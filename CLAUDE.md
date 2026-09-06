@@ -12,11 +12,15 @@ Do **not** build a real backend, authentication, database, live maps, or payment
 integration. Every feature only has to be drawn or mocked. Per-slot availability
 assumes the mall's existing parking-bay sensors — that integration is out of scope.
 
-If a static HTML prototype is added later, record here how to serve it.
-
 Working docs:
 - `docs/product-spec.md` — prototype scope, screen inventory, user flows, defense notes
 - `docs/design-system.md` — color tokens, type/spacing scales, component list
+
+Clickable HTML prototype in `prototype/` (no build step) — open `prototype/index.html`
+directly, or `cd prototype && python -m http.server 8777`. Screens live in
+`index.html`; tokens in `styles.css` mirror `docs/design-system.md`; `app.js` holds
+the screen router, the 15-min countdown, and the mock slot/QR data. See
+`prototype/README.md`.
 
 ## Product
 

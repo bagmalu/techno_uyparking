@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uy Parking! — Prototype</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="statusbar-right">
+        <button id="themeToggle" class="theme-toggle" title="Toggle theme">◐</button>
+        Uy Parking!
+      </span>
+    </div>
+
+    <!-- ================= SCREEN: MAP HOME ================= -->
+    <section class="screen is-active" id="screen-map" data-title="Explore">
+      <div class="screen-body no-pad">
+        <div class="map">
+          <div class="map-search">
+            <input type="text" placeholder="Search a place or parking lot" readonly data-goto="search">
+          </div>
+          <svg class="map-canvas" viewBox="0 0 320 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <rect x="0" y="0" width="320" height="460" class="map-ground"/>
+            <path d="M-20 120 L340 90" class="map-road"/>
+            <path d="M40 -20 L70 480" class="map-road"/>
+            <path d="M-20 300 L340 330" class="map-road"/>
+            <rect x="120" y="140" width="90" height="70" rx="6" class="map-block"/>
+            <rect x="230" y="200" width="60" height="90" rx="6" class="map-block"/>
+            <rect x="90" y="330" width="80" height="60" rx="6" class="map-block"/>
+          </svg>
+
+          <button class="pin heat-4" style="left:44%;top:30%" data-goto="lot" data-lot="North Wing Parkade">
+            <span class="pin-count">3</span>
+          </button>
+          <button class="pin heat-2" style="left:74%;top:52%" data-goto="lot" data-lot="East Deck">
+            <span class="pin-count">31</span>
+          </button>
+          <button class="pin heat-1" style="left:33%;top:76%" data-goto="lot" data-lot="Grove Open Lot">
+            <span class="pin-count">58</span>
+          </button>
+
+          <div class="map-legend">
+            <span><i class="dot heat-1"></i>Open</span>
+            <span><i class="dot heat-3"></i>Filling</span>
+            <span><i class="dot heat-4"></i>Full</span>
+          </div>
+        </div>
+
+        <div class="sheet-static">
+          <p class="eyebrow">Saved</p>
+          <div class="chip-row">
+            <button class="chip" data-goto="lot" data-lot="North Wing Parkade">🏫 School</button>
+            <button class="chip" data-goto="lot" data-lot="East Deck">🏠 Home</button>
+          </div>
+          <p class="eyebrow">Recent</p>
+          <button class="list-row" data-goto="lot" data-lot="Grove Open Lot">
+            <span>Grove Open Lot</span><span class="muted">Tue, 2:14 PM</span>
+          </button>
+        </div>
+      </div>
+      <nav class="bottomnav">
+        <button class="is-current"><span>◎</span>Explore</button>
+        <button data-goto="finder"><span>▣</span>Scan / Pay</button>
+        <button data-goto="activity"><span>≣</span>Activity</button>
+      </nav>
+    </section>
+
+    <!-- ================= SCREEN: SEARCH ================= -->
+    <section class="screen" id="screen-search" data-title="Search">
+      <header class="topbar">
+        <button class="back" data-goto="map">‹</button>
+        <input type="text" class="topbar-input" value="North" autofocus>
+      </header>
+      <div class="screen-body">
+        <button class="list-row" data-goto="lot" data-lot="North Wing Parkade">
+          <span><strong>North Wing Parkade</strong><br><span class="muted">220 m · 3 slots left</span></span>
+          <i class="dot heat-4"></i>
+        </button>
+        <button class="list-row" data-goto="lot" data-lot="East Deck">
+          <span><strong>East Deck</strong><br><span class="muted">480 m · 31 slots left</span></span>
+          <i class="dot heat-2"></i>
+        </button>
+        <button class="list-row" data-goto="lot" data-lot="Grove Open Lot">
+          <span><strong>Grove Open Lot</strong><br><span class="muted">610 m · 58 slots left</span></span>
+          <i class="dot heat-1"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: LOT DETAIL ================= -->
+    <section class="screen" id="screen-lot" data-title="Lot">
+      <header class="topbar">
+        <button class="back" data-goto="map">‹</button>
+        <h1 id="lotName">North Wing Parkade</h1>
+      </header>
+      <div class="screen-body">
+        <div class="card">
+          <div class="occ">
+            <div class="occ-bar"><i style="width:70%"></i><b style="width:15%"></b></div>
+            <p class="occ-label"><span>28 parked</span> + <span>6 reserved</span> / 40</p>
+          </div>
+          <div class="tag-row">
+            <span class="tag">⚡ EV charging</span>
+            <span class="tag">☂ Covered</span>
+            <span class="tag">♿ PWD slots</span>
+            <span class="tag">↧ 40 m to lift</span>
+          </div>
+        </div>
+
+        <p class="eyebrow">Choose a floor</p>
+        <button class="floor-row" data-goto="floor" data-floor="2">
+          <span><strong>Level 2</strong><br><span class="muted">covered · near lift</span></span>
+          <span class="floor-count status-available">7 open</span>
+        </button>
+        <button class="floor-row" data-goto="floor" data-floor="3">
+          <span><strong>Level 3</strong><br><span class="muted">covered</span></span>
+          <span class="floor-count status-filling">2 open</span>
+        </button>
+        <button class="floor-row is-disabled" disabled>
+          <span><strong>Level 4</strong><br><span class="muted">roof deck</span></span>
+          <span class="floor-count status-full">Full</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: FLOOR DETAIL ================= -->
+    <section class="screen" id="screen-floor" data-title="Floor">
+      <header class="topbar">
+        <button class="back" data-goto="lot">‹</button>
+        <h1>Level <span id="floorNum">2</span> · North Wing</h1>
+      </header>
+      <div class="screen-body">
+        <p class="muted small">Tap an open slot to reserve. Live from bay sensors.</p>
+        <div class="slot-grid" id="slotGrid"></div>
+        <div class="slot-legend">
+          <span><i class="swatch open"></i>Open</span>
+          <span><i class="swatch taken"></i>Taken</span>
+          <span><i class="swatch ev"></i>EV</span>
+          <span><i class="swatch pwd"></i>PWD</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: RESERVE CONFIRM ================= -->
+    <section class="screen sheet-screen" id="screen-reserve" data-title="Reserve">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <h2>Reserve slot <span id="rsvSlot">2-14</span></h2>
+        <dl class="kv">
+          <div><dt>Lot</dt><dd>North Wing Parkade</dd></div>
+          <div><dt>Level</dt><dd>2 · covered</dd></div>
+          <div><dt>Hold</dt><dd>15 min grace after you arrive</dd></div>
+          <div><dt>Reservation fee</dt><dd>₱0.00 — pay on exit</dd></div>
+        </dl>
+        <p class="notice" id="pwdNotice" hidden>♿ This is a PWD slot. Please make sure you're eligible before parking.</p>
+        <button class="btn-primary" data-goto="otp">Confirm reservation</button>
+        <button class="btn-text" data-goto="floor">Cancel</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: OTP ================= -->
+    <section class="screen sheet-screen" id="screen-otp" data-title="Verify">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <h2>Quick verify</h2>
+        <p class="muted">First reservation on this device. Enter your plate or a phone number — no account needed.</p>
+        <input type="text" class="field" value="NBA 1234" aria-label="Plate or phone">
+        <div class="otp-row">
+          <input class="otp" value="4" maxlength="1"><input class="otp" value="1" maxlength="1">
+          <input class="otp" value="9" maxlength="1"><input class="otp" value="2" maxlength="1">
+        </div>
+        <button class="btn-primary" data-goto="qr">Verify &amp; reserve</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: RESERVATION QR ================= -->
+    <section class="screen" id="screen-qr" data-title="Reservation">
+      <header class="topbar">
+        <button class="back" data-goto="map">‹</button>
+        <h1>Your reservation</h1>
+      </header>
+      <div class="screen-body center">
+        <div class="countdown" id="countdown">15:00</div>
+        <p class="muted small" id="countdownNote">Hold expires if you don't scan in</p>
+        <div class="qr" id="qrBox"></div>
+        <p class="qr-caption">Slot <strong id="qrSlot">2-14</strong> · Level 2 · North Wing Parkade</p>
+        <div class="btn-col">
+          <button class="btn-primary" data-goto="scanin">Simulate scan-in</button>
+          <button class="btn-outline" data-goto="expired">Simulate no-show</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: EXPIRED ================= -->
+    <section class="screen" id="screen-expired" data-title="Expired">
+      <div class="screen-body center">
+        <div class="big-icon status-full">⌛</div>
+        <h2>Reservation released</h2>
+        <p class="muted">No scan-in within the 15-minute grace period, so slot 2-14 was returned to the pool.</p>
+        <button class="btn-primary" data-goto="lot">Find another slot</button>
+        <button class="btn-text" data-goto="map">Back to map</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: SCAN-IN CONFIRMATION ================= -->
+    <section class="screen" id="screen-scanin" data-title="Parked">
+      <div class="screen-body center">
+        <div class="big-icon status-available">✓</div>
+        <h2>You're parked</h2>
+        <p class="muted">Level 2 · Slot 2-14 · North Wing Parkade</p>
+        <div class="minimap">
+          <div class="minimap-dot" style="left:62%;top:40%"></div>
+          <span class="minimap-tag">Your car</span>
+        </div>
+        <div class="btn-col">
+          <button class="btn-outline" data-goto="locate">Find my car later</button>
+          <button class="btn-primary" data-goto="checkout">Simulate scan-out</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: LOCATE ================= -->
+    <section class="screen" id="screen-locate" data-title="Find my car">
+      <header class="topbar">
+        <button class="back" data-goto="activity">‹</button>
+        <h1>Find where you parked</h1>
+      </header>
+      <div class="screen-body">
+        <div class="minimap tall">
+          <div class="minimap-dot" style="left:62%;top:44%"></div>
+          <span class="minimap-tag">Slot 2-14</span>
+          <div class="minimap-you" style="left:20%;top:80%">You</div>
+        </div>
+        <p class="muted">Level 2, North Wing Parkade. Head past the lift, second row on your right. Parked Tue 2:14 PM.</p>
+        <button class="btn-outline" data-goto="activity">Done</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: CHECKOUT / SESSION SUMMARY ================= -->
+    <section class="screen" id="screen-checkout" data-title="Session">
+      <header class="topbar">
+        <button class="back" data-goto="map">‹</button>
+        <h1>Session summary</h1>
+      </header>
+      <div class="screen-body">
+        <div class="card">
+          <dl class="kv">
+            <div><dt>Lot</dt><dd>North Wing Parkade</dd></div>
+            <div><dt>In</dt><dd>2:14 PM</dd></div>
+            <div><dt>Out</dt><dd>4:02 PM</dd></div>
+            <div><dt>Duration</dt><dd>1 h 48 m</dd></div>
+          </dl>
+          <div class="total-row"><span>Total due</span><strong>₱75.00</strong></div>
+        </div>
+        <button class="btn-primary" data-goto="pay">Pay with QR Ph</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: PAYMENT ================= -->
+    <section class="screen" id="screen-pay" data-title="Pay">
+      <header class="topbar">
+        <button class="back" data-goto="checkout">‹</button>
+        <h1>QR Ph</h1>
+      </header>
+      <div class="screen-body center">
+        <p class="muted small">Scan with any GCash / Maya / bank app</p>
+        <div class="qr qrph" id="qrPhBox"></div>
+        <p class="qr-caption">UY PARKING SERVICES · ₱75.00</p>
+        <button class="btn-primary" data-goto="paid">Simulate payment</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: PAID ================= -->
+    <section class="screen" id="screen-paid" data-title="Paid">
+      <div class="screen-body center">
+        <div class="big-icon status-available">✓</div>
+        <h2>Paid ₱75.00</h2>
+        <p class="muted">Gate will open automatically. Receipt saved to Activity.</p>
+        <button class="btn-primary" data-goto="activity">Done</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: WALK-IN ================= -->
+    <section class="screen" id="screen-walkin" data-title="Walk-in">
+      <header class="topbar">
+        <button class="back" data-goto="finder">‹</button>
+        <h1>Walk-in</h1>
+      </header>
+      <div class="screen-body center">
+        <p class="muted">No reservation? Tap below at the entrance scanner. We'll assign the nearest open slot and generate your QR.</p>
+        <button class="btn-primary" data-goto="walkinqr">Get a slot now</button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-walkinqr" data-title="Walk-in">
+      <div class="screen-body center">
+        <div class="big-icon status-available">P</div>
+        <h2>Slot 3-08 assigned</h2>
+        <p class="muted">Level 3 · East Deck · nearest open bay</p>
+        <div class="qr" id="qrWalkBox"></div>
+        <button class="btn-primary" data-goto="scanin">Simulate scan-in</button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN: ACTIVITY ================= -->
+    <section class="screen" id="screen-activity" data-title="Activity">
+      <header class="topbar"><h1>Activity</h1></header>
+      <div class="screen-body">
+        <p class="eyebrow">Active</p>
+        <button class="list-row" data-goto="locate">
+          <span><strong>Parked · Slot 2-14</strong><br><span class="muted">North Wing · since 2:14 PM</span></span>
+          <span class="floor-count status-available">Find</span>
+        </button>
+        <p class="eyebrow">Recent</p>
+        <button class="list-row" data-goto="lot" data-lot="Grove Open Lot">
+          <span><strong>Grove Open Lot</strong><br><span class="muted">Mon · ₱60.00</span></span>
+        </button>
+        <p class="eyebrow">Favorites</p>
+        <button class="list-row" data-goto="lot" data-lot="East Deck">
+          <span><strong>East Deck</strong><br><span class="muted">★ saved</span></span>
+        </button>
+        <p class="eyebrow">Owner</p>
+        <button class="list-row" data-goto="owner"><span><strong>Owner dashboard</strong></span><span class="muted">›</span></button>
+      </div>
+      <nav class="bottomnav">
+        <button data-goto="map"><span>◎</span>Explore</button>
+        <button data-goto="finder"><span>▣</span>Scan / Pay</button>
+        <button class="is-current"><span>≣</span>Activity</button>
+      </nav>
+    </section>
+
+    <!-- ================= SCREEN: FINDER HUB ================= -->
+    <section class="screen" id="screen-finder" data-title="Scan / Pay">
+      <header class="topbar"><h1>Scan / Pay</h1></header>
+      <div class="screen-body">
+        <button class="big-action" data-goto="qr"><span>▣</span> Show my reservation QR</button>
+        <button class="big-action" data-goto="walkin"><span>P</span> Walk-in — get a slot</button>
+        <button class="big-action" data-goto="checkout"><span>₱</span> Pay for parking</button>
+        <button class="big-action" data-goto="locate"><span>◈</span> Find where I parked</button>
+      </div>
+      <nav class="bottomnav">
+        <button data-goto="map"><span>◎</span>Explore</button>
+        <button class="is-current"><span>▣</span>Scan / Pay</button>
+        <button data-goto="activity"><span>≣</span>Activity</button>
+      </nav>
+    </section>
+
+    <!-- ================= SCREEN: OWNER ================= -->
+    <section class="screen" id="screen-owner" data-title="Owner">
+      <header class="topbar">
+        <button class="back" data-goto="activity">‹</button>
+        <h1>North Wing · Owner</h1>
+      </header>
+      <div class="tabs">
+        <button class="tab is-active" data-tab="stats">Stats</button>
+        <button class="tab" data-tab="fin">Financials</button>
+      </div>
+      <div class="screen-body" id="ownerStats">
+        <div class="stat-row">
+          <div class="stat"><b>82%</b><span>Occupancy now</span></div>
+          <div class="stat"><b>1 h 36 m</b><span>Avg stay</span></div>
+          <div class="stat"><b>214</b><span>Cars today</span></div>
+        </div>
+        <p class="eyebrow">Occupancy by hour</p>
+        <div class="bars">
+          <i style="height:20%"></i><i style="height:35%"></i><i style="height:60%"></i>
+          <i style="height:85%"></i><i style="height:95%"></i><i style="height:70%"></i>
+          <i style="height:55%"></i><i style="height:80%"></i><i style="height:90%"></i>
+          <i style="height:45%"></i><i style="height:30%"></i><i style="height:18%"></i>
+        </div>
+        <p class="muted small">7 AM → 6 PM. Peak 11 AM–12 NN.</p>
+      </div>
+      <div class="screen-body" id="ownerFin" hidden>
+        <div class="stat-row">
+          <div class="stat"><b>₱16,050</b><span>Today</span></div>
+          <div class="stat"><b>₱98,400</b><span>This week</span></div>
+        </div>
+        <p class="eyebrow">Daily revenue</p>
+        <button class="list-row"><span>Mon</span><span>₱14,220</span></button>
+        <button class="list-row"><span>Tue</span><span>₱15,900</span></button>
+        <button class="list-row"><span>Wed</span><span>₱16,050</span></button>
+        <p class="muted small">Mock figures — settlement and payouts are out of scope for the prototype.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <p class="stage-hint">Prototype — tap through the flows. Screen: <span id="crumb">Explore</span></p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
