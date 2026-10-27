@@ -73,17 +73,21 @@ label — never color alone.**
 | status-filling | `#f59e0b` | few left |
 | status-full | `#dc2626` | none available |
 
-### Heatmap scale — lot fullness on the map
+### Heatmap scale — lot availability on the map
 
-Sequential amber→red (single-hue-ish, CVD-safe). The numeric count is always shown
-next to the color, so the color is reinforcement, not the sole signal.
+Matches the mockups (`mockup/default.png`, `mockup/zoomed in.png`): markers are teal, and
+their strength shows how much space is left. The count appears on every marker once the map
+is zoomed in (and always on the selected marker), so color is never the only signal.
 
-| Band | Hex | Occupancy |
+| Band | Hex | Spaces left |
 |---|---|---|
-| heat-1 | `#ffe9b8` | < 40% taken |
-| heat-2 | `#ffc266` | 40–70% |
-| heat-3 | `#ff8c42` | 70–90% |
-| heat-4 | `#e03131` | > 90% / full |
+| lot-high | `#009f8b` | 20 or more |
+| lot-mid | `#2cac9d` | 10–19 |
+| lot-low | `#b3d6d4` (ink `#0b5e55`) | 1–9 |
+| lot-full | `#d3d9d9` (ink `#6b7574`, label "Full") | 0 |
+
+Selected marker: `#009f8b` with a `#aeb3bd` ring. Map background `#f1f4f5`, buildings
+`#e0e3e6`, roads `#d9dde1` (sampled from the mockups).
 
 "Taken" = parked + reserved (see `../CLAUDE.md`).
 
@@ -91,9 +95,9 @@ next to the color, so the color is reinforcement, not the sole signal.
 
 | Element | Treatment | Required content |
 |---|---|---|
-| Default lot marker | Teal rectangular/pill marker | Spaces left or taken count |
-| Low-availability marker | Heat-3 or heat-4 fill | Count plus `filling` or `full` label |
-| Selected marker | Accent-500 with stronger elevation | Selected lot name or count |
+| Default lot marker | Teal rectangle shaped like the lot (lot-high/mid) | Spaces left, shown when zoomed in |
+| Low-availability marker | lot-low or lot-full fill | Count, or `Full` label |
+| Selected marker | Accent-500 with grey `#aeb3bd` ring | Count, always visible |
 | User location | Small blue dot | Do not imply GPS precision in the prototype |
 
 The mockup's large teal markers are intentionally legible at a glance. Keep marker labels
