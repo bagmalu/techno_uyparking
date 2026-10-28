@@ -86,8 +86,11 @@ is zoomed in (and always on the selected marker), so color is never the only sig
 | lot-low | `#b3d6d4` (ink `#0b5e55`) | 1–9 |
 | lot-full | `#d3d9d9` (ink `#6b7574`, label "Full") | 0 |
 
-Selected marker: `#009f8b` with a `#aeb3bd` ring. Map background `#f1f4f5`, buildings
-`#e0e3e6`, roads `#d9dde1` (sampled from the mockups).
+Selected marker: `#009f8b` with a `#aeb3bd` ring.
+
+Base map: OpenStreetMap tiles, greyed with a CSS filter (`.osm-tiles`) so they read like the
+mockups' pale map; dark mode inverts them to a deep teal. Map background while tiles load:
+`#f1f4f5` (light) / `#062625` (dark). OSM attribution must stay visible.
 
 "Taken" = parked + reserved (see `../CLAUDE.md`).
 
@@ -95,7 +98,7 @@ Selected marker: `#009f8b` with a `#aeb3bd` ring. Map background `#f1f4f5`, buil
 
 | Element | Treatment | Required content |
 |---|---|---|
-| Default lot marker | Teal rectangle shaped like the lot (lot-high/mid) | Spaces left, shown when zoomed in |
+| Default lot marker | Teal fill on the building's real OSM outline (lot-high/mid) | Spaces left, shown when zoomed in |
 | Low-availability marker | lot-low or lot-full fill | Count, or `Full` label |
 | Selected marker | Accent-500 with grey `#aeb3bd` ring | Count, always visible |
 | User location | Small blue dot | Do not imply GPS precision in the prototype |

@@ -9,37 +9,70 @@ const FEE_CREDIT = 35;             // deducted from the final parking fee
 const DEMO_MINUTES = 135;          // simulated parking duration at scan-out
 
 // ---------- mock data ----------
+// Real places in Ortigas Center used as placeholders. `shape` is the building / lot outline
+// from OpenStreetMap (© OpenStreetMap contributors, ODbL); counts, rates and features are mock.
 const LOTS = [
-  { id: 'sm-b1', name: 'SM Basement Parking 1', area: 'SM City · Basement', capacity: 120, parked: 82, reserved: 15, rate: 40,
-    accessible: true, ev: false, covered: true, distance: '120 m', walk: '2 min',
-    x: 52, y: 24, rot: -6, w: 30, h: 28, busy: 1.0, tone: '#cfd3d6', sign: 'SM', floors: ['B1', 'B2'],
-    landmarks: ['near Elevator B', 'beside Entrance 2', 'by the ramp to B2'] },
-  { id: 'open-b', name: 'SM Open Lot B', area: 'SM City · Ground', capacity: 60, parked: 18, reserved: 4, rate: 30,
-    accessible: true, ev: false, covered: false, distance: '350 m', walk: '5 min',
-    x: 22, y: 31, rot: 28, w: 13, h: 30, busy: .6, tone: '#d9cdb8', sign: 'LOT B', floors: ['G'],
-    landmarks: ['near the mall side door', 'by the guard house'] },
-  { id: 'north', name: 'North Tower P2', area: 'North Tower · Level P2', capacity: 80, parked: 40, reserved: 8, rate: 50,
-    accessible: true, ev: true, covered: true, distance: '400 m', walk: '6 min',
-    x: 71, y: 43, rot: 4, w: 10, h: 26, busy: .8, tone: '#b9c4cc', sign: 'NT', floors: ['P2', 'P3'],
-    landmarks: ['next to the EV chargers', 'near Lift Lobby A'] },
-  { id: 'annex', name: 'Annex Carpark', area: 'Annex Building', capacity: 30, parked: 27, reserved: 3, rate: 35,
-    accessible: false, ev: false, covered: true, distance: '250 m', walk: '4 min',
-    x: 28, y: 48, rot: -10, w: 26, h: 20, busy: 1.15, tone: '#d1c2c2', sign: 'ANNEX', floors: ['1'],
-    landmarks: ['by the stairwell'] },
-  { id: 'riverside', name: 'Riverside Lot', area: 'Riverside Walk', capacity: 50, parked: 30, reserved: 2, rate: 30,
-    accessible: true, ev: true, covered: false, distance: '650 m', walk: '9 min',
-    x: 40, y: 67, rot: 14, w: 50, h: 18, busy: .75, tone: '#c8d4c4', sign: 'RIVERSIDE', floors: ['G'],
-    landmarks: ['near the riverside gate'] },
-  { id: 'plaza', name: 'Plaza Covered Deck', area: 'Central Plaza', capacity: 100, parked: 85, reserved: 8, rate: 45,
-    accessible: true, ev: true, covered: true, distance: '800 m', walk: '11 min',
-    x: 66, y: 77, rot: -4, w: 26, h: 24, busy: 1.1, tone: '#c9c6d6', sign: 'PLAZA', floors: ['L2', 'L3', 'L4'],
-    landmarks: ['near Elevator 3', 'beside the food court bridge'] },
+  { id: 'sm-b1', name: 'SM Megamall Basement 1', area: 'Megamall · Bldg A',
+    address: 'EDSA cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 120, parked: 82, reserved: 15, rate: 40,
+    accessible: true, ev: false, covered: true, busy: 1.0, tone: '#cfd3d6', sign: 'SM', floors: ['B1', 'B2'],
+    landmarks: ['near Elevator B', 'beside Entrance 2', 'by the ramp to B2'], labelAt: [14.58625, 121.05725],
+    shape: [[14.584589, 121.056611], [14.584578, 121.057686], [14.584701, 121.057687], [14.584727, 121.056956], [14.585667, 121.056967],
+      [14.585658, 121.057699], [14.586828, 121.057712], [14.586838, 121.056795], [14.586408, 121.056790], [14.586408, 121.056638],
+      [14.585812, 121.056631], [14.585815, 121.056374], [14.585656, 121.056372], [14.585654, 121.056623]] },
+  { id: 'open-b', name: 'SM Megamall Open Parking', area: 'Megamall · Open lot',
+    address: 'Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 60, parked: 18, reserved: 4, rate: 30,
+    accessible: true, ev: false, covered: false, busy: .6, tone: '#d9cdb8', sign: 'OPEN', floors: ['G'],
+    landmarks: ['near the mall side door', 'by the guard house'],
+    shape: [[14.585863, 121.058042], [14.585606, 121.058038], [14.585603, 121.058654], [14.585855, 121.058655]] },
+  { id: 'north', name: 'The Podium Parking', area: 'The Podium · P2',
+    address: 'ADB Ave. cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 80, parked: 40, reserved: 8, rate: 50,
+    accessible: true, ev: true, covered: true, busy: .8, tone: '#b9c4cc', sign: 'PODIUM', floors: ['P2', 'P3'],
+    landmarks: ['next to the EV chargers', 'near Lift Lobby A'],
+    shape: [[14.584609, 121.059143], [14.584645, 121.059344], [14.584815, 121.059525], [14.584906, 121.059613], [14.585031, 121.059620],
+      [14.585118, 121.059586], [14.585593, 121.059589], [14.585603, 121.058676], [14.584605, 121.058673]] },
+  { id: 'annex', name: 'Megamall Building C Carpark', area: 'Megamall · Bldg C',
+    address: 'EDSA, Ortigas Center, Mandaluyong', capacity: 30, parked: 27, reserved: 3, rate: 35,
+    accessible: false, ev: false, covered: true, busy: 1.15, tone: '#d1c2c2', sign: 'BLDG C', floors: ['1'],
+    landmarks: ['by the stairwell'],
+    shape: [[14.585159, 121.056492], [14.584692, 121.056483], [14.584701, 121.055984], [14.585384, 121.056222], [14.585647, 121.056314],
+      [14.585648, 121.056502]] },
+  { id: 'riverside', name: 'Shangri-La Plaza Parking', area: 'Shangri-La · Basement',
+    address: 'EDSA cor. Shaw Blvd., Mandaluyong', capacity: 50, parked: 30, reserved: 2, rate: 30,
+    accessible: true, ev: true, covered: true, busy: .75, tone: '#c8d4c4', sign: 'SHANGRI-LA', floors: ['B1', 'B2'],
+    landmarks: ['near the East Wing entrance'],
+    shape: [[14.581316, 121.054049], [14.581446, 121.054115], [14.581604, 121.054264], [14.581977, 121.054517], [14.581673, 121.054830],
+      [14.581732, 121.054879], [14.581395, 121.055268], [14.581361, 121.055236], [14.580847, 121.055835], [14.580540, 121.056236],
+      [14.579976, 121.055713], [14.580223, 121.055427], [14.580096, 121.055310], [14.581182, 121.054035]] },
+  { id: 'plaza', name: 'Robinsons Galleria Parking', area: 'Galleria · Deck',
+    address: 'EDSA cor. Ortigas Ave., Ortigas Center, Quezon City', capacity: 100, parked: 85, reserved: 8, rate: 45,
+    accessible: true, ev: true, covered: true, busy: 1.1, tone: '#c9c6d6', sign: 'GALLERIA', floors: ['L2', 'L3', 'L4'],
+    landmarks: ['near Elevator 3', 'beside the food court bridge'],
+    shape: [[14.592243, 121.059302], [14.592157, 121.059058], [14.592064, 121.058958], [14.591981, 121.059055], [14.591734, 121.059256],
+      [14.591677, 121.059208], [14.591952, 121.058883], [14.591942, 121.058701], [14.591783, 121.058545], [14.591624, 121.058481],
+      [14.591578, 121.058644], [14.591319, 121.058591], [14.591285, 121.058462], [14.591007, 121.058747], [14.590239, 121.059637],
+      [14.589995, 121.059975], [14.590197, 121.060071], [14.590197, 121.060307], [14.590039, 121.060355], [14.590291, 121.060586],
+      [14.590465, 121.060586], [14.590631, 121.060385], [14.590573, 121.060571], [14.590921, 121.060878], [14.591601, 121.060068]] },
 ];
 
+// Mock "you are here" (no real GPS): Doña Julia Vargas Ave., between SM Megamall and The Podium
+const ME = [14.58515, 121.05788];
+
+// centre of each outline, and straight-line distance from ME
+function metres([lat1, lng1], [lat2, lng2]) {
+  const r = Math.PI / 180, x = (lng2 - lng1) * r * Math.cos(((lat1 + lat2) / 2) * r), y = (lat2 - lat1) * r;
+  return 6371000 * Math.hypot(x, y);
+}
+LOTS.forEach((lot) => {
+  const lats = lot.shape.map((p) => p[0]), lngs = lot.shape.map((p) => p[1]);
+  lot.center = lot.labelAt || [(Math.min(...lats) + Math.max(...lats)) / 2, (Math.min(...lngs) + Math.max(...lngs)) / 2];
+  lot.metres = metres(ME, lot.center);
+  lot.distance = lot.metres < 1000 ? `${Math.round(lot.metres / 10) * 10} m` : `${(lot.metres / 1000).toFixed(1)} km`;
+});
+
 const SAVED_PLACES = [
-  { icon: 'i-home', name: 'Home', sub: 'Riverside Walk', lotId: 'riverside' },
-  { icon: 'i-pin', name: 'SM City', sub: 'Preset · mall', lotId: 'sm-b1' },
-  { icon: 'i-pin', name: 'Office', sub: 'North Tower', lotId: 'north' },
+  { icon: 'i-home', name: 'Home', sub: 'Shaw Blvd., Mandaluyong', lotId: 'riverside' },
+  { icon: 'i-pin', name: 'SM Megamall', sub: 'Preset · EDSA, Mandaluyong', lotId: 'sm-b1' },
+  { icon: 'i-pin', name: 'Office', sub: 'ADB Ave., Ortigas Center', lotId: 'north' },
 ];
 
 // typical occupancy 6 AM → 9 PM (16 hourly bars), scaled per lot and day
@@ -173,68 +206,78 @@ function floorMap(session) {
   </svg>`;
 }
 
-// The art covers 2× the viewport in each direction (viewBox 800×1600); the visible
-// map at zoom 1 is the centre region (200..600, 400..1200), where markers live.
-function drawMapArt() {
-  const rnd = seeded('uy-parking-map');
-  let blocks = '';
-  for (let y = 0; y < 1600; y += 44) for (let x = 0; x < 800; x += 44) {
-    const n = rnd() < .45 ? 2 : 1;
-    for (let k = 0; k < n; k++) {
-      const w = 12 + rnd() * 22, h = 10 + rnd() * 22, bx = x + 3 + rnd() * (40 - w), by = y + 3 + rnd() * (40 - h);
-      blocks += `<rect class="block" x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" transform="rotate(${((rnd() - .5) * 24).toFixed(1)} ${(bx + w / 2).toFixed(1)} ${(by + h / 2).toFixed(1)})"/>`;
-    }
-  }
-  const ring = (cx, cy, r) => `M${cx - r} ${cy} a${r} ${r} 0 1 0 ${2 * r} 0 a${r} ${r} 0 1 0 ${-2 * r} 0`;
-  const cx = 400, cy = 820, R = 70;
-  // radial avenues out of the central roundabout, slightly bent like the mockup
-  const spokes = [-92, -62, -118, -20, 20, 158, 200, 96].map((deg) => {
-    const a = (deg * Math.PI) / 180, b = a + .12;
-    const x1 = cx + Math.cos(a) * R, y1 = cy + Math.sin(a) * R;
-    const xm = cx + Math.cos(b) * 380, ym = cy + Math.sin(b) * 380;
-    const x2 = cx + Math.cos(a) * 1100, y2 = cy + Math.sin(a) * 1100;
-    return `M${x1.toFixed(0)} ${y1.toFixed(0)} Q${xm.toFixed(0)} ${ym.toFixed(0)} ${x2.toFixed(0)} ${y2.toFixed(0)}`;
+// ---------- map: OpenStreetMap tiles via Leaflet (vendor/leaflet) ----------
+// Tiles are greyed with a CSS filter to match the mockups (see .osm-tiles in styles.css).
+// tile.openstreetmap.org blocks requests with no Referer ("Access blocked … tile usage policy"),
+// and a page opened as file:// never sends one. There we use the German OSM community's tile
+// server instead: same OpenStreetMap data and style, and it accepts requests without a Referer.
+const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+const TILES = location.protocol === 'file:'
+  ? { url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', attribution: `${OSM_ATTRIBUTION}, tiles by <a href="https://openstreetmap.de" target="_blank" rel="noopener">openstreetmap.de</a>` }
+  : { url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: OSM_ATTRIBUTION };
+const HOME_VIEW = { center: [14.5862, 121.0578], zoom: 16 };
+const ZOOMED_AT = 17;          // lot counts show from this zoom (zoomed in.png)
+const FAR_BELOW = 15;          // below this, outlines are too small to tap, so lots show as pins
+let map;
+const lotLayers = {};          // id → { poly, label }
+let userView = null;           // the view to return to once nothing is focused
+let focused = false;
+
+function initMap() {
+  map = L.map('map', { zoomControl: false, zoomSnap: .25, minZoom: 11, maxZoom: 19 })
+    .setView(HOME_VIEW.center, HOME_VIEW.zoom);
+  map.attributionControl.setPrefix(false);
+  L.tileLayer(TILES.url, { maxZoom: 19, className: 'osm-tiles', attribution: TILES.attribution }).addTo(map);
+
+  LOTS.forEach((lot) => {
+    const open = () => ACTIONS.openLot({ id: lot.id });
+    const poly = L.polygon(lot.shape, { className: 'lot-shape', weight: 2 }).on('click', open).addTo(map);
+    const label = L.marker(lot.center, { icon: L.divIcon({ className: 'lot-label', iconSize: [0, 0], html: '<b></b>' }), title: lot.name, riseOnHover: true })
+      .on('click', open).addTo(map);
+    lotLayers[lot.id] = { poly, label };
   });
-  const cross = ['M-20 560 Q400 500 820 575', 'M-20 1090 Q400 1040 820 1100', 'M-20 300 Q400 260 820 320',
-    'M-20 1380 Q400 1330 820 1400', 'M140 -20 Q170 800 120 1620', 'M690 -20 Q650 800 700 1620'];
-  const rings = [ring(cx, cy, R), ring(404, 535, 11), ring(388, 1068, 11), ring(560, 548, 10), ring(222, 556, 10),
-    ring(160, 1090, 10), ring(640, 1094, 10), ring(150, 300, 10), ring(672, 312, 10)];
-  $('#mapArt').innerHTML = blocks + [...spokes, ...cross, ...rings].map((d) => `<path class="road" d="${d}" stroke-width="5"/>`).join('');
+  L.marker(ME, { icon: L.divIcon({ className: 'me-dot', iconSize: [15, 15] }), interactive: false, keyboard: false, title: 'Approximate location (mock)' }).addTo(map);
+
+  const onZoom = () => {
+    $('#map').classList.toggle('zoomed', map.getZoom() >= ZOOMED_AT);
+    $('#map').classList.toggle('far', map.getZoom() < FAR_BELOW);
+  };
+  map.on('zoomend', onZoom);
+  onZoom();
+  // the map grows when the tab bar hides (lot sheet open), so keep Leaflet's size in sync
+  new ResizeObserver(() => {
+    const before = map.getSize();
+    map.invalidateSize();
+    const id = ui.focusLot || ui.selectedLot;
+    if (id && !before.equals(map.getSize())) focusLot(id, false);
+  }).observe($('#map'));
 }
 
-// ---------- map view: pan / zoom / focus ----------
-const view = { s: 1, x: 0, y: 0 };
-let userView = { ...view };
-const ZOOMED_AT = 1.6, FOCUS_SCALE = 2.3;
-
-function mapSize() { const r = $('#map').getBoundingClientRect(); return { W: r.width, H: r.height }; }
-function clampView() {
-  const { W, H } = mapSize();
-  view.s = Math.min(3, Math.max(1, view.s));
-  // the art extends half a viewport beyond each edge
-  view.x = Math.min(.5 * W * view.s, Math.max(W - 1.5 * W * view.s, view.x));
-  view.y = Math.min(.5 * H * view.s, Math.max(H - 1.5 * H * view.s, view.y));
-}
-function applyView(animate = true) {
-  const layer = $('#mapLayer');
-  layer.classList.toggle('no-anim', !animate);
-  layer.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
-  layer.style.setProperty('--s', view.s);
-  $('#map').classList.toggle('zoomed', view.s >= ZOOMED_AT);
-}
-function setView(v, animate = true) { Object.assign(view, v); clampView(); applyView(animate); }
-function zoomAt(px, py, factor, animate = true) {
-  const s2 = Math.min(3, Math.max(1, view.s * factor)), k = s2 / view.s;
-  setView({ s: s2, x: px - k * (px - view.x), y: py - k * (py - view.y) }, animate);
-  userView = { ...view };
-}
-// Put a lot in the strip of map left visible above the sheet (like space selected.png)
-function focusLot(id) {
+// Put a lot in the strip of map left visible above the sheet (like space selected.png),
+// as close as it fits.
+function focusLot(id, animate = true) {
   const lot = lotById(id);
   if (!lot) return;
-  const { W, H } = mapSize();
-  setView({ s: FOCUS_SCALE, x: W * .5 - FOCUS_SCALE * (lot.x / 100) * W, y: H * .19 - FOCUS_SCALE * (lot.y / 100) * H });
+  map.invalidateSize();
+  if (!focused) { userView = { center: map.getCenter(), zoom: map.getZoom() }; focused = true; }
+  const size = map.getSize();
+  const b = lotLayers[id].poly.getBounds();
+  const fits = (z) => {
+    const nw = map.project(b.getNorthWest(), z), se = map.project(b.getSouthEast(), z);
+    return se.x - nw.x <= size.x * .7 && se.y - nw.y <= size.y * .16;
+  };
+  let z = 18;
+  while (z > 15 && !fits(z)) z -= .25;
+  const centre = map.unproject(map.project(lot.center, z).add([0, size.y * (.5 - .19)]), z);
+  if (animate) map.flyTo(centre, z, { duration: .6 });
+  else map.setView(centre, z, { animate: false });
 }
+function restoreView() {
+  if (!focused) return;
+  focused = false;
+  map.flyTo(userView.center, userView.zoom, { duration: .5 });
+}
+function flyHome(center, zoom) { focused = false; map.flyTo(center, zoom, { duration: .6 }); }
 
 // which lot the map should centre on for each screen
 const FOCUS = {
@@ -250,51 +293,6 @@ const FOCUS = {
   session: () => state.session?.lotId,
   exit: () => state.session?.lotId,
 };
-
-function initMapGestures() {
-  const map = $('#map');
-  const pts = new Map();
-  let last = null, moved = 0, pinch = 0;
-  map.addEventListener('pointerdown', (e) => {
-    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    last = { x: e.clientX, y: e.clientY }; moved = 0;
-    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
-  });
-  map.addEventListener('pointermove', (e) => {
-    if (!pts.has(e.pointerId)) return;
-    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    const r = map.getBoundingClientRect();
-    if (pts.size === 2) {
-      const [a, b] = [...pts.values()];
-      const d = Math.hypot(a.x - b.x, a.y - b.y);
-      if (pinch) zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, d / pinch, false);
-      pinch = d; moved = 99;
-      return;
-    }
-    const dx = e.clientX - last.x, dy = e.clientY - last.y;
-    moved += Math.abs(dx) + Math.abs(dy);
-    last = { x: e.clientX, y: e.clientY };
-    if (moved > 6) {
-      if (!map.classList.contains('dragging')) { map.classList.add('dragging'); map.setPointerCapture(e.pointerId); }
-      setView({ x: view.x + dx, y: view.y + dy }, false);
-      userView = { ...view };
-    }
-  });
-  const end = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; map.classList.remove('dragging'); };
-  map.addEventListener('pointerup', end);
-  map.addEventListener('pointercancel', end);
-  // a drag must not count as a tap on a marker
-  map.addEventListener('click', (e) => { if (moved > 6) { e.stopPropagation(); e.preventDefault(); } }, true);
-  map.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const r = map.getBoundingClientRect();
-    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.25 : 0.8);
-  }, { passive: false });
-  map.addEventListener('dblclick', (e) => {
-    const r = map.getBoundingClientRect();
-    zoomAt(e.clientX - r.left, e.clientY - r.top, view.s >= ZOOMED_AT ? 0.4 : 2);
-  });
-}
 
 // ---------- router ----------
 const TABS = ['map', 'scan', 'explore'];
@@ -321,7 +319,7 @@ function show(name) {
   ui.focusLot = focusId || null;
   if (focusId) focusLot(focusId);
   else if (name === 'map' && ui.selectedLot) focusLot(ui.selectedLot);
-  else setView(userView);
+  else restoreView();
   renderMap();
 }
 function go(name, { replace = false } = {}) { if (replace) stack.pop(); stack.push(name); show(name); }
@@ -337,19 +335,24 @@ function goFrom(root, name) { stack = [root, name]; show(name); }
 
 // ---------- map ----------
 function renderMap() {
-  $('#markers').innerHTML = LOTS.map((lot) => {
+  LOTS.forEach((lot) => {
     const s = stats(lot);
-    const cls = ['marker', `lvl-${s.lvl}`];
-    if (ui.selectedLot === lot.id || ui.focusLot === lot.id) cls.push('selected');
-    if (state.reservation?.lotId === lot.id) cls.push('reserved');
-    return `<button class="${cls.join(' ')}" style="left:${lot.x}%;top:${lot.y}%;--w:${lot.w}px;--h:${lot.h}px;--rot:${lot.rot}deg"
-      data-action="openLot" data-id="${lot.id}" aria-label="${esc(lot.name)}: ${s.left} spaces left, ${STATUS_LABEL[s.status]}">
-      <b>${s.left || 'Full'}</b></button>`;
-  }).join('');
+    const { poly, label } = lotLayers[lot.id];
+    const selected = ui.selectedLot === lot.id || ui.focusLot === lot.id;
+    for (const el of [poly.getElement(), label.getElement()]) {
+      ['high', 'mid', 'low', 'full'].forEach((l) => el.classList.toggle(`lvl-${l}`, l === s.lvl));
+      el.classList.toggle('selected', selected);
+      el.classList.toggle('reserved', state.reservation?.lotId === lot.id);
+    }
+    if (selected) poly.bringToFront();
+    const el = label.getElement();
+    el.firstChild.textContent = s.left || 'Full';
+    el.setAttribute('aria-label', `${lot.name}: ${s.left} spaces left, ${STATUS_LABEL[s.status]}`);
+  });
   renderBanners();
 }
 
-// w reserved.png: "SM Basement 1 Parking | # 206" pill under the search bar
+// w reserved.png: "<lot name> | #206" pill under the search bar
 function renderBanners() {
   let html = '';
   if (state.reservation) {
@@ -381,7 +384,7 @@ function closeSheet() {
   if (!ui.selectedLot) return;
   ui.selectedLot = null;
   $('#app').classList.remove('sheet-open');
-  if (current === 'map') setView(userView);
+  if (current === 'map') restoreView();
   renderMap();
 }
 
@@ -394,7 +397,7 @@ function renderSheet() {
   const s = stats(lot);
   const fav = state.favorites.includes(lot.id);
   const mine = state.reservation?.lotId === lot.id;
-  const alternative = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0).sort((a, b) => parseInt(a.distance) - parseInt(b.distance))[0];
+  const alternative = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0).sort((a, b) => a.metres - b.metres)[0];
 
   let cta;
   if (mine) cta = `<button class="btn primary lg block" data-action="go" data-to="resqr">View reservation</button>`;
@@ -409,6 +412,7 @@ function renderSheet() {
       <button class="fav-btn ${fav ? 'on' : ''}" data-action="fav" data-id="${lot.id}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favorites">${icon('i-heart')}</button>
     </div>
     <p class="lot-sub"><b>${s.left ? `${s.left} slots left` : 'Full'}</b> · ${s.parked} parked + ${s.reserved} reserved / ${lot.capacity} · ${lot.distance}</p>
+    <p class="lot-addr" title="${esc(lot.address)}">${icon('i-pin')}<span>${esc(lot.address)}</span></p>
 
     ${lotPhoto(lot)}
 
@@ -463,13 +467,13 @@ function renderSearch(q = '') {
   };
   let html;
   if (query) {
-    const hits = LOTS.filter((l) => `${l.name} ${l.area}`.toLowerCase().includes(query));
-    html = `<h4>Parking near “${esc(q.trim())}”</h4>` + (hits.length ? hits.map((l) => lotRow(l)).join('') : `<p class="empty" style="padding:8px 16px">No lots found. Try “SM”, “Plaza” or “Tower”.</p>`);
+    const hits = LOTS.filter((l) => `${l.name} ${l.area} ${l.address}`.toLowerCase().includes(query));
+    html = `<h4>Parking near “${esc(q.trim())}”</h4>` + (hits.length ? hits.map((l) => lotRow(l)).join('') : `<p class="empty" style="padding:8px 16px">No lots found. Try “Megamall”, “Podium” or “EDSA”.</p>`);
   } else {
     html = `<h4>Saved places</h4>` + SAVED_PLACES.map((p) => `<button class="row" data-action="pickLot" data-id="${p.lotId}">${icon(p.icon)}
       <span>${p.name}<small>${p.sub} · nearest: ${esc(lotById(p.lotId).name)}</small></span>${icon('i-chevron', 'sm')}</button>`).join('')
       + `<h4>Recent searches</h4>` + (state.recents.length ? state.recents.map((id) => lotRow(lotById(id), 'i-history')).join('') : `<p class="empty" style="padding:8px 16px">Nothing yet.</p>`)
-      + `<h4>Nearby</h4>` + [...LOTS].sort((a, b) => parseInt(a.distance) - parseInt(b.distance)).slice(0, 3).map((l) => lotRow(l)).join('');
+      + `<h4>Nearby</h4>` + [...LOTS].sort((a, b) => a.metres - b.metres).slice(0, 3).map((l) => lotRow(l)).join('');
   }
   $('#searchResults').innerHTML = html;
   $('#searchPanel').hidden = false;
@@ -493,7 +497,7 @@ function renderReserve() {
   $('#reserveBody').innerHTML = `
     <div class="card">
       <h3>${esc(lot.name)}</h3>
-      <p class="caption" style="margin:0 0 8px">${esc(lot.area)} · ${lot.distance} · ${peso(lot.rate)}/hr</p>
+      <p class="caption" style="margin:0 0 8px">${esc(lot.address)} · ${lot.distance} · ${peso(lot.rate)}/hr</p>
       ${statusChip(s)} <span class="caption">${s.left} spaces left right now</span>
     </div>
 
@@ -698,7 +702,7 @@ function renderWalkin() {
   const options = LOTS.map((l) => `<option value="${l.id}" ${l.id === lot.id ? 'selected' : ''}>${esc(l.name)}</option>`).join('');
   let body;
   if (s.status === 'full') {
-    const alts = LOTS.filter((l) => stats(l).left > 0).sort((a, b) => parseInt(a.distance) - parseInt(b.distance)).slice(0, 3);
+    const alts = LOTS.filter((l) => stats(l).left > 0).sort((a, b) => a.metres - b.metres).slice(0, 3);
     body = `<div class="center">
         <div class="big-icon full">${icon('i-warn')}</div>
         <h2 style="margin:0 0 8px">${esc(lot.name)} is full</h2>
@@ -867,7 +871,7 @@ function lotCard(lot) {
 }
 
 function renderExplore() {
-  const near = [...LOTS].sort((a, b) => parseInt(a.distance) - parseInt(b.distance));
+  const near = [...LOTS].sort((a, b) => a.metres - b.metres);
   const favs = LOTS.filter((l) => state.favorites.includes(l.id));
   let html = '';
   if (state.session) {
@@ -1004,16 +1008,14 @@ const ACTIONS = {
   pickLot: (d) => pickLot(d.id),
   expand: (d, el) => el.closest('.panel').classList.toggle('expanded'),
   locate: () => {
-    const { W, H } = mapSize();
-    setView({ s: 1.3, x: W * .5 - 1.3 * .49 * W, y: H * .5 - 1.3 * .5 * H }); userView = { ...view };
+    flyHome(ME, 17);
     toast('Centered on your approximate location (mock, no real GPS).');
   },
   demoZoom: () => {
     if (current !== 'map') tab('map');
     closeSheet();
-    const { W, H } = mapSize();
-    setView(view.s >= ZOOMED_AT ? { s: 1, x: 0, y: 0 } : { s: 2.2, x: W * .5 - 2.2 * .42 * W, y: H * .45 - 2.2 * .36 * H });
-    userView = { ...view };
+    if (map.getZoom() >= ZOOMED_AT) flyHome(HOME_VIEW.center, HOME_VIEW.zoom);
+    else flyHome([14.5852, 121.0575], 17.5);
   },
   voice: () => toast('Voice search is not part of the prototype.'),
   fav: (d) => {
@@ -1153,9 +1155,7 @@ $('#otpBoxes').addEventListener('keydown', (e) => {
 });
 
 // ---------- boot ----------
-drawMapArt();
-initMapGestures();
-addEventListener('resize', () => { if (ui.focusLot || ui.selectedLot) focusLot(ui.focusLot || ui.selectedLot); else setView(view, false); });
+initMap();
 applyTheme();
 applyOffline();
 renderDrawer();

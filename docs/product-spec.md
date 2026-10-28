@@ -10,7 +10,7 @@ decisions.
 | In scope (mock/draw) | Out of scope (do not build) |
 |---|---|
 | All consumer golden paths, clickable end to end | Real backend, authentication, database |
-| Static styled campus map with heatmap pins / clusters | Live map SDK, real GPS |
+| OpenStreetMap base map with mock lots drawn on real building outlines | Live occupancy feeds, real GPS, routing |
 | QR screens with a placeholder QR image | Real QR generation / validation |
 | Universal QR Ph payment screen & NFC integration (visual only) | Real payment, settlement, refunds |
 | Static "usually fills up" trends chart | Real historical data / analytics |
@@ -37,7 +37,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 ### Landing / map
 | Screen | Purpose |
 |---|---|
-| Map home | Static campus map, teal/heatmap lot markers, search bar, locate-me control, saved/preset locations, and recent searches |
+| Map home | OpenStreetMap view of Ortigas Center, teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
 | Search results | List and map pins for nearby lots ranked by proximity and availability |
 | Lot detail sheet | Lot photo, name, aggregate availability, accessible/EV/covered attributes, hourly rate, and trends |

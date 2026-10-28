@@ -236,39 +236,49 @@ button.row:hover { background: var(--surface-2); }
 :root[data-theme="dark"] .chip.filling { background: #3a2a0c; color: #fcd34d; }
 :root[data-theme="dark"] .chip.full { background: #401414; color: #fca5a5; }
 
-/* ---------- map ---------- */
-.map { position: absolute; inset: 0; overflow: hidden; background: var(--map-bg); touch-action: none; cursor: grab; }
-.map.dragging { cursor: grabbing; }
-.map-layer { position: absolute; inset: 0; transform-origin: 0 0; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-.map-layer.no-anim { transition: none; }
-.map-art { position: absolute; left: -50%; top: -50%; width: 200%; height: 200%; }
-.map-art .block { fill: var(--map-block); }
-.map-art .road { stroke: var(--map-road); fill: none; stroke-linecap: round; stroke-linejoin: round; }
-
-.me-dot {
-  position: absolute; left: 49%; top: 50%;
-  width: 11px; height: 11px; border-radius: 50%;
-  background: #3b8fd9; border: 2px solid #fff;
-  transform: translate(-50%, -50%) scale(calc(1 / var(--s, 1)));
+/* ---------- map (OpenStreetMap via Leaflet) ---------- */
+.map { position: absolute; inset: 0; overflow: hidden; z-index: 0; }  /* own stacking context: Leaflet panes use z-index 400+ */
+.map.leaflet-container { background: var(--map-bg); font-family: var(--font); }
+/* grey the OSM tiles down to the mockups' pale map; dark mode inverts them to deep teal */
+.osm-tiles { filter: grayscale(1) contrast(.82) brightness(1.08); }
+:root[data-theme="dark"] .osm-tiles { filter: grayscale(1) invert(1) contrast(.78) brightness(.62) sepia(.5) hue-rotate(125deg) saturate(1.6); }
+.map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--text-secondary);
+  font-size: 10px; line-height: 15px; padding: 0 6px; border-top-left-radius: 6px;
 }
+.map .leaflet-control-attribution a { color: inherit; }
 
-.marker {
-  position: absolute; width: var(--w); height: var(--h); padding: 0; border: 0; border-radius: 1.5px;
-  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
-  background: var(--lot-high); color: #fff;
-  display: grid; place-items: center;
-  font: 800 12px/1 var(--font); letter-spacing: -.02em;
-  transition: outline-color .2s, background .2s;
+.me-dot { box-sizing: border-box; border-radius: 50%; background: #3b8fd9; border: 2.5px solid #fff; box-shadow: 0 0 0 6px rgba(59, 143, 217, .18); }
+
+/* lots drawn on their real OSM outlines; teal strength = how many spaces are left (mockup) */
+.lot-shape { fill: var(--lot-high); fill-opacity: .9; stroke: var(--lot-high); stroke-width: 1.5; stroke-linejoin: round; transition: fill .2s, stroke .2s; }
+.lot-shape.lvl-mid { fill: var(--lot-mid); stroke: var(--lot-mid); }
+.lot-shape.lvl-low { fill: var(--lot-low); stroke: var(--lot-low-ink); stroke-opacity: .35; }
+.lot-shape.lvl-full { fill: var(--lot-full); stroke: var(--lot-full-ink); stroke-opacity: .35; }
+.lot-shape.selected { fill: var(--lot-high); stroke: var(--lot-selected-ring); stroke-width: 4; stroke-opacity: 1; }
+
+.lot-label { overflow: visible; }
+.lot-label b {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
+  font: 800 13px/1 var(--font); letter-spacing: -.02em; color: #fff; white-space: nowrap;
+  opacity: 0; transition: opacity .25s; pointer-events: none;
 }
-.marker b { transform: rotate(calc(-1 * var(--rot, 0deg))); opacity: 0; transition: opacity .25s; }
-.map.zoomed .marker b, .marker.selected b { opacity: 1; }
-.marker.lvl-high { background: var(--lot-high); }
-.marker.lvl-mid { background: var(--lot-mid); }
-.marker.lvl-low { background: var(--lot-low); color: var(--lot-low-ink); }
-.marker.lvl-full { background: var(--lot-full); color: var(--lot-full-ink); font-size: 7px; text-transform: uppercase; }
-.marker.selected { background: var(--lot-high); color: #fff; outline: 3px solid var(--lot-selected-ring); z-index: 2; }
-.marker.reserved::after {
-  content: ""; position: absolute; top: -3px; right: -3px; width: 6px; height: 6px; border-radius: 50%;
+.map.zoomed .lot-label b, .lot-label.selected b { opacity: 1; pointer-events: auto; }
+.lot-label.lvl-low b { color: var(--lot-low-ink); }
+.lot-label.lvl-full b { color: var(--lot-full-ink); font-size: 9px; text-transform: uppercase; }
+.lot-label.selected b { color: #fff; font-size: 15px; }
+/* zoomed out across Metro Manila: each lot becomes a small pin coloured by availability */
+.map.far .lot-shape { stroke-width: 0; }
+.map.far .lot-label::before {
+  content: ""; position: absolute; left: -8px; top: -8px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--lot-high); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); box-sizing: border-box; cursor: pointer;
+}
+.map.far .lot-label.lvl-mid::before { background: var(--lot-mid); }
+.map.far .lot-label.lvl-low::before { background: var(--lot-low); }
+.map.far .lot-label.lvl-full::before { background: var(--lot-full); }
+.map.far .lot-label b { opacity: 0; pointer-events: none; }
+.lot-label.reserved::after {
+  content: ""; position: absolute; left: 10px; top: -16px; width: 7px; height: 7px; border-radius: 50%;
   background: #fff; border: 1.5px solid var(--accent-700);
 }
 
@@ -328,8 +338,11 @@ button.row:hover { background: var(--surface-2); }
 .fav-btn.on .ic { fill: currentColor; }
 .lot-sub { margin: -2px 0 12px; font-size: 14px; line-height: 20px; color: var(--text-secondary); }
 .lot-sub b { color: var(--accent-text); }
+.lot-addr { display: flex; gap: 6px; align-items: center; margin: -6px 0 12px; font-size: 13px; line-height: 18px; color: var(--text-secondary); }
+.lot-addr span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lot-addr .ic { width: 16px; height: 16px; flex: none; }
 
-.photo { width: 100%; height: 172px; display: block; border-radius: 2px; margin-bottom: 10px; }
+.photo { width: 100%; height: 140px; display: block; border-radius: 2px; margin-bottom: 10px; }
 
 .attrs { display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 500; margin-bottom: 10px; white-space: nowrap; }
 .attr { display: inline-flex; align-items: center; gap: 3px; }

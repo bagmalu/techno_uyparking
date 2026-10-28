@@ -33,10 +33,11 @@ beside it. On a phone-sized screen it fills the screen, and the controls panel i
 Each of these flows follows `docs/user-flowchart.png`.
 
 ### 1. Reserve a space
-1. On the **Map** tab, tap a lot marker. Solid teal means plenty of space, pale teal means
-   nearly full and grey means full. Zoom in to see the free-space count on every marker.
-   Drag to pan; scroll, double-click or pinch to zoom; ⌖ recentres the map.
-2. The details sheet shows free spaces, the *parked + reserved* split, features
+1. On the **Map** tab, tap a lot. Lots are the teal shapes drawn on real buildings around
+   SM Megamall in Ortigas Center. Solid teal means plenty of space, pale teal means nearly
+   full and grey means full. Zoom in to see the free-space count on every lot.
+   Drag to pan; scroll, double-click or pinch to zoom; ⌖ recentres on your (mock) location.
+2. The details sheet shows free spaces, the *parked + reserved* split, the address, features
    (accessible, EV, covered), the hourly rate and a **trends** chart. Tap any bar to see
    that hour's typical availability, or change the day.
 3. Tap **Reserve**, review the ₱50 fee (₱35 is credited at exit), then continue.
@@ -49,7 +50,7 @@ Each of these flows follows `docs/user-flowchart.png`.
 
 ### 2. Walk in without a reservation
 **Scan** tab → **Walk in** → choose the lot you're at → **Generate entry QR** → **Scan in
-at the gate**. Choosing a full lot (for example *Annex Carpark*) shows the "lot full" state
+at the gate**. Choosing a full lot (for example *Megamall Building C Carpark*) shows the "lot full" state
 with nearby alternatives.
 
 ### 3. Leave and pay
@@ -88,6 +89,16 @@ toggle offline or dark mode, and **reset all demo data**.
 
 - **The look follows `docs/mockup/`.** The map stays on screen at all times, and every
   screen opens as a rounded sheet over it, like the lot-detail sheet in `space selected.png`.
+- **The map is real OpenStreetMap, the parking is not.** Map tiles load from
+  `tile.openstreetmap.org` when served over http (Option B), or from the OSM community
+  server `tile.openstreetmap.de` when you open the file directly, because openstreetmap.org
+  blocks pages opened from disk. Either way you need an internet connection; without one, the lots still
+  appear on a blank background. The six lots are real places (SM Megamall Buildings A and C,
+  its open lot, The Podium, Shangri-La Plaza and Robinsons Galleria), drawn on their
+  OpenStreetMap outlines with their street addresses. Their counts, rates and features are
+  made up, and none of these malls is involved with the project.
+- **"You are here" is fixed** on Doña Julia Vargas Ave. beside SM Megamall. Distances are
+  straight-line from that point.
 
 - **Your progress is saved in this browser** (`localStorage`), including reservations,
   favourites, recents and plate/phone, just as the real app would keep a local cache.
@@ -98,8 +109,8 @@ toggle offline or dark mode, and **reset all demo data**.
 - **Users never pick a slot.** The floor and slot are assigned randomly when you scan in,
   matching the "automatic assignment" design decision.
 - **QR codes are placeholders.** They look like QR codes but can't be scanned.
-- Lot names, photos (illustrations), counts and owner figures are all mock data, defined
-  at the top of `prototype/app.js`.
+- Lot photos (illustrations), counts and owner figures are mock data, defined at the top of
+  `prototype/app.js` together with each lot's address and map outline.
 
 ## Project layout
 
@@ -116,7 +127,10 @@ prototype/
   index.html           ← all screens
   styles.css           ← design tokens and components
   app.js               ← screen router, 15-min countdown, mock data and flows
+  vendor/leaflet/      ← Leaflet 1.9.4 map library (BSD-2), bundled so no CDN is needed
 ```
+
+Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).
 
 ## Branding
 

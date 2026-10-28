@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -62,13 +63,7 @@
       <main class="screens">
 
         <!-- ===== Persistent map shell: every screen is a sheet over this map ===== -->
-        <div class="map" id="map">
-          <div class="map-layer" id="mapLayer">
-            <svg class="map-art" id="mapArt" viewBox="0 0 800 1600" preserveAspectRatio="none" aria-hidden="true"></svg>
-            <div id="markers"></div>
-            <span class="me-dot" title="Approximate location (mock)"></span>
-          </div>
-        </div>
+        <div class="map" id="map" aria-label="Map of parking near you"></div>
 
         <div class="map-top">
           <button class="fab" id="menuFab" data-action="openDrawer" aria-label="Open menu"><svg class="ic"><use href="#i-menu"/></svg></button>
@@ -360,6 +355,7 @@
   </aside>
 </div>
 
+<script src="vendor/leaflet/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
