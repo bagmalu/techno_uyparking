@@ -33,9 +33,10 @@ beside it. On a phone-sized screen it fills the screen, and the controls panel i
 Each of these flows follows `docs/user-flowchart.png`.
 
 ### 1. Reserve a space
-1. On the **Map** tab, tap a lot. Lots are the teal shapes drawn on real buildings around
-   SM Megamall in Ortigas Center. Solid teal means plenty of space, pale teal means nearly
-   full and grey means full. Zoom in to see the free-space count on every lot.
+1. On the **Map** tab, tap a lot. Lots are the teal shapes drawn on real buildings; the map
+   opens on SM Megamall in Ortigas Center, and zooming out shows 20 lots across Metro Manila
+   as small pins. Solid teal means plenty of space, pale teal means nearly full and grey
+   means full. Zoom in to see the free-space count on every lot.
    Drag to pan; scroll, double-click or pinch to zoom; ⌖ recentres on your (mock) location.
 2. The details sheet shows free spaces, the *parked + reserved* split, the address, features
    (accessible, EV, covered), the hourly rate and a **trends** chart. Tap any bar to see
@@ -99,9 +100,15 @@ scans and lot counts. Tapping a gate QR code stands in for the gate's scanner re
   `tile.openstreetmap.org` when served over http (Option B), or from the OSM community
   server `tile.openstreetmap.de` when you open the file directly, because openstreetmap.org
   blocks pages opened from disk. Either way you need an internet connection; without one, the lots still
-  appear on a blank background. The six lots are real places (SM Megamall Buildings A and C,
-  its open lot, The Podium, Shangri-La Plaza and Robinsons Galleria), drawn on their
-  OpenStreetMap outlines with their street addresses. Their counts, rates and features are
+  appear on a blank background. The 20 lots are real places, drawn on their OpenStreetMap
+  outlines with their street addresses:
+  - **Ortigas Center:** SM Megamall Buildings A and C and its open lot, The Podium,
+    Shangri-La Plaza and Robinsons Galleria.
+  - **Quezon City:** SM North EDSA, TriNoma, Gateway Mall in Cubao and Eastwood Mall.
+  - **Makati:** Greenbelt 5, Glorietta and Power Plant Mall.
+  - **BGC, Taguig:** SM Aura, Market! Market! (full) and Uptown Mall.
+  - **Elsewhere:** SM Mall of Asia (Pasay), Greenhills (San Juan), Robinsons Place
+    Manila (Ermita) and Alabang Town Center (Muntinlupa). Their counts, rates and features are
   made up, and none of these malls is involved with the project.
 - **"You are here" is fixed** on Doña Julia Vargas Ave. beside SM Megamall. Distances are
   straight-line from that point.

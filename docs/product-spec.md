@@ -37,7 +37,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 ### Landing / map
 | Screen | Purpose |
 |---|---|
-| Map home | OpenStreetMap view of Ortigas Center, teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
+| Map home | OpenStreetMap view of Metro Manila (opening on Ortigas Center), teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
 | Search results | List and map pins for nearby lots ranked by proximity and availability |
 | Lot detail sheet | Lot photo, name, aggregate availability, accessible/EV/covered attributes, hourly rate, and trends |
