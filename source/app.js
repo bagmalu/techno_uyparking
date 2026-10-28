@@ -4,7 +4,7 @@
 
 // ---------- locked product constants (see CLAUDE.md) ----------
 const GRACE_MS = 75 * 60 * 1000;   // reservation grace period: 1 hour 15 minutes
-const GRACE_TEXT = '1 hour 15 minutes';
+const GRACE_TEXT = minutesText(GRACE_MS / 60000);
 const RESERVATION_FEE = 50;        // paid up front
 const FEE_CREDIT = 35;             // deducted from the final parking fee
 const DEMO_MINUTES = 135;          // simulated parking duration at scan-out
@@ -263,6 +263,11 @@ const lotById = (id) => LOTS.find((l) => l.id === id);
 const peso = (n) => `₱${n.toLocaleString('en-PH')}`;
 const icon = (id, cls = '') => `<svg class="ic ${cls}"><use href="#${id}"/></svg>`;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// 75 → "1 hour 15 minutes" (function declaration, so the constants above can use it)
+function minutesText(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return [h && `${h} hour${h > 1 ? 's' : ''}`, m && `${m} minute${m > 1 ? 's' : ''}`].filter(Boolean).join(' ');
+}
 const fmtTime = (ts) => new Date(ts).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
 const today = () => new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
 const hourLabel = (i) => { const h = 6 + i; return `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`; };
@@ -806,13 +811,16 @@ function tick() {
   if (!r) return;
   const left = r.expiresAt - Date.now();
   if (left <= 0) { expireReservation(); return; }
-  const h = Math.floor(left / 3600000);
-  const mm = String(Math.floor((left % 3600000) / 60000)).padStart(2, '0');
-  const ss = String(Math.floor((left % 60000) / 1000)).padStart(2, '0');
+  // round up, so a new hold reads 1:15:00 and 00:00 only appears as it expires
+  const secs = Math.ceil(left / 1000);
+  const h = Math.floor(secs / 3600);
+  const mm = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
+  const ss = String(secs % 60).padStart(2, '0');
   const text = h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  const total = r.expiresAt - r.createdAt || GRACE_MS;   // this hold's own length
   const warn = left < 2 * 60 * 1000;
   $$('[data-countdown]').forEach((el) => { el.textContent = text; el.classList.toggle('warn', warn); });
-  $$('[data-progress]').forEach((el) => { el.classList.toggle('warn', warn); el.firstElementChild.style.width = `${(left / GRACE_MS) * 100}%`; });
+  $$('[data-progress]').forEach((el) => { el.classList.toggle('warn', warn); el.firstElementChild.style.width = `${(left / total) * 100}%`; });
   $$('[data-banner="res"]').forEach((el) => el.classList.toggle('warn', warn));
   $$('[data-banner-left]').forEach((el) => { el.hidden = !warn; });
 }
@@ -998,7 +1006,7 @@ function renderSession() {
       <h3>${esc(lot.name)}</h3>
       <div class="kv"><span>Floor · slot</span><span>${esc(s.floor)} · ${s.slot}</span></div>
       <div class="kv"><span>Entered</span><span>${fmtTime(s.enteredAt)}</span></div>
-      <div class="kv"><span>Duration</span><span>2h 15m</span></div>
+      <div class="kv"><span>Duration</span><span>${Math.floor(DEMO_MINUTES / 60)}h ${DEMO_MINUTES % 60}m</span></div>
       <div class="kv"><span>Rate</span><span>${peso(lot.rate)}/hr × ${f.hours} hr</span></div>
       <div class="kv"><span>Parking fee</span><span>${peso(f.fee)}</span></div>
       ${s.reserved ? `<div class="kv credit"><span>Reservation credit (${esc(s.ref)})</span><span>−${peso(f.credit)}</span></div>` : ''}
@@ -1278,6 +1286,7 @@ const ACTIONS = {
   demoTime: (d) => {
     if (!state.reservation) { toast('Make a reservation first (flow 1).'); return; }
     state.reservation.expiresAt = d.mode === 'expire' ? Date.now() : Date.now() + 2 * 60 * 1000 - 5000;
+    state.reservation.createdAt = state.reservation.expiresAt - GRACE_MS;   // keep the bar's full length
     save(); tick();
   },
 };
