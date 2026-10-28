@@ -300,8 +300,39 @@ function qrSvg(seed, cls = 'qr') {
 // A QR the gate scanner reads. Tapping it stands in for the scanner reading it.
 const gateQr = (svg, attrs) => `<button class="qr-tap" ${attrs} aria-label="QR code for the gate scanner">${svg}</button>`;
 
+// Lot photos from Wikimedia Commons, cropped to img/<lot id>.jpg (credits also in README.md)
+const PHOTOS = {
+  'sm-b1': { by: 'Manager27', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:SM_Megamall.jpg' },
+  'open-b': { by: 'Ganmatthew', license: 'CC BY 4.0', page: 'https://commons.wikimedia.org/wiki/File:SM_Megamall_Side_View_6.jpg' },
+  'north': { by: 'Ganmatthew', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Podium_Mall_ADB_Avenue_1.jpg' },
+  'annex': { by: 'Ganmatthew', license: 'CC BY 4.0', page: 'https://commons.wikimedia.org/wiki/File:SM_Megamall_Side_View_8.jpg' },
+  'riverside': { by: 'Jhnry14', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:SHANGRI_LA_MALL_PLAZA.jpg' },
+  'plaza': { by: 'Ralff Nestor Nacor', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Robinsons_Galleria,_Ortigas_Center,_Apr_2025.jpg' },
+  'moa': { by: 'Jamesjames1024', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:SM_Mall_of_Asia_Picture.jpg' },
+  'sm-north': { by: 'Ralff Nestor Nacor', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:SM_City_North_EDSA,_Q.C.,_Jun_2026.jpg' },
+  'trinoma': { by: 'Judgefloro', license: 'Public domain', page: 'https://commons.wikimedia.org/wiki/File:09906jfBarangay_Bagong_Pag-asa_North_Avenue_SM_TriNoma_Quezon_Cityfvf_08.jpg' },
+  'gateway': { by: 'Judgefloro', license: 'CC0', page: 'https://commons.wikimedia.org/wiki/File:09520jf_Gateway_Mall_Araneta_Center_Cubao_fvf_09.jpg' },
+  'eastwood': { by: 'Wide Awake!', license: 'CC BY 4.0', page: 'https://commons.wikimedia.org/wiki/File:Interior_of_the_Eastwood_Mall_(01)_(2026-01-16).jpg' },
+  'greenbelt': { by: 'Ralff Nestor Nacor', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Greenbelt_5_Interior,_Makati,_Jul_2024.jpg' },
+  'glorietta': { by: 'ScarletViolet', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Glorietta_Uniqlo.jpg' },
+  'powerplant': { by: 'RFNirmala', license: 'CC0', page: 'https://commons.wikimedia.org/wiki/File:Rockwell_Power_Plant_Mall_C_(Dec_6,_2024).jpg' },
+  'sm-aura': { by: 'Ralff Nestor Nacor', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:SM_Aura,_BGC,_Taguig,_Aug_2026.jpg' },
+  'market': { by: 'Idawriter', license: 'CC BY-SA 3.0', page: 'https://commons.wikimedia.org/wiki/File:Fort_Bonifacio,_Taguig,_Metro_Manila,_Philippines_-_panoramio_(35).jpg' },
+  'uptown': { by: 'Lawrence Ruiz', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Uptown_Mall.jpg' },
+  'greenhills': { by: 'Badudoy', license: 'CC BY 3.0', page: 'https://commons.wikimedia.org/wiki/File:Greenhills_Shopping_Center.jpg' },
+  'rob-manila': { by: 'Ralff Nestor Nacor', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Robinsons_Place_Manila,_May_2025_(1).jpg' },
+  'atc': { by: 'Judgefloro', license: 'CC0', page: 'https://commons.wikimedia.org/wiki/File:5749Ayala_Alabang_Landmarks_06.jpg' },
+};
+
 let photoN = 0;
 function lotPhoto(lot, cls = 'photo') {
+  const p = PHOTOS[lot.id];
+  if (p && cls === 'photo') {
+    return `<figure class="photo-fig"><img class="photo" src="img/${lot.id}.jpg" alt="${esc(lot.name)}">
+      <figcaption>Photo: <a href="${p.page}" target="_blank" rel="noopener">${esc(p.by)}</a>, ${esc(p.license)}</figcaption></figure>`;
+  }
+  if (p) return `<img class="${cls}" src="img/${lot.id}.jpg" alt="" loading="lazy">`;
+  // no photo yet: drawn stand-in
   const id = `sky${photoN++}`;
   const floors = [0, 1, 2, 3].map((i) => `<rect x="60" y="${64 + i * 19}" width="230" height="5" fill="rgba(0,0,0,.16)"/>`).join('');
   return `<svg class="${cls}" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Photo of ${esc(lot.name)}">

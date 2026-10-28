@@ -122,8 +122,9 @@ scans and lot counts. Tapping a gate QR code stands in for the gate's scanner re
 - **Users never pick a slot.** The floor and slot are assigned randomly when you scan in,
   matching the "automatic assignment" design decision.
 - **QR codes are placeholders.** They look like QR codes but can't be scanned.
-- Lot photos (illustrations), counts and owner figures are mock data, defined at the top of
-  `source/app.js` together with each lot's address and map outline.
+- Lot counts, rates and owner figures are mock data, defined at the top of `source/app.js`
+  together with each lot's address, map outline and photo credit. The photos are real (see
+  **Photo credits** below).
 
 ## Project layout
 
@@ -140,10 +141,40 @@ source/
   index.html           ← all screens
   styles.css           ← design tokens and components
   app.js               ← screen router, 15-min countdown, mock data and flows
+  img/                 ← lot photos from Wikimedia Commons (see Photo credits)
   vendor/leaflet/      ← Leaflet 1.9.4 map library (BSD-2), bundled so no CDN is needed
 ```
 
 Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).
+
+## Photo credits
+
+Lot photos come from [Wikimedia Commons](https://commons.wikimedia.org). Each has been cropped
+and resized to `source/img/<lot id>.jpg`, and the lot sheet shows its credit. Cropped versions of
+CC BY-SA photos are shared under the same licence as the original.
+
+| Lot | Original file | Photographer | Licence |
+|---|---|---|---|
+| SM Megamall Basement 1 | [SM Megamall.jpg](https://commons.wikimedia.org/wiki/File:SM_Megamall.jpg) | Manager27 | CC BY-SA 4.0 |
+| SM Megamall Open Parking | [SM Megamall Side View 6.jpg](https://commons.wikimedia.org/wiki/File:SM_Megamall_Side_View_6.jpg) | Ganmatthew | CC BY 4.0 |
+| The Podium Parking | [Podium Mall ADB Avenue 1.jpg](https://commons.wikimedia.org/wiki/File:Podium_Mall_ADB_Avenue_1.jpg) | Ganmatthew | CC BY-SA 4.0 |
+| Megamall Building C Carpark | [SM Megamall Side View 8.jpg](https://commons.wikimedia.org/wiki/File:SM_Megamall_Side_View_8.jpg) | Ganmatthew | CC BY 4.0 |
+| Shangri-La Plaza Parking | [SHANGRI LA MALL PLAZA.jpg](https://commons.wikimedia.org/wiki/File:SHANGRI_LA_MALL_PLAZA.jpg) | Jhnry14 | CC BY-SA 4.0 |
+| Robinsons Galleria Parking | [Robinsons Galleria, Ortigas Center, Apr 2025.jpg](https://commons.wikimedia.org/wiki/File:Robinsons_Galleria,_Ortigas_Center,_Apr_2025.jpg) | Ralff Nestor Nacor | CC BY-SA 4.0 |
+| SM Mall of Asia Parking | [SM Mall of Asia Picture.jpg](https://commons.wikimedia.org/wiki/File:SM_Mall_of_Asia_Picture.jpg) | Jamesjames1024 | CC BY-SA 4.0 |
+| SM North EDSA Parking | [SM City North EDSA, Q.C., Jun 2026.jpg](https://commons.wikimedia.org/wiki/File:SM_City_North_EDSA,_Q.C.,_Jun_2026.jpg) | Ralff Nestor Nacor | CC BY-SA 4.0 |
+| TriNoma Parking | [09906jfBarangay Bagong Pag-asa North Avenue SM TriNoma Quezon Cityfvf 08.jpg](https://commons.wikimedia.org/wiki/File:09906jfBarangay_Bagong_Pag-asa_North_Avenue_SM_TriNoma_Quezon_Cityfvf_08.jpg) | Judgefloro | Public domain |
+| Gateway Mall Parking | [09520jf Gateway Mall Araneta Center Cubao fvf 09.jpg](https://commons.wikimedia.org/wiki/File:09520jf_Gateway_Mall_Araneta_Center_Cubao_fvf_09.jpg) | Judgefloro | CC0 |
+| Eastwood Mall Parking | [Interior of the Eastwood Mall (01) (2026-01-16).jpg](https://commons.wikimedia.org/wiki/File:Interior_of_the_Eastwood_Mall_%2801%29_%282026-01-16%29.jpg) | Wide Awake! | CC BY 4.0 |
+| Greenbelt 5 Parking | [Greenbelt 5 Interior, Makati, Jul 2024.jpg](https://commons.wikimedia.org/wiki/File:Greenbelt_5_Interior,_Makati,_Jul_2024.jpg) | Ralff Nestor Nacor | CC BY-SA 4.0 |
+| Glorietta Parking | [Glorietta Uniqlo.jpg](https://commons.wikimedia.org/wiki/File:Glorietta_Uniqlo.jpg) | ScarletViolet | CC BY-SA 4.0 |
+| Power Plant Mall Parking | [Rockwell Power Plant Mall C (Dec 6, 2024).jpg](https://commons.wikimedia.org/wiki/File:Rockwell_Power_Plant_Mall_C_%28Dec_6,_2024%29.jpg) | RFNirmala | CC0 |
+| SM Aura Parking | [SM Aura, BGC, Taguig, Aug 2026.jpg](https://commons.wikimedia.org/wiki/File:SM_Aura,_BGC,_Taguig,_Aug_2026.jpg) | Ralff Nestor Nacor | CC BY-SA 4.0 |
+| Market! Market! Car Park | [Fort Bonifacio, Taguig, Metro Manila, Philippines - panoramio (35).jpg](https://commons.wikimedia.org/wiki/File:Fort_Bonifacio,_Taguig,_Metro_Manila,_Philippines_-_panoramio_%2835%29.jpg) | Idawriter | CC BY-SA 3.0 |
+| Uptown Mall Parking | [Uptown Mall.jpg](https://commons.wikimedia.org/wiki/File:Uptown_Mall.jpg) | Lawrence Ruiz | CC BY-SA 4.0 |
+| Greenhills Mall Parking | [Greenhills Shopping Center.jpg](https://commons.wikimedia.org/wiki/File:Greenhills_Shopping_Center.jpg) | Badudoy | CC BY 3.0 |
+| Robinsons Place Manila Parking | [Robinsons Place Manila, May 2025 (1).jpg](https://commons.wikimedia.org/wiki/File:Robinsons_Place_Manila,_May_2025_%281%29.jpg) | Ralff Nestor Nacor | CC BY-SA 4.0 |
+| Alabang Town Center Parking | [5749Ayala Alabang Landmarks 06.jpg](https://commons.wikimedia.org/wiki/File:5749Ayala_Alabang_Landmarks_06.jpg) | Judgefloro | CC0 |
 
 ## Branding
 
