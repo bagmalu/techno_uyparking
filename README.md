@@ -45,7 +45,7 @@ Each of these flows follows `docs/user-flowchart.png`.
 4. Enter a plate number, or use **Phone (OTP)**. Any 6 digits work as the code; no text is
    actually sent.
 5. On the payment screen, tap **I've paid** (QR Ph) or **Pay ₱50** (NFC). No money moves.
-6. The reservation QR appears with a **15-minute countdown**. Your floor and slot are not
+6. The reservation QR appears with a **1 hour 15 minute countdown**. Your floor and slot are not
    assigned yet.
 7. Tap **Check in with NFC**, or tap the QR code itself to act as the gate scanner reading
    it. The app checks you in, assigns a floor and slot, and saves the location.
@@ -116,7 +116,7 @@ scans and lot counts. Tapping a gate QR code stands in for the gate's scanner re
 - **Your progress is saved in this browser** (`localStorage`), including reservations,
   favourites, recents and plate/phone, just as the real app would keep a local cache.
   Use **Reset demo data** or Settings → **Clear local data** to start fresh.
-- **The countdown is real time.** A reservation genuinely expires 15 minutes later, even
+- **The countdown is real time.** A reservation genuinely expires 1 hour 15 minutes later, even
   after a page reload. Use the controls to skip ahead.
 - **Parking duration at scan-out is simulated** as 2h 15m, so the fee looks realistic.
 - **Users never pick a slot.** The floor and slot are assigned randomly when you scan in,
@@ -140,7 +140,7 @@ docs/
 source/
   index.html           ← all screens
   styles.css           ← design tokens and components
-  app.js               ← screen router, 15-min countdown, mock data and flows
+  app.js               ← screen router, reservation countdown, mock data and flows
   img/                 ← lot photos from Wikimedia Commons (see Photo credits)
   vendor/leaflet/      ← Leaflet 1.9.4 map library (BSD-2), bundled so no CDN is needed
 ```

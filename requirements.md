@@ -56,7 +56,7 @@ reserving or paying.
 |---|---|
 | Reservation fee | **₱50**, paid up front |
 | Credit at exit | **₱35** of the reservation fee is deducted from the final parking fee |
-| Grace period | **15 minutes** to scan in. If the driver doesn't arrive in time, the reservation is released automatically. |
+| Grace period | **1 hour 15 minutes** to scan in. If the driver doesn't arrive in time, the reservation is released automatically. |
 | Slot assignment | Automatic, at the moment of entry scan/NFC tap. Users never pick a floor or slot. |
 | Occupancy count | "Taken" = parked + reserved. Lot details show the split, e.g. "82 parked + 15 reserved / 120". |
 | Wrong slot | Parking in a slot other than the assigned one may incur a penalty. If someone takes your slot, staff redirect you to another slot and give you a voucher. |
@@ -121,10 +121,5 @@ Reference frames are in `docs/mockup/`:
 
 ## 8. Open questions
 
-- **1 hour vs. 15 minutes:** the flowchart says a reservation is made "1 hour in advance"
-  and checks whether the driver is "within their 1hr reservation time". The locked rule is
-  a 15-minute grace period. Should drivers be able to book up to 1 hour ahead, then get
-  15 minutes of grace after their chosen arrival time? The prototype currently uses only
-  the 15-minute timer.
 - **Wrong-slot penalty:** who issues it and how much is it? The prototype only shows a
   warning and a "Someone's in my slot?" option.

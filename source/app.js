@@ -1,9 +1,10 @@
 /* Uy Parking! clickable prototype — everything here is mocked.
-   Screen router, 15-min reservation countdown, mock lot / slot / QR data. */
+   Screen router, reservation countdown (1 h 15 min), mock lot / slot / QR data. */
 'use strict';
 
 // ---------- locked product constants (see CLAUDE.md) ----------
-const GRACE_MS = 15 * 60 * 1000;   // reservation grace period
+const GRACE_MS = 75 * 60 * 1000;   // reservation grace period: 1 hour 15 minutes
+const GRACE_TEXT = '1 hour 15 minutes';
 const RESERVATION_FEE = 50;        // paid up front
 const FEE_CREDIT = 35;             // deducted from the final parking fee
 const DEMO_MINUTES = 135;          // simulated parking duration at scan-out
@@ -689,8 +690,8 @@ function renderReserve() {
     <div class="notice">${icon('i-car')}<div><b>Your space is assigned at the gate</b>
       Scan your QR or tap NFC at the entrance and we'll assign an open floor and slot for you.</div></div>
 
-    <div class="notice">${icon('i-clock')}<div><b>Arrive within 15 minutes</b>
-      If you don't scan in within 15 minutes, the reservation is released automatically for other drivers.</div></div>
+    <div class="notice">${icon('i-clock')}<div><b>Arrive within ${GRACE_TEXT}</b>
+      If you don't scan in within ${GRACE_TEXT}, the reservation is released automatically for other drivers.</div></div>
 
     ${lot.accessible ? `<div class="notice">${icon('i-info')}<div><b>About accessible spaces</b>
       This lot has accessible spaces near the elevators. Please leave them for drivers who need them. We don't check eligibility.</div></div>` : ''}
@@ -805,10 +806,12 @@ function tick() {
   if (!r) return;
   const left = r.expiresAt - Date.now();
   if (left <= 0) { expireReservation(); return; }
-  const mm = String(Math.floor(left / 60000)).padStart(2, '0');
+  const h = Math.floor(left / 3600000);
+  const mm = String(Math.floor((left % 3600000) / 60000)).padStart(2, '0');
   const ss = String(Math.floor((left % 60000) / 1000)).padStart(2, '0');
+  const text = h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
   const warn = left < 2 * 60 * 1000;
-  $$('[data-countdown]').forEach((el) => { el.textContent = `${mm}:${ss}`; el.classList.toggle('warn', warn); });
+  $$('[data-countdown]').forEach((el) => { el.textContent = text; el.classList.toggle('warn', warn); });
   $$('[data-progress]').forEach((el) => { el.classList.toggle('warn', warn); el.firstElementChild.style.width = `${(left / GRACE_MS) * 100}%`; });
   $$('[data-banner="res"]').forEach((el) => el.classList.toggle('warn', warn));
   $$('[data-banner-left]').forEach((el) => { el.hidden = !warn; });
@@ -822,7 +825,7 @@ function expireReservation() {
   save();
   if (current === 'resqr') goFrom('map', 'expired');
   else {
-    toast(`Reservation ${r.ref} was released after 15 minutes.`);
+    toast(`Reservation ${r.ref} was released after ${GRACE_TEXT}.`);
     if (current === 'map') { renderMap(); if (ui.selectedLot) renderSheet(); }
   }
 }
@@ -832,7 +835,7 @@ function renderExpired() {
   const lot = r ? lotById(r.lotId) : LOTS[0];
   $('#expiredBody').innerHTML = `
     <div class="big-icon warn">${icon('i-clock')}</div>
-    <h2 style="margin:0 0 8px">Your 15 minutes are up</h2>
+    <h2 style="margin:0 0 8px">Your reservation time is up</h2>
     <p class="lead">You didn't scan in within the grace period, so reservation ${r ? r.ref : ''} at <b>${esc(lot.name)}</b> was released for other drivers.</p>
     <div class="notice" style="text-align:left">${icon('i-info')}<div>Already at the gate? You can still enter as a walk-in if there's space.</div></div>
     <div class="btn-stack">
@@ -868,7 +871,7 @@ function renderScan() {
         <span><b>Walk in</b><small>No reservation? Choose “Walk-in” at the scanner to get an entry QR.</small></span>${icon('i-chevron')}</button>`;
     if (!state.reservation) html += `<button class="choice" data-action="tab" data-tab-id="map">
         <span class="ic-wrap">${icon('i-pin')}</span>
-        <span><b>Reserve first</b><small>Find a lot on the map and hold a space for 15 minutes.</small></span>${icon('i-chevron')}</button>`;
+        <span><b>Reserve first</b><small>Find a lot on the map and hold a space for ${GRACE_TEXT}.</small></span>${icon('i-chevron')}</button>`;
   }
   html += `<div class="notice" style="margin-top:16px">${icon('i-nfc')}<div>Every gate supports both <b style="display:inline">QR</b> and <b style="display:inline">NFC</b>. Hold your phone near the reader or show the code on screen.</div></div>`;
   $('#scanBody').innerHTML = html;

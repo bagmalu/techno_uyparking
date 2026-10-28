@@ -25,7 +25,7 @@ Working docs:
 Clickable HTML prototype in `source/` (no build step) — open `source/index.html`
 directly, or `cd source && python -m http.server 8777`. Screens live in
 `index.html`; tokens in `styles.css` mirror `docs/design-system.md`; `app.js` holds
-the screen router, the 15-min countdown, and the mock slot/QR data. See
+the screen router, the 1 h 15 min reservation countdown, and the mock slot/QR data. See
 `source/README.md`.
 
 ## Product
@@ -49,7 +49,8 @@ See `docs/product-spec.md` for the full screen inventory and the nav/sidebar lay
 
 ## Locked decisions (do not contradict without the user's say-so)
 
-- **Reservation grace period:** 15 minutes. No-show → reservation is auto-removed.
+- **Reservation grace period:** 1 hour 15 minutes. No-show → reservation is auto-removed
+  and released for other drivers.
 - **Payment:** 50 peso consumer-side reservation fee, 35 pesos is deductible from the
   final parking fee, and payment on exit is shown through a visual
   **Universal QR Ph / NFC integration**. Settlement, refunds, and disputes are out of scope.

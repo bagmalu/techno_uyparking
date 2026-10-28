@@ -47,7 +47,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 ### QR / Parking Finder
 | Screen | Purpose |
 |---|---|
-| Reservation QR | Placeholder QR + prominent 15-min countdown + lot and reservation summary; no floor/slot is assigned yet |
+| Reservation QR | Placeholder QR + prominent 1 h 15 min countdown + lot and reservation summary; no floor/slot is assigned yet |
 | Reservation expired | No-show state after grace period; offer to re-reserve |
 | Walk-in entry | "Choose walk-in at the scanner" → generates QR; entry scan/NFC then assigns a floor and slot |
 | Scan-in confirmation | "You're parked" + saved system-assigned location (floor, slot, photo, map dot) |
@@ -78,7 +78,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 3. Tap Reserve → reservation confirmation; the user does not choose a floor or slot
 4. If needed, enter plate number or complete phone OTP
 5. Pay the ₱50 reservation fee → ₱35 will be deducted from the final parking fee
-6. Reservation QR screen with 15-min countdown and no assigned slot
+6. Reservation QR screen with 1 h 15 min countdown and no assigned slot
 7. Arrive → scan QR/NFC → system assigns an available floor and slot
 8. Scan-in confirmation with the assigned location saved
 
@@ -116,7 +116,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 
 - **Reserved counts as taken.** Prevents phantom availability. Always show the split
   on lot detail so panelists don't read it as a bug.
-- **15-min grace, auto-release.** Countdown is front and center on the QR screen; the
+- **1 h 15 min grace, auto-release.** Countdown is front and center on the QR screen; the
   expired state is prototyped.
 - **Payment.** A ₱50 consumer-side reservation fee is paid before the reservation QR is
   shown; ₱35 is deductible from the final parking fee. Universal QR Ph/NFC is shown on
