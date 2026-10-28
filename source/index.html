@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Uy Parking! — Prototype</title>
+  <title>Uy Parking!</title>
   <meta name="theme-color" content="#009f8b">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,7 +127,7 @@
               </label>
               <button class="btn secondary block" data-action="sendOtp" id="sendOtpBtn">Send code</button>
               <div id="otpBlock" hidden>
-                <p class="caption">Enter the 6-digit code we texted you. <em>(Prototype: any 6 digits work.)</em></p>
+                <p class="caption">Enter the 6-digit code we texted you.</p>
                 <div class="otp" id="otpBoxes">
                   <input maxlength="1" inputmode="numeric" aria-label="Digit 1"><input maxlength="1" inputmode="numeric" aria-label="Digit 2"><input maxlength="1" inputmode="numeric" aria-label="Digit 3"><input maxlength="1" inputmode="numeric" aria-label="Digit 4"><input maxlength="1" inputmode="numeric" aria-label="Digit 5"><input maxlength="1" inputmode="numeric" aria-label="Digit 6">
                 </div>
@@ -259,7 +259,7 @@
             <div class="list">
               <label class="row toggle-row"><span>Dark mode</span><input type="checkbox" id="themeToggle" data-action="toggleTheme"></label>
             </div>
-            <h3 class="section-title">Notifications <span class="caption">(not functional)</span></h3>
+            <h3 class="section-title">Notifications</h3>
             <div class="list">
               <label class="row toggle-row"><span>Reservation reminders<small>2 minutes before your grace period ends</small></span><input type="checkbox" checked></label>
               <label class="row toggle-row"><span>Favorite lot is filling up</span><input type="checkbox"></label>
@@ -267,10 +267,9 @@
             </div>
             <h3 class="section-title">Data</h3>
             <div class="list">
-              <label class="row toggle-row"><span>Simulate offline<small>e.g. underground with no signal</small></span><input type="checkbox" id="offlineToggle" data-action="toggleOffline"></label>
               <button class="row" data-action="resetDemo"><span>Clear local data</span><small class="danger-text">Reset</small></button>
             </div>
-            <p class="caption center">Uy Parking! prototype · v0.2 · no real data is sent anywhere</p>
+            <p class="caption center">Uy Parking! · version 0.2</p>
           </div>
         </section>
 
@@ -313,7 +312,7 @@
           <hr>
           <button data-action="drawerGo" data-to="owner"><svg class="ic"><use href="#i-chart"/></svg>Parking owner view</button>
         </nav>
-        <p class="caption drawer-foot">Lo-fi prototype. Maps, payments and scans are mocked.</p>
+        <p class="caption drawer-foot">Uy Parking! · version 0.2</p>
       </aside>
 
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -321,9 +320,9 @@
   </div>
 
   <!-- ============ DEMO CONTROLS (outside the phone) ============ -->
-  <aside class="demo" aria-label="Prototype controls">
-    <h2>Prototype controls</h2>
-    <p>Shortcuts for presenting. None of these exist in the real app.</p>
+  <aside class="demo" aria-label="Presentation controls">
+    <h2>Presentation controls</h2>
+    <p>Shortcuts for presenting.</p>
 
     <h3>Jump to a flow</h3>
     <div class="demo-grid">

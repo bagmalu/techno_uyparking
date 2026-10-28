@@ -8,8 +8,10 @@ This is a **lo-fi project**, not a working system. The deliverable
 across 1 month is a Figma MVP and/or a basic clickable HTML prototype of the
 "Uy Parking!" mobile app.
 
-Do **not** build a real backend, authentication, database, live maps, or payment
-integration. Every feature only has to be drawn or mocked. Per-slot availability
+Do **not** build a real backend, authentication, database, or payment integration.
+Every feature only has to be drawn or mocked. The map may use an OpenStreetMap base map
+(tiles via Leaflet) with mock lots drawn on real building outlines for realism; live
+occupancy data, real GPS, and routing stay out of scope. Per-slot availability
 assumes the mall's existing parking-bay sensors — that integration is out of scope.
 Users do not choose a floor or individual parking slot; the prototype shows aggregate
 availability and mocks automatic floor/slot assignment only when the user scans or taps
@@ -20,11 +22,11 @@ Working docs:
 - `docs/design-system.md` — color tokens, type/spacing scales, component list
 - `docs/mockup/` — contains mockups which is the basis of the aesthetic of the app
 
-Clickable HTML prototype in `prototype/` (no build step) — open `prototype/index.html`
-directly, or `cd prototype && python -m http.server 8777`. Screens live in
+Clickable HTML prototype in `source/` (no build step) — open `source/index.html`
+directly, or `cd source && python -m http.server 8777`. Screens live in
 `index.html`; tokens in `styles.css` mirror `docs/design-system.md`; `app.js` holds
 the screen router, the 15-min countdown, and the mock slot/QR data. See
-`prototype/README.md`.
+`source/README.md`.
 
 ## Product
 

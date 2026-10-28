@@ -15,7 +15,7 @@ const LOTS = [
   { id: 'sm-b1', name: 'SM Megamall Basement 1', area: 'Megamall · Bldg A',
     address: 'EDSA cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 120, parked: 82, reserved: 15, rate: 40,
     accessible: true, ev: false, covered: true, busy: 1.0, tone: '#cfd3d6', sign: 'SM', floors: ['B1', 'B2'],
-    landmarks: ['near Elevator B', 'beside Entrance 2', 'by the ramp to B2'], labelAt: [14.58625, 121.05725],
+    landmarks: ['near Elevator B', 'beside Entrance 2', 'by the ramp to B2'],
     shape: [[14.584589, 121.056611], [14.584578, 121.057686], [14.584701, 121.057687], [14.584727, 121.056956], [14.585667, 121.056967],
       [14.585658, 121.057699], [14.586828, 121.057712], [14.586838, 121.056795], [14.586408, 121.056790], [14.586408, 121.056638],
       [14.585812, 121.056631], [14.585815, 121.056374], [14.585656, 121.056372], [14.585654, 121.056623]] },
@@ -57,14 +57,22 @@ const LOTS = [
 // Mock "you are here" (no real GPS): Doña Julia Vargas Ave., between SM Megamall and The Podium
 const ME = [14.58515, 121.05788];
 
-// centre of each outline, and straight-line distance from ME
+// centre of each outline (area-weighted, so it stays inside L-shaped and irregular buildings)
+// and straight-line distance from ME
+function centroid(shape) {
+  let a = 0, lat = 0, lng = 0;
+  shape.forEach(([y0, x0], i) => {
+    const [y1, x1] = shape[(i + 1) % shape.length], c = x0 * y1 - x1 * y0;
+    a += c; lng += (x0 + x1) * c; lat += (y0 + y1) * c;
+  });
+  return [lat / (3 * a), lng / (3 * a)];
+}
 function metres([lat1, lng1], [lat2, lng2]) {
   const r = Math.PI / 180, x = (lng2 - lng1) * r * Math.cos(((lat1 + lat2) / 2) * r), y = (lat2 - lat1) * r;
   return 6371000 * Math.hypot(x, y);
 }
 LOTS.forEach((lot) => {
-  const lats = lot.shape.map((p) => p[0]), lngs = lot.shape.map((p) => p[1]);
-  lot.center = lot.labelAt || [(Math.min(...lats) + Math.max(...lats)) / 2, (Math.min(...lngs) + Math.max(...lngs)) / 2];
+  lot.center = centroid(lot.shape);
   lot.metres = metres(ME, lot.center);
   lot.distance = lot.metres < 1000 ? `${Math.round(lot.metres / 10) * 10} m` : `${(lot.metres / 1000).toFixed(1)} km`;
 });
@@ -162,14 +170,17 @@ function qrSvg(seed, cls = 'qr') {
   const inFinder = (x, y) => (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
   let cells = '';
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!inFinder(x, y) && rnd() > .52) cells += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
-  return `<svg class="${cls}" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="Placeholder QR code"><g fill="#021c1c">${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}${cells}</g></svg>`;
+  return `<svg class="${cls}" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="QR code"><g fill="#021c1c">${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}${cells}</g></svg>`;
 }
+
+// A QR the gate scanner reads. Tapping it stands in for the scanner reading it.
+const gateQr = (svg, attrs) => `<button class="qr-tap" ${attrs} aria-label="QR code for the gate scanner">${svg}</button>`;
 
 let photoN = 0;
 function lotPhoto(lot, cls = 'photo') {
   const id = `sky${photoN++}`;
   const floors = [0, 1, 2, 3].map((i) => `<rect x="60" y="${64 + i * 19}" width="230" height="5" fill="rgba(0,0,0,.16)"/>`).join('');
-  return `<svg class="${cls}" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Illustration of ${esc(lot.name)}">
+  return `<svg class="${cls}" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Photo of ${esc(lot.name)}">
     <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fb8e8"/><stop offset="1" stop-color="#d7eefb"/></linearGradient></defs>
     <rect width="320" height="160" fill="url(#${id})"/>
     <rect x="18" y="22" width="52" height="130" fill="#97a3ab"/><rect x="24" y="30" width="40" height="110" fill="#aab5bc"/>
@@ -218,16 +229,27 @@ const TILES = location.protocol === 'file:'
 const HOME_VIEW = { center: [14.5862, 121.0578], zoom: 16 };
 const ZOOMED_AT = 17;          // lot counts show from this zoom (zoomed in.png)
 const FAR_BELOW = 15;          // below this, outlines are too small to tap, so lots show as pins
-let map;
+let map, tiles;
 const lotLayers = {};          // id → { poly, label }
 let userView = null;           // the view to return to once nothing is focused
 let focused = false;
+let flyingTo = null;           // zoom of the fly animation in progress, if any
 
 function initMap() {
   map = L.map('map', { zoomControl: false, zoomSnap: .25, minZoom: 11, maxZoom: 19 })
     .setView(HOME_VIEW.center, HOME_VIEW.zoom);
   map.attributionControl.setPrefix(false);
-  L.tileLayer(TILES.url, { maxZoom: 19, className: 'osm-tiles', attribution: TILES.attribution }).addTo(map);
+  tiles = L.tileLayer(TILES.url, { maxZoom: 19, className: 'osm-tiles', attribution: TILES.attribution });
+  // demo offline mode: tiles already on screen stay (like a cache), new ones are left blank
+  const createTile = tiles.createTile;
+  tiles.createTile = function (coords, done) {
+    if (!state.offline) return createTile.call(this, coords, done);
+    const blank = document.createElement('div');
+    setTimeout(() => done(null, blank));
+    return blank;
+  };
+  tiles.addTo(map);
+  map.on('moveend', () => { flyingTo = null; });
 
   LOTS.forEach((lot) => {
     const open = () => ACTIONS.openLot({ id: lot.id });
@@ -236,7 +258,7 @@ function initMap() {
       .on('click', open).addTo(map);
     lotLayers[lot.id] = { poly, label };
   });
-  L.marker(ME, { icon: L.divIcon({ className: 'me-dot', iconSize: [15, 15] }), interactive: false, keyboard: false, title: 'Approximate location (mock)' }).addTo(map);
+  L.marker(ME, { icon: L.divIcon({ className: 'me-dot', iconSize: [15, 15] }), interactive: false, keyboard: false, title: 'Your location' }).addTo(map);
 
   const onZoom = () => {
     $('#map').classList.toggle('zoomed', map.getZoom() >= ZOOMED_AT);
@@ -247,9 +269,10 @@ function initMap() {
   // the map grows when the tab bar hides (lot sheet open), so keep Leaflet's size in sync
   new ResizeObserver(() => {
     const before = map.getSize();
-    map.invalidateSize();
-    const id = ui.focusLot || ui.selectedLot;
-    if (id && !before.equals(map.getSize())) focusLot(id, false);
+    map.invalidateSize({ pan: flyingTo === null });   // keep the centre, unless a fly animation owns the view
+    if (before.equals(map.getSize()) || flyingTo !== null) return;
+    const id = ui.focusLot || (current === 'map' ? ui.selectedLot : null);
+    if (id) focusLot(id, false);
   }).observe($('#map'));
 }
 
@@ -258,7 +281,7 @@ function initMap() {
 function focusLot(id, animate = true) {
   const lot = lotById(id);
   if (!lot) return;
-  map.invalidateSize();
+  map.invalidateSize({ pan: false });   // the sheet / tab bar may have just changed the map's size
   if (!focused) { userView = { center: map.getCenter(), zoom: map.getZoom() }; focused = true; }
   const size = map.getSize();
   const b = lotLayers[id].poly.getBounds();
@@ -269,15 +292,22 @@ function focusLot(id, animate = true) {
   let z = 18;
   while (z > 15 && !fits(z)) z -= .25;
   const centre = map.unproject(map.project(lot.center, z).add([0, size.y * (.5 - .19)]), z);
-  if (animate) map.flyTo(centre, z, { duration: .6 });
+  if (animate) fly(centre, z, .6);
   else map.setView(centre, z, { animate: false });
+}
+function fly(center, zoom, duration) {
+  map.invalidateSize({ pan: false });
+  flyingTo = zoom;
+  map.flyTo(center, zoom, { duration });
 }
 function restoreView() {
   if (!focused) return;
   focused = false;
-  map.flyTo(userView.center, userView.zoom, { duration: .5 });
+  fly(userView.center, userView.zoom, .5);
 }
-function flyHome(center, zoom) { focused = false; map.flyTo(center, zoom, { duration: .6 }); }
+function flyHome(center, zoom) { focused = false; fly(center, zoom, .6); }
+// the zoom the map is at or heading to, ignoring a focus that is about to be undone
+const settledZoom = () => (focused ? userView.zoom : flyingTo ?? map.getZoom());
 
 // which lot the map should centre on for each screen
 const FOCUS = {
@@ -546,12 +576,12 @@ function renderPay() {
     <div class="ticket">
       ${qr ? `<div class="ref">Scan with any QR Ph bank or e-wallet app</div>
         <h3>Uy Parking! · ${esc(lot.name)}</h3>${qrSvg('pay' + amount + lot.id)}
-        <div class="qr-cap">Universal QR Ph · merchant QR (mock)</div>`
+        <div class="qr-cap">Universal QR Ph</div>`
       : `<div class="pulse" style="margin:8px auto 12px">${icon('i-nfc', 'xl')}</div>
-        <h3>Hold your phone or card near the reader</h3><div class="ref">Contactless / NFC payment (mock)</div>`}
+        <h3>Hold your phone or card near the reader</h3><div class="ref">Contactless / NFC</div>`}
     </div>
-    <button class="btn primary lg block" data-action="paid">Simulate successful payment</button>
-    <p class="caption center">Visual mock only. No real payment is made.</p>`;
+    <button class="btn primary lg block" data-action="paid">${qr ? "I've paid" : `Pay ${peso(amount)}`}</button>
+    <p class="caption center">${qr ? 'Paid in your bank or e-wallet app? Tap above once the payment goes through.' : 'Your receipt appears here once the payment is confirmed.'}</p>`;
 }
 
 function fees() {
@@ -599,7 +629,7 @@ function renderResQr() {
       <div class="countdown" data-countdown>--:--</div>
       <div class="caption">left to scan in at the entrance</div>
       <div class="progress" data-progress><i></i></div>
-      ${qrSvg(r.ref + r.lotId)}
+      ${gateQr(qrSvg(r.ref + r.lotId), 'data-action="entryScan" data-via="reservation"')}
       <div class="qr-cap">${state.offline ? 'Saved offline. Works without signal.' : 'Show this at the gate, or tap NFC.'}</div>
     </div>
     <div class="center" style="margin-bottom:12px"><span class="status-line">${icon('i-info', 'sm')} Floor &amp; slot: assigned when you scan in</span></div>
@@ -609,8 +639,7 @@ function renderResQr() {
       <div class="kv"><span>Reserved for</span><span>${esc(state.identity?.value || 'Guest')}</span></div>
     </div>
     <div class="btn-stack">
-      <button class="btn primary lg block" data-action="entryScan" data-via="reservation">${icon('i-qr')} I'm at the gate — scan QR</button>
-      <button class="btn secondary block" data-action="entryScan" data-via="reservation">${icon('i-nfc')} Tap NFC instead</button>
+      <button class="btn primary lg block" data-action="entryScan" data-via="reservation">${icon('i-nfc')} Check in with NFC</button>
       <button class="btn text block" data-action="cancelReservation">Cancel reservation</button>
     </div>`;
   tick();
@@ -712,14 +741,13 @@ function renderWalkin() {
     body = `<div class="card"><div class="kv"><span>Spaces left</span><span>${s.left} ${statusChip(s)}</span></div>
         <div class="kv"><span>Rate</span><span>${peso(lot.rate)}/hr · pay on exit</span></div></div>
       <div class="notice">${icon('i-info')}<div>No reservation fee for walk-ins. Your floor and slot are assigned when you scan in.</div></div>
-      <button class="btn primary lg block" data-action="genWalkin">Generate entry QR</button>`;
+      <button class="btn primary lg block" data-action="genWalkin">Get entry pass</button>`;
   } else {
     const ref = `W-${lot.id.toUpperCase().slice(0, 3)}-${String(Date.now()).slice(-4)}`;
-    body = `<div class="ticket"><div class="ref">Walk-in ticket ${ref}</div><h3>${esc(lot.name)}</h3>${qrSvg(ref)}
+    body = `<div class="ticket"><div class="ref">Walk-in ticket ${ref}</div><h3>${esc(lot.name)}</h3>${gateQr(qrSvg(ref), 'data-action="entryScan" data-via="walkin"')}
         <div class="qr-cap">${state.offline ? 'Saved offline. Works without signal.' : 'Scan this at the gate, or tap NFC'}</div></div>
       <div class="btn-stack" style="margin-top:0">
-        <button class="btn primary lg block" data-action="entryScan" data-via="walkin">${icon('i-qr')} Scan in at the gate</button>
-        <button class="btn secondary block" data-action="entryScan" data-via="walkin">${icon('i-nfc')} Tap NFC instead</button>
+        <button class="btn primary lg block" data-action="entryScan" data-via="walkin">${icon('i-nfc')} Check in with NFC</button>
         <button class="btn text block" data-action="print">${icon('i-printer', 'sm')} Print paper ticket instead</button>
       </div>`;
   }
@@ -798,7 +826,6 @@ function renderLocator() {
       <li>Take the lift to Floor ${esc(s.floor)}.</li>
       <li>Follow the blue path along the lane. Your car is in slot ${s.slot}, ${esc(s.landmark)}.</li>
     </ol>
-    <p class="caption">Indoor directions are illustrative. No live GPS is used.</p>
     <div class="btn-stack"><button class="btn primary lg block" data-action="go" data-to="session">Leaving? Scan out &amp; pay</button></div>`;
 }
 
@@ -813,7 +840,7 @@ function renderSession() {
       <h3>${esc(lot.name)}</h3>
       <div class="kv"><span>Floor · slot</span><span>${esc(s.floor)} · ${s.slot}</span></div>
       <div class="kv"><span>Entered</span><span>${fmtTime(s.enteredAt)}</span></div>
-      <div class="kv"><span>Duration</span><span>2h 15m <span class="caption">(simulated)</span></span></div>
+      <div class="kv"><span>Duration</span><span>2h 15m</span></div>
       <div class="kv"><span>Rate</span><span>${peso(lot.rate)}/hr × ${f.hours} hr</span></div>
       <div class="kv"><span>Parking fee</span><span>${peso(f.fee)}</span></div>
       ${s.reserved ? `<div class="kv credit"><span>Reservation credit (${esc(s.ref)})</span><span>−${peso(f.credit)}</span></div>` : ''}
@@ -843,10 +870,10 @@ function renderExit() {
     ${vendor ? `<div class="notice warn" style="text-align:left;width:100%">${icon('i-store')}<div><b>Pay ${peso(fees().due)} at the cashier first</b>Then scan this code at the exit gate.</div></div>`
       : `<span class="status-line" style="margin-bottom:12px">${icon('i-check', 'sm')} Paid ${peso(fees().due)} via ${s.payMethod === 'nfc' ? 'NFC' : 'QR Ph'}</span>`}
     <div class="ticket" style="width:100%">
-      <div class="ref">Exit pass</div><h3>${esc(lot.name)}</h3>${qrSvg('exit' + s.slot + s.lotId)}
+      <div class="ref">Exit pass</div><h3>${esc(lot.name)}</h3>${gateQr(qrSvg('exit' + s.slot + s.lotId), 'data-action="exitScan"')}
       <div class="qr-cap">Show at the exit gate, or tap NFC</div></div>
     <div class="btn-stack" style="margin-top:0">
-      <button class="btn primary lg block" data-action="exitScan">${icon('i-qr')} Scan at exit</button>
+      <button class="btn primary lg block" data-action="exitScan">${icon('i-nfc')} Exit with NFC</button>
     </div>`;
 }
 
@@ -938,7 +965,7 @@ function renderOwner() {
         <div class="top"><span>${esc(l.name)}</span><span>${s.parked} + ${s.reserved} / ${l.capacity}</span></div>
         <div class="occ-bar"><i class="parked" style="width:${(s.parked / l.capacity) * 100}%"></i><i class="reserved" style="width:${(s.reserved / l.capacity) * 100}%"></i></div></div>`; }).join('')}
         <div class="occ-legend"><span><i class="parked"></i>Parked</span><span><i class="reserved"></i>Reserved</span></div></div>
-      <p class="caption center">Mock data for the prototype.</p>`;
+      <p class="caption center">Updated ${fmtTime(Date.now())}</p>`;
   } else {
     $('#ownerBody').innerHTML = `
       <div class="stat-grid">
@@ -952,7 +979,7 @@ function renderOwner() {
         <div class="kv"><span>NFC</span><span>18%</span></div>
         <div class="kv"><span>Cashier / vendor</span><span>28%</span></div></div>
       <div class="card"><h3>Recent transactions</h3>${OWNER.txns.map((t) => `<div class="txn"><span>${t.what}<small>${t.when}</small></span><b>${peso(t.amt)}</b></div>`).join('')}</div>
-      <p class="caption center">Mock data. Settlement, refunds and disputes are out of scope.</p>`;
+      <p class="caption center">Updated ${fmtTime(Date.now())}</p>`;
   }
 }
 
@@ -964,7 +991,9 @@ function applyTheme() {
 }
 function applyOffline() {
   $('#offlineBar').hidden = !state.offline;
-  $('#offlineToggle').checked = state.offline;
+  const wasOffline = $('#map').classList.contains('offline');
+  $('#map').classList.toggle('offline', state.offline);
+  if (wasOffline && !state.offline) tiles.redraw();   // fill in tiles left blank while offline
 }
 
 let toastTimer;
@@ -1009,15 +1038,16 @@ const ACTIONS = {
   expand: (d, el) => el.closest('.panel').classList.toggle('expanded'),
   locate: () => {
     flyHome(ME, 17);
-    toast('Centered on your approximate location (mock, no real GPS).');
+    toast('Showing your location.');
   },
   demoZoom: () => {
+    const zoomedIn = settledZoom() >= ZOOMED_AT;
     if (current !== 'map') tab('map');
     closeSheet();
-    if (map.getZoom() >= ZOOMED_AT) flyHome(HOME_VIEW.center, HOME_VIEW.zoom);
+    if (zoomedIn) flyHome(HOME_VIEW.center, HOME_VIEW.zoom);
     else flyHome([14.5852, 121.0575], 17.5);
   },
-  voice: () => toast('Voice search is not part of the prototype.'),
+  voice: () => toast("Voice search isn't available yet."),
   fav: (d) => {
     const on = state.favorites.includes(d.id);
     state.favorites = on ? state.favorites.filter((f) => f !== d.id) : [...state.favorites, d.id];
@@ -1043,7 +1073,7 @@ const ACTIONS = {
     if (v.length < 10) { toast('Enter a 10-digit mobile number, e.g. 917 123 4567.'); return; }
     $('#otpBlock').hidden = false;
     $('#sendOtpBtn').textContent = 'Resend code';
-    toast('Code sent (mock). Any 6 digits will work.');
+    toast(`Code sent to +63 ${v.slice(-10)}.`);
     $('#otpBoxes input').focus();
   },
   verifyOtp: () => {
@@ -1063,12 +1093,12 @@ const ACTIONS = {
   cancelReservation: () => {
     setHistoryStatus(state.reservation.ref, 'Cancelled');
     state.reservation = null; save(); tab('map');
-    toast('Reservation cancelled. Refunds are out of scope for the prototype.');
+    toast('Reservation cancelled.');
   },
   entryScan: (d) => entryScan(d.via),
   walkinAt: (d) => { ui.walkinLot = d.id; ui.walkinQr = false; goFrom('scan', 'walkin'); },
   genWalkin: () => { ui.walkinQr = true; renderWalkin(); },
-  print: () => toast('Ticket sent to the gate printer (mock).'),
+  print: () => toast('Ticket sent to the gate printer.'),
   slotTaken: () => toast('Staff have been notified. They will direct you to another slot and give you a voucher.'),
   payExit: () => { ui.payCtx = 'exit'; ui.payMethod = 'qrph'; go('pay'); },
   payVendor: () => { state.session.payMethod = 'vendor'; save(); ui.exitDone = false; go('exit'); },
@@ -1080,10 +1110,11 @@ const ACTIONS = {
   },
   toggleOffline: () => { state.offline = !state.offline; save(); applyOffline(); RENDER[current]?.(); },
   resetDemo: () => {
+    closeSheet();
     state = defaultState(); save();
     Object.assign(ui, { selectedLot: null, pendingLot: null, walkinQr: false, exitDone: false });
-    applyTheme(); applyOffline(); closeSheet(); tab('map');
-    toast('Demo data reset.');
+    applyTheme(); applyOffline(); tab('map');
+    toast('Local data cleared.');
   },
   demoFlow: (d) => DEMO_FLOWS[d.flow](),
   demoTime: (d) => {
@@ -1155,6 +1186,8 @@ $('#otpBoxes').addEventListener('keydown', (e) => {
 });
 
 // ---------- boot ----------
+addEventListener('offline', () => { state.offline = true; save(); applyOffline(); RENDER[current]?.(); });
+addEventListener('online', () => { state.offline = false; save(); applyOffline(); RENDER[current]?.(); });
 initMap();
 applyTheme();
 applyOffline();

@@ -41,7 +41,6 @@
 
   /* map (sampled from the mockups) */
   --map-bg: #f1f4f5;
-  --map-block: #e0e3e6;
   --map-road: #d9dde1;
 
   --shadow-fab: 0 2px 10px rgba(0, 0, 0, .12);
@@ -74,7 +73,6 @@
   --lot-selected-ring: #8fa9a6;
 
   --map-bg: #062625;
-  --map-block: #0e3230;
   --map-road: #1d4643;
 
   --shadow-fab: 0 2px 12px rgba(0, 0, 0, .45);
@@ -239,6 +237,8 @@ button.row:hover { background: var(--surface-2); }
 /* ---------- map (OpenStreetMap via Leaflet) ---------- */
 .map { position: absolute; inset: 0; overflow: hidden; z-index: 0; }  /* own stacking context: Leaflet panes use z-index 400+ */
 .map.leaflet-container { background: var(--map-bg); font-family: var(--font); }
+/* demo offline: tiles already loaded stay, faded, like a cached map */
+.map.offline .osm-tiles { opacity: .5; }
 /* grey the OSM tiles down to the mockups' pale map; dark mode inverts them to deep teal */
 .osm-tiles { filter: grayscale(1) contrast(.82) brightness(1.08); }
 :root[data-theme="dark"] .osm-tiles { filter: grayscale(1) invert(1) contrast(.78) brightness(.62) sepia(.5) hue-rotate(125deg) saturate(1.6); }
@@ -552,3 +552,6 @@ button.row:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* gate QR codes: tapping one stands in for the gate scanner reading it */
+.qr-tap { display: block; margin: 0 auto; padding: 0; border: 0; background: none; cursor: pointer; }
