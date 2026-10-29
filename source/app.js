@@ -11,41 +11,45 @@ const DEMO_MINUTES = 135;          // simulated parking duration at scan-out
 
 // ---------- mock data ----------
 // Real places in Metro Manila (around Ortigas Center first) used as placeholders. `shape` is the building / lot outline
-// from OpenStreetMap (© OpenStreetMap contributors, ODbL); counts, rates and features are mock.
+// from OpenStreetMap (© OpenStreetMap contributors, ODbL); counts and features are mock.
+// `rate` is the car rate: `base` for the first `hrs` hours, then `next` per succeeding hour (a fraction counts as
+// a full hour); `flat` is the weekend & holiday flat rate. Figures come from published guides (Philkotse, Top Gear,
+// MoneyMax, ParkinganPH, Philtoyota; 2019–2026). gateway, powerplant, greenhills, market and atc had no
+// published rate, so they follow their operator's usual rate.
 const LOTS = [
   { id: 'sm-b1', name: 'SM Megamall Basement 1', area: 'Megamall · Bldg A',
-    address: 'EDSA cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 120, parked: 82, reserved: 15, rate: 40,
+    address: 'EDSA cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 120, parked: 82, reserved: 15, rate: { hrs: 3, base: 50, next: 20, flat: 50 },
     accessible: true, ev: false, covered: true, busy: 1.0, tone: '#cfd3d6', sign: 'SM', floors: ['B1', 'B2'],
     landmarks: ['near Elevator B', 'beside Entrance 2', 'by the ramp to B2'],
     shape: [[14.584589, 121.056611], [14.584578, 121.057686], [14.584701, 121.057687], [14.584727, 121.056956], [14.585667, 121.056967],
       [14.585658, 121.057699], [14.586828, 121.057712], [14.586838, 121.056795], [14.586408, 121.056790], [14.586408, 121.056638],
       [14.585812, 121.056631], [14.585815, 121.056374], [14.585656, 121.056372], [14.585654, 121.056623]] },
   { id: 'open-b', name: 'SM Megamall Open Parking', area: 'Megamall · Open lot',
-    address: 'Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 60, parked: 18, reserved: 4, rate: 30,
+    address: 'Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 60, parked: 18, reserved: 4, rate: { hrs: 3, base: 50, next: 20, flat: 50 },
     accessible: true, ev: false, covered: false, busy: .6, tone: '#d9cdb8', sign: 'OPEN', floors: ['G'],
     landmarks: ['near the mall side door', 'by the guard house'],
     shape: [[14.585863, 121.058042], [14.585606, 121.058038], [14.585603, 121.058654], [14.585855, 121.058655]] },
   { id: 'north', name: 'The Podium Parking', area: 'The Podium · P2',
-    address: 'ADB Ave. cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 80, parked: 40, reserved: 8, rate: 50,
+    address: 'ADB Ave. cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 80, parked: 40, reserved: 8, rate: { hrs: 3, base: 50, next: 15, flat: 50 },
     accessible: true, ev: true, covered: true, busy: .8, tone: '#b9c4cc', sign: 'PODIUM', floors: ['P2', 'P3'],
     landmarks: ['next to the EV chargers', 'near Lift Lobby A'],
     shape: [[14.584609, 121.059143], [14.584645, 121.059344], [14.584815, 121.059525], [14.584906, 121.059613], [14.585031, 121.059620],
       [14.585118, 121.059586], [14.585593, 121.059589], [14.585603, 121.058676], [14.584605, 121.058673]] },
   { id: 'annex', name: 'Megamall Building C Carpark', area: 'Megamall · Bldg C',
-    address: 'EDSA, Ortigas Center, Mandaluyong', capacity: 30, parked: 27, reserved: 3, rate: 35,
+    address: 'EDSA, Ortigas Center, Mandaluyong', capacity: 30, parked: 27, reserved: 3, rate: { hrs: 3, base: 50, next: 20, flat: 50 },
     accessible: false, ev: false, covered: true, busy: 1.15, tone: '#d1c2c2', sign: 'BLDG C', floors: ['1'],
     landmarks: ['by the stairwell'],
     shape: [[14.585159, 121.056492], [14.584692, 121.056483], [14.584701, 121.055984], [14.585384, 121.056222], [14.585647, 121.056314],
       [14.585648, 121.056502]] },
   { id: 'riverside', name: 'Shangri-La Plaza Parking', area: 'Shangri-La · Basement',
-    address: 'EDSA cor. Shaw Blvd., Mandaluyong', capacity: 50, parked: 30, reserved: 2, rate: 30,
+    address: 'EDSA cor. Shaw Blvd., Mandaluyong', capacity: 50, parked: 30, reserved: 2, rate: { hrs: 3, base: 70, next: 20 },
     accessible: true, ev: true, covered: true, busy: .75, tone: '#c8d4c4', sign: 'SHANGRI-LA', floors: ['B1', 'B2'],
     landmarks: ['near the East Wing entrance'],
     shape: [[14.581316, 121.054049], [14.581446, 121.054115], [14.581604, 121.054264], [14.581977, 121.054517], [14.581673, 121.054830],
       [14.581732, 121.054879], [14.581395, 121.055268], [14.581361, 121.055236], [14.580847, 121.055835], [14.580540, 121.056236],
       [14.579976, 121.055713], [14.580223, 121.055427], [14.580096, 121.055310], [14.581182, 121.054035]] },
   { id: 'plaza', name: 'Robinsons Galleria Parking', area: 'Galleria · Deck',
-    address: 'EDSA cor. Ortigas Ave., Ortigas Center, Quezon City', capacity: 100, parked: 85, reserved: 8, rate: 45,
+    address: 'EDSA cor. Ortigas Ave., Ortigas Center, Quezon City', capacity: 100, parked: 85, reserved: 8, rate: { hrs: 3, base: 50, next: 15 },
     accessible: true, ev: true, covered: true, busy: 1.1, tone: '#c9c6d6', sign: 'GALLERIA', floors: ['L2', 'L3', 'L4'],
     landmarks: ['near Elevator 3', 'beside the food court bridge'],
     shape: [[14.592243, 121.059302], [14.592157, 121.059058], [14.592064, 121.058958], [14.591981, 121.059055], [14.591734, 121.059256],
@@ -55,7 +59,7 @@ const LOTS = [
       [14.590465, 121.060586], [14.590631, 121.060385], [14.590573, 121.060571], [14.590921, 121.060878], [14.591601, 121.060068]] },
   // elsewhere in Metro Manila
   { id: 'moa', name: 'SM Mall of Asia Parking', area: 'MOA · North Parking',
-    address: 'Seaside Blvd., Mall of Asia Complex, Pasay', capacity: 300, parked: 210, reserved: 30, rate: 50,
+    address: 'Seaside Blvd., Mall of Asia Complex, Pasay', capacity: 300, parked: 210, reserved: 30, rate: { hrs: 3, base: 50, next: 10 },
     accessible: true, ev: true, covered: true, busy: 1.05, tone: '#cfd3d6', sign: 'MOA', floors: ['B1', 'B2', 'P3'],
     landmarks: ['near the North Entrance', 'by Elevator 4'],
     shape: [[14.533093, 120.979943], [14.533408, 120.979889], [14.537087, 120.979749], [14.537115, 120.979767], [14.537133, 120.979799],
@@ -64,7 +68,7 @@ const LOTS = [
       [14.534893, 120.983449], [14.534704, 120.983571], [14.534585, 120.983702], [14.534505, 120.984028], [14.534422, 120.984113],
       [14.533244, 120.984200], [14.533222, 120.984176], [14.533044, 120.979964]] },
   { id: 'sm-north', name: 'SM North EDSA Parking', area: 'SM North EDSA · The Block',
-    address: 'North Ave. cor. EDSA, Quezon City', capacity: 250, parked: 220, reserved: 18, rate: 40,
+    address: 'North Ave. cor. EDSA, Quezon City', capacity: 250, parked: 220, reserved: 18, rate: { hrs: 4, base: 50, next: 10, flat: 50 },
     accessible: true, ev: false, covered: true, busy: 1.1, tone: '#d1c2c2', sign: 'SM NORTH', floors: ['B1', 'B2', 'P1'],
     landmarks: ['near The Block entrance', 'by the cinema escalators'],
     shape: [[14.657342, 121.026544], [14.656682, 121.026385], [14.656477, 121.027308], [14.656659, 121.027354], [14.656577, 121.027724],
@@ -73,7 +77,7 @@ const LOTS = [
       [14.655819, 121.032797], [14.655681, 121.033473], [14.658591, 121.034132], [14.658742, 121.033464], [14.657450, 121.033192],
       [14.658310, 121.029135], [14.656843, 121.028782]] },
   { id: 'trinoma', name: 'TriNoma Parking', area: 'TriNoma · Basement',
-    address: 'EDSA cor. North Ave., Quezon City', capacity: 180, parked: 120, reserved: 15, rate: 50,
+    address: 'EDSA cor. North Ave., Quezon City', capacity: 180, parked: 120, reserved: 15, rate: { hrs: 3, base: 60, next: 20 },
     accessible: true, ev: true, covered: true, busy: 0.9, tone: '#c8d4c4', sign: 'TRINOMA', floors: ['B1', 'B2'],
     landmarks: ['near the MRT link bridge', 'by Elevator 2'],
     shape: [[14.654065, 121.031494], [14.654568, 121.032304], [14.654250, 121.033756], [14.654520, 121.033819], [14.654380, 121.034480],
@@ -81,7 +85,7 @@ const LOTS = [
       [14.652779, 121.034558], [14.652617, 121.034451], [14.652347, 121.034385], [14.652334, 121.034443], [14.651165, 121.034184],
       [14.650824, 121.033651]] },
   { id: 'gateway', name: 'Gateway Mall Parking', area: 'Araneta City · Gateway',
-    address: 'Gen. Aguinaldo Ave., Araneta City, Cubao, Quezon City', capacity: 150, parked: 138, reserved: 7, rate: 45,
+    address: 'Gen. Aguinaldo Ave., Araneta City, Cubao, Quezon City', capacity: 150, parked: 138, reserved: 7, rate: { hrs: 3, base: 50, next: 20 },
     accessible: true, ev: false, covered: true, busy: 1.1, tone: '#c9c6d6', sign: 'GATEWAY', floors: ['B1', 'B2'],
     landmarks: ['near the Cubao MRT walkway', 'by Lift Lobby C'],
     shape: [[14.621182, 121.052975], [14.622021, 121.052547], [14.622395, 121.053321], [14.621823, 121.053609], [14.621744, 121.053440],
@@ -89,7 +93,7 @@ const LOTS = [
       [14.621176, 121.053615], [14.621219, 121.053547], [14.621304, 121.053553], [14.621280, 121.053507], [14.621292, 121.053364],
       [14.621254, 121.053290], [14.621205, 121.053326], [14.621165, 121.053151], [14.621087, 121.053024]] },
   { id: 'eastwood', name: 'Eastwood Mall Parking', area: 'Eastwood City · Mall',
-    address: 'Orchard Rd., Eastwood City, Libis, Quezon City', capacity: 120, parked: 80, reserved: 10, rate: 40,
+    address: 'Orchard Rd., Eastwood City, Libis, Quezon City', capacity: 120, parked: 80, reserved: 10, rate: { hrs: 3, base: 60, next: 20, flat: 60 },
     accessible: true, ev: true, covered: true, busy: 0.8, tone: '#b9c4cc', sign: 'EASTWOOD', floors: ['B1', 'B2'],
     landmarks: ['near the Open Park doors', 'by the EV chargers'],
     shape: [[14.609690, 121.080318], [14.609838, 121.080461], [14.609992, 121.080531], [14.610183, 121.080568], [14.610393, 121.080552],
@@ -101,7 +105,7 @@ const LOTS = [
       [14.610151, 121.079826], [14.610099, 121.079930], [14.609971, 121.079957], [14.609917, 121.079990], [14.609937, 121.080035],
       [14.609715, 121.080201], [14.609752, 121.080246]] },
   { id: 'greenbelt', name: 'Greenbelt 5 Parking', area: 'Ayala Center · Greenbelt 5',
-    address: 'Legazpi St., Ayala Center, Makati', capacity: 140, parked: 125, reserved: 9, rate: 60,
+    address: 'Legazpi St., Ayala Center, Makati', capacity: 140, parked: 125, reserved: 9, rate: { hrs: 4, base: 45, next: 10, flat: 45, note: '₱50/hr for succeeding hours between 6 and 11 AM' },
     accessible: true, ev: true, covered: true, busy: 1.1, tone: '#d9cdb8', sign: 'GREENBELT', floors: ['B1', 'B2', 'B3'],
     landmarks: ['near the garden-side lifts', 'by the EV chargers'],
     shape: [[14.552651, 121.020247], [14.552504, 121.020428], [14.552449, 121.020580], [14.552433, 121.020693], [14.552464, 121.020761],
@@ -113,7 +117,7 @@ const LOTS = [
       [14.553097, 121.021280], [14.553132, 121.020905], [14.552826, 121.020878], [14.552883, 121.020375], [14.552747, 121.020361],
       [14.552752, 121.020277]] },
   { id: 'glorietta', name: 'Glorietta Parking', area: 'Ayala Center · Glorietta',
-    address: 'Palm Dr., Ayala Center, Makati', capacity: 200, parked: 160, reserved: 22, rate: 60,
+    address: 'Palm Dr., Ayala Center, Makati', capacity: 200, parked: 160, reserved: 22, rate: { hrs: 4, base: 40, next: 10, flat: 45, note: '₱30/hr for succeeding hours between 4 and 10 AM' },
     accessible: true, ev: false, covered: true, busy: 1.0, tone: '#cfd3d6', sign: 'GLORIETTA', floors: ['P1', 'P2', 'P3'],
     landmarks: ['near the Activity Center lifts', 'beside Entrance 3'],
     shape: [[14.551733, 121.024215], [14.552286, 121.024493], [14.552226, 121.024628], [14.552200, 121.024749], [14.552179, 121.024996],
@@ -127,14 +131,14 @@ const LOTS = [
       [14.550215, 121.026177], [14.549941, 121.025856], [14.550218, 121.025601], [14.550373, 121.025230], [14.550591, 121.024814],
       [14.550715, 121.024636], [14.550899, 121.024481], [14.551173, 121.024320], [14.551331, 121.024009]] },
   { id: 'powerplant', name: 'Power Plant Mall Parking', area: 'Rockwell Center · Basement',
-    address: 'Hidalgo Dr., Rockwell Center, Makati', capacity: 160, parked: 100, reserved: 12, rate: 70,
+    address: 'Hidalgo Dr., Rockwell Center, Makati', capacity: 160, parked: 100, reserved: 12, rate: { hrs: 3, base: 60, next: 30 },
     accessible: true, ev: true, covered: true, busy: 0.75, tone: '#c9c6d6', sign: 'ROCKWELL', floors: ['B1', 'B2', 'B3'],
     landmarks: ['near the cinema lifts', 'by the EV chargers'],
     shape: [[14.564378, 121.037029], [14.565682, 121.037056], [14.565693, 121.036654], [14.565774, 121.036654], [14.565778, 121.035989],
       [14.564040, 121.035981], [14.564042, 121.036066], [14.563931, 121.036067], [14.563932, 121.036102], [14.563859, 121.036103],
       [14.563864, 121.036486], [14.563892, 121.036485], [14.563891, 121.036509], [14.564176, 121.036512], [14.564379, 121.036747]] },
   { id: 'sm-aura', name: 'SM Aura Parking', area: 'BGC · SM Aura',
-    address: 'C.P. Garcia Ave. cor. McKinley Pkwy., Bonifacio Global City, Taguig', capacity: 220, parked: 150, reserved: 20, rate: 50,
+    address: 'C.P. Garcia Ave. cor. McKinley Pkwy., Bonifacio Global City, Taguig', capacity: 220, parked: 150, reserved: 20, rate: { hrs: 4, base: 50, next: 10, flat: 50 },
     accessible: true, ev: true, covered: true, busy: 0.85, tone: '#b9c4cc', sign: 'SM AURA', floors: ['B1', 'B2', 'B3'],
     landmarks: ['near the Sky Park lifts', 'by Entrance 1'],
     shape: [[14.545408, 121.052219], [14.543963, 121.052881], [14.543911, 121.053048], [14.544449, 121.053165], [14.544746, 121.053296],
@@ -143,14 +147,14 @@ const LOTS = [
       [14.547273, 121.054389], [14.546510, 121.053964], [14.546313, 121.053805], [14.546134, 121.053621], [14.545885, 121.053310],
       [14.545686, 121.052979]] },
   { id: 'market', name: 'Market! Market! Car Park', area: 'BGC · Market! Market!',
-    address: 'McKinley Pkwy., Bonifacio Global City, Taguig', capacity: 180, parked: 172, reserved: 8, rate: 40,
+    address: 'McKinley Pkwy., Bonifacio Global City, Taguig', capacity: 180, parked: 172, reserved: 8, rate: { hrs: 4, base: 40, next: 10, flat: 45 },
     accessible: true, ev: false, covered: true, busy: 1.15, tone: '#d1c2c2', sign: 'MARKET!', floors: ['P1', 'P2', 'P3'],
     landmarks: ['near the bridge to the mall', 'by the stairwell'],
     shape: [[14.550140, 121.056986], [14.550071, 121.057047], [14.550028, 121.057197], [14.550130, 121.057260], [14.550402, 121.057814],
       [14.550451, 121.057825], [14.550450, 121.057904], [14.550489, 121.057974], [14.550614, 121.058011], [14.550688, 121.057965],
       [14.550903, 121.058032], [14.551047, 121.057927], [14.551111, 121.057736], [14.551154, 121.057750], [14.551284, 121.057362]] },
   { id: 'uptown', name: 'Uptown Mall Parking', area: 'BGC · Uptown Bonifacio',
-    address: '9th Ave. cor. 36th St., Uptown Bonifacio, Taguig', capacity: 130, parked: 90, reserved: 12, rate: 50,
+    address: '9th Ave. cor. 36th St., Uptown Bonifacio, Taguig', capacity: 130, parked: 90, reserved: 12, rate: { hrs: 3, base: 50, next: 10, flat: 50 },
     accessible: true, ev: true, covered: true, busy: 0.8, tone: '#c8d4c4', sign: 'UPTOWN', floors: ['B1', 'B2'],
     landmarks: ['near the Sky Park lifts', 'by the underground link'],
     shape: [[14.556514, 121.055196], [14.555790, 121.054965], [14.555757, 121.055005], [14.555647, 121.054908], [14.555392, 121.054822],
@@ -158,13 +162,13 @@ const LOTS = [
       [14.556945, 121.054111], [14.556899, 121.054260], [14.556938, 121.054284], [14.556910, 121.054454], [14.556821, 121.054526],
       [14.556597, 121.055222]] },
   { id: 'greenhills', name: 'Greenhills Mall Parking', area: 'Greenhills · Shopping Center',
-    address: 'Ortigas Ave., Greenhills, San Juan', capacity: 160, parked: 140, reserved: 6, rate: 40,
+    address: 'Ortigas Ave., Greenhills, San Juan', capacity: 160, parked: 140, reserved: 6, rate: { hrs: 3, base: 50, next: 20 },
     accessible: true, ev: false, covered: false, busy: 1.05, tone: '#d9cdb8', sign: 'GREENHILLS', floors: ['G'],
     landmarks: ['near the Theatre Mall side', 'by the guard house'],
     shape: [[14.601536, 121.048625], [14.601342, 121.048878], [14.601832, 121.049279], [14.602150, 121.048864], [14.602765, 121.049365],
       [14.603151, 121.048859], [14.601939, 121.047868], [14.601579, 121.048376]] },
   { id: 'rob-manila', name: 'Robinsons Place Manila Parking', area: 'Ermita · Robinsons Place',
-    address: 'Pedro Gil St. cor. M. Adriatico St., Ermita, Manila', capacity: 200, parked: 130, reserved: 14, rate: 40,
+    address: 'Pedro Gil St. cor. M. Adriatico St., Ermita, Manila', capacity: 200, parked: 130, reserved: 14, rate: { hrs: 3, base: 50, next: 15 },
     accessible: true, ev: false, covered: true, busy: 0.85, tone: '#cfd3d6', sign: 'ROBINSONS', floors: ['B1', 'P2', 'P3'],
     landmarks: ['near the Padre Faura wing', 'by Elevator 5'],
     shape: [[14.574310, 120.983881], [14.574314, 120.983963], [14.574403, 120.984191], [14.574914, 120.985320], [14.576203, 120.984601],
@@ -172,7 +176,7 @@ const LOTS = [
       [14.577115, 120.983607], [14.577047, 120.983579], [14.576876, 120.983246], [14.576830, 120.983275], [14.576517, 120.982681],
       [14.575750, 120.983130]] },
   { id: 'atc', name: 'Alabang Town Center Parking', area: 'Ayala Alabang · ATC',
-    address: 'Alabang–Zapote Rd. cor. Madrigal Ave., Ayala Alabang, Muntinlupa', capacity: 150, parked: 135, reserved: 9, rate: 40,
+    address: 'Alabang–Zapote Rd. cor. Madrigal Ave., Ayala Alabang, Muntinlupa', capacity: 150, parked: 135, reserved: 9, rate: { hrs: 4, base: 40, next: 10, flat: 45 },
     accessible: true, ev: true, covered: true, busy: 1.0, tone: '#c8d4c4', sign: 'ATC', floors: ['P1', 'P2'],
     landmarks: ['near the Corporate Center bridge', 'by the EV chargers'],
     shape: [[14.424080, 121.031384], [14.424377, 121.031533], [14.424620, 121.031001], [14.424629, 121.030869], [14.424451, 121.030787],
@@ -238,7 +242,8 @@ function defaultState() {
       { lotId: 'north', ref: '#188', date: 'Oct 21', status: 'Completed' },
       { lotId: 'sm-b1', ref: '#152', date: 'Oct 14', status: 'Expired' },
     ],
-    identity: null,      // { type: 'plate' | 'phone', value }
+    account: null,       // see newAccount(); keyed on a plate number or an OTP-verified phone
+    prefs: { remind: true, filling: false, receipts: true, sms: false },
     theme: null,
     offline: false,
   };
@@ -246,11 +251,30 @@ function defaultState() {
 
 let state = load();
 const ui = { selectedLot: null, pendingLot: null, payCtx: 'reserve', payMethod: 'qrph',
-  walkinLot: 'sm-b1', walkinQr: false, focusLot: null, assignLot: null, exitDone: false, ownerTab: 'stats', trendDay: new Date().getDay(), trendSel: null };
+  walkinLot: 'sm-b1', walkinQr: false, focusLot: null, assignLot: null, exitDone: false, ownerTab: 'stats', trendDay: new Date().getDay(), trendSel: null,
+  idCtx: 'reserve', confirmDelete: false };   // idCtx: why the identity screen is open — reserve | create | signin | phone
 
 function load() {
-  try { return Object.assign(defaultState(), JSON.parse(localStorage.getItem(STORE_KEY)) || {}); }
-  catch { return defaultState(); }
+  try {
+    const s = Object.assign(defaultState(), JSON.parse(localStorage.getItem(STORE_KEY)) || {});
+    if (s.identity && !s.account) s.account = newAccount(s.identity.type, s.identity.value);   // saved before accounts existed
+    delete s.identity;
+    return s;
+  } catch { return defaultState(); }
+}
+
+// ---------- account ----------
+function newAccount(via, value, name = '') {
+  return { via, name, email: '', phone: via === 'phone' ? value : null,
+    plates: via === 'plate' ? [value] : [], plate: via === 'plate' ? value : null, payMethod: 'qrph' };
+}
+// what the gate matches a reservation on: the default plate, else the verified phone
+const acctKey = (a = state.account) => (a ? a.plate || a.phone : null);
+const acctName = (a = state.account) => (a ? a.name || acctKey(a) : 'Guest');
+const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
+function cleanPlate(v) {
+  v = v.trim().toUpperCase().replace(/\s+/g, ' ');
+  return v.replace(/\s/g, '').length >= 4 ? v : null;
 }
 function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* private mode etc. */ }
@@ -261,6 +285,12 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
 const lotById = (id) => LOTS.find((l) => l.id === id);
 const peso = (n) => `₱${n.toLocaleString('en-PH')}`;
+const isWeekend = (t = Date.now()) => [0, 6].includes(new Date(t).getDay());
+const rateShort = (r) => `${peso(r.base)} first ${r.hrs} hrs`;
+// weekday: base + each succeeding hour; weekend: the flat rate where the lot has one
+function parkingFee(r, hours, weekend) {
+  return weekend && r.flat ? r.flat : r.base + Math.max(0, hours - r.hrs) * r.next;
+}
 const icon = (id, cls = '') => `<svg class="ic ${cls}"><use href="#${id}"/></svg>`;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 75 → "1 hour 15 minutes" (function declaration, so the constants above can use it)
@@ -523,6 +553,8 @@ function back() {
 }
 function tab(name) { stack = [name]; show(name); }
 function goFrom(root, name) { stack = [root, name]; show(name); }
+// open a screen from the drawer: Back returns to the tab it was opened over
+function fromRoot(name) { goFrom(current === 'map' || TABS.includes(current) ? current : 'map', name); }
 
 // ---------- map ----------
 function renderMap() {
@@ -581,6 +613,21 @@ function closeSheet() {
 
 function liveIndex() { const i = new Date().getHours() - 6; return i >= 0 && i < 16 ? i : 12; }
 
+// rate chip: hover (tap on touch) opens the full breakdown
+function rateChip(r) {
+  const eg = r.hrs + 2;
+  return `<span class="rate-wrap">
+    <button class="attr rate" data-action="rateTip" aria-expanded="false" aria-describedby="rateTip" aria-label="${rateShort(r)}, see rates">${peso(r.base)}/${r.hrs}h</button>
+    <div class="rate-tip" id="rateTip" role="tooltip">
+      <b>Parking rates · cars</b>
+      <div class="kv"><span>First ${r.hrs} hours</span><span>${peso(r.base)}</span></div>
+      <div class="kv"><span>Each succeeding hour</span><span>+${peso(r.next)}</span></div>
+      ${r.flat ? `<div class="kv"><span>Weekends &amp; holidays</span><span>${peso(r.flat)} flat</span></div>` : ''}
+      <div class="kv total"><span>${eg} hrs on a weekday</span><span>${peso(parkingFee(r, eg, false))}</span></div>
+      <p>${r.note ? `${r.note}. ` : ''}A fraction of an hour counts as a full hour. Reserving? ${peso(FEE_CREDIT)} of the ${peso(RESERVATION_FEE)} fee comes off this at exit.</p>
+    </div></span>`;
+}
+
 // space selected.png
 function renderSheet() {
   const lot = lotById(ui.selectedLot);
@@ -596,13 +643,16 @@ function renderSheet() {
   else if (s.status === 'full') cta = `<button class="btn primary lg block" disabled>Full — no space to assign</button>
       <button class="btn text block" data-action="openLot" data-id="${alternative.id}">Try ${esc(alternative.name)} · ${stats(alternative).left} left</button>`;
   else cta = `<button class="btn primary lg block" data-action="reserve" data-id="${lot.id}">Reserve</button>`;
+  // already at the gate with no booking: skip reserving and go straight to a walk-in entry pass
+  const walkin = s.status !== 'full' && !state.reservation && !state.session
+    ? `<button class="btn secondary block" data-action="walkinAt" data-id="${lot.id}" data-from="map">${icon('i-car', 'sm')} Walk in now</button>` : '';
 
   $('#sheetBody').innerHTML = `
     <div class="sheet-title">
       <h1 class="panel-title">${esc(lot.name)}</h1>
       <button class="fav-btn ${fav ? 'on' : ''}" data-action="fav" data-id="${lot.id}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favorites">${icon('i-heart')}</button>
     </div>
-    <p class="lot-sub"><b>${s.left ? `${s.left} slots left` : 'Full'}</b> · ${s.parked} parked + ${s.reserved} reserved / ${lot.capacity} · <span style="white-space:nowrap">${lot.distance}</span></p>
+    <p class="lot-sub"><b>${s.left ? `${s.left} slots left` : 'Full'}</b> · ${lot.capacity} total · <span style="white-space:nowrap">${lot.distance}</span></p>
     <p class="lot-addr" title="${esc(lot.address)}">${icon('i-pin')}<span>${esc(lot.address)}</span></p>
 
     ${lotPhoto(lot)}
@@ -611,11 +661,11 @@ function renderSheet() {
       <span class="attr ${lot.accessible ? '' : 'off'}">${icon('i-access')} Accessible</span>
       <span class="attr ${lot.ev ? '' : 'off'}">${icon('i-ev')} EV Charging</span>
       <span class="attr ${lot.covered ? '' : 'off'}">${icon('i-covered')} Covered</span>
-      <span class="attr rate">${peso(lot.rate)}/hr</span>
+      ${rateChip(lot.rate)}
     </div>
 
     <div class="trend" id="trend"></div>
-    ${cta}
+    <div class="btn-stack" style="margin-top:0">${cta}${walkin}</div>
     <p class="sheet-note">You don't pick a slot. The gate assigns your floor and slot when you scan in.</p>`;
   renderTrend(lot);
 }
@@ -684,11 +734,12 @@ function pickLot(id) {
 function renderReserve() {
   const lot = lotById(ui.pendingLot);
   const s = stats(lot);
-  const who = state.identity ? `${state.identity.type === 'plate' ? 'Plate' : 'Phone'} ${esc(state.identity.value)}` : 'Guest — add a plate or phone next';
+  const a = state.account;
+  const who = a ? `${a.plate ? 'Plate' : 'Phone'} ${esc(acctKey())}` : 'Guest — add a plate or phone next';
   $('#reserveBody').innerHTML = `
     <div class="card">
       <h3>${esc(lot.name)}</h3>
-      <p class="caption" style="margin:0 0 8px">${esc(lot.address)} · ${lot.distance} · ${peso(lot.rate)}/hr</p>
+      <p class="caption" style="margin:0 0 8px">${esc(lot.address)} · ${lot.distance} · ${rateShort(lot.rate)}</p>
       ${statusChip(s)} <span class="caption">${s.left} spaces left right now</span>
     </div>
 
@@ -711,10 +762,48 @@ function renderReserve() {
     <div class="btn-stack"><button class="btn primary lg block" data-action="confirmReserve">Continue to pay ${peso(RESERVATION_FEE)}</button></div>`;
 }
 
-function afterIdentity() {
+function toPay() {
   ui.payCtx = 'reserve';
-  renderDrawer();
+  ui.payMethod = state.account?.payMethod || 'qrph';
   go('pay', { replace: current === 'otp' });
+}
+
+// identity screen copy per context; signing in and adding a number are phone-only
+const ID_COPY = {
+  reserve: ["Who's parking?", 'No account needed. We just need a plate number or phone so the gate can match your reservation.'],
+  create: ['Create an account', 'Save your plates, phone and payment method so reserving and paying take one tap.'],
+  signin: ['Sign in', "Enter the mobile number on your account and we'll text you a code."],
+  phone: ['Add a mobile number', 'Verify a number to sign in on other phones and get SMS alerts.'],
+};
+function renderIdentity() {
+  const ctx = ui.idCtx, phoneOnly = ctx === 'signin' || ctx === 'phone';
+  [$('#otpTitle').textContent, $('#otpLead').textContent] = ID_COPY[ctx];
+  $('#nameField').hidden = ctx !== 'create';
+  $('#idTabs').hidden = phoneOnly;
+  $('#otpFoot').textContent = ctx === 'signin' ? 'Accounts made with only a plate number stay on the phone they were made on.'
+    : 'Saved only on this device. You can remove it anytime in Account.';
+  ACTIONS.idTab({ tabId: phoneOnly ? 'phone' : 'plate' });
+  $('#nameInput').value = '';
+  $('#plateInput').value = '';
+  $('#phoneInput').value = '';
+  $('#otpBlock').hidden = true;
+  $('#sendOtpBtn').textContent = 'Send code';
+  $$('#otpBoxes input').forEach((i) => { i.value = ''; });
+  $('#otpBoxes').classList.remove('error', 'ok');
+  $('#otpError').hidden = true;
+}
+
+// a plate or verified phone came back from the identity screen
+function afterIdentity(via, value) {
+  const ctx = ui.idCtx;
+  if (ctx === 'phone') state.account.phone = value;
+  else if (!state.account) state.account = newAccount(via, value, ctx === 'create' ? $('#nameInput').value.trim() : '');
+  save();
+  renderDrawer();
+  if (ctx === 'reserve') { toPay(); return; }
+  if (stack[stack.length - 2] === 'profile') back();   // opened from the Account screen
+  else go('profile', { replace: true });
+  toast({ create: 'Account created.', signin: 'Signed in.', phone: 'Mobile number verified.' }[ctx]);
 }
 
 // ---------- payment ----------
@@ -748,9 +837,13 @@ function renderPay() {
 function fees() {
   const lot = lotById(state.session.lotId);
   const hours = Math.ceil(DEMO_MINUTES / 60);
-  const fee = lot.rate * hours;
+  const r = lot.rate;
+  const flat = isWeekend(state.session.enteredAt) && !!r.flat;
+  const fee = parkingFee(r, hours, flat);
+  const extra = Math.max(0, hours - r.hrs);
+  const basis = flat ? 'Weekend flat rate' : `${rateShort(r)}${extra ? ` + ${extra} × ${peso(r.next)}` : ''}`;
   const credit = state.session.reserved ? FEE_CREDIT : 0;
-  return { hours, fee, credit, due: Math.max(0, fee - credit) };
+  return { hours, fee, basis, credit, due: Math.max(0, fee - credit) };
 }
 
 function paid() {
@@ -797,7 +890,7 @@ function renderResQr() {
     <div class="card tinted">
       <div class="kv"><span>Reservation fee</span><span>${peso(RESERVATION_FEE)} paid</span></div>
       <div class="kv credit"><span>Credit at exit</span><span>−${peso(FEE_CREDIT)}</span></div>
-      <div class="kv"><span>Reserved for</span><span>${esc(state.identity?.value || 'Guest')}</span></div>
+      <div class="kv"><span>Reserved for</span><span>${esc(acctKey() || 'Guest')}</span></div>
     </div>
     <div class="btn-stack">
       <button class="btn primary lg block" data-action="entryScan" data-via="reservation">${icon('i-nfc')} Check in with NFC</button>
@@ -905,7 +998,7 @@ function renderWalkin() {
       <h3 class="section-title">Nearby lots with space</h3>${alts.map(lotCard).join('')}`;
   } else if (!ui.walkinQr) {
     body = `<div class="card"><div class="kv"><span>Spaces left</span><span>${s.left} ${statusChip(s)}</span></div>
-        <div class="kv"><span>Rate</span><span>${peso(lot.rate)}/hr · pay on exit</span></div></div>
+        <div class="kv"><span>Rate</span><span>${rateShort(lot.rate)} · pay on exit</span></div></div>
       <div class="notice">${icon('i-info')}<div>No reservation fee for walk-ins. Your floor and slot are assigned when you scan in.</div></div>
       <button class="btn primary lg block" data-action="genWalkin">Get entry pass</button>`;
   } else {
@@ -946,6 +1039,8 @@ function entryScan(via) {
     state.reservation = null;
     ui.walkinQr = false;
     save();
+    $('#app').classList.remove('sheet-open');   // a walk-in may have started from the lot sheet
+    ui.selectedLot = null;
     goFrom('map', 'parked');
   }, 450 * (items.length + 1));
 }
@@ -1007,7 +1102,7 @@ function renderSession() {
       <div class="kv"><span>Floor · slot</span><span>${esc(s.floor)} · ${s.slot}</span></div>
       <div class="kv"><span>Entered</span><span>${fmtTime(s.enteredAt)}</span></div>
       <div class="kv"><span>Duration</span><span>${Math.floor(DEMO_MINUTES / 60)}h ${DEMO_MINUTES % 60}m</span></div>
-      <div class="kv"><span>Rate</span><span>${peso(lot.rate)}/hr × ${f.hours} hr</span></div>
+      <div class="kv"><span>Rate</span><span>${f.basis}</span></div>
       <div class="kv"><span>Parking fee</span><span>${peso(f.fee)}</span></div>
       ${s.reserved ? `<div class="kv credit"><span>Reservation credit (${esc(s.ref)})</span><span>−${peso(f.credit)}</span></div>` : ''}
       <div class="kv total"><span>Amount due</span><span>${peso(f.due)}</span></div>
@@ -1059,7 +1154,7 @@ function lotCard(lot) {
   const s = stats(lot);
   return `<button class="lot-card" data-action="pickLot" data-id="${lot.id}">
     ${lotPhoto(lot, 'lot-thumb')}
-    <span class="info"><b>${esc(lot.name)}</b><small>${lot.distance} · ${peso(lot.rate)}/hr</small>${statusChip(s)}</span>
+    <span class="info"><b>${esc(lot.name)}</b><small>${lot.distance} · ${rateShort(lot.rate)}</small>${statusChip(s)}</span>
     <span class="count lvl-${s.lvl}">${s.left || 'Full'}</span></button>`;
 }
 
@@ -1088,24 +1183,86 @@ function historyList() {
   }).join('')}</div><p class="caption">Stored on this device only.</p>`;
 }
 
-// ---------- profile / drawer ----------
+// ---------- account / drawer ----------
+const avatar = (a, cls = 'avatar') => `<span class="${cls}">${a?.name ? initials(a.name) : icon('i-user')}</span>`;
+
 function renderProfile() {
-  const id = state.identity;
+  const a = state.account;
+  if (!a) {
+    $('#profileBody').innerHTML = `
+      <div class="center"><div class="big-icon soft">${icon('i-user')}</div>
+        <h2 style="margin:0">Guest</h2>
+        <p class="lead" style="margin-top:4px">You're using Uy Parking! without an account. Everything still works.</p></div>
+      <div class="card tinted perks">
+        <p>${icon('i-car', 'sm')} Save your plates so reserving takes one tap</p>
+        <p>${icon('i-wallet', 'sm')} Pick QR Ph or NFC once for every payment</p>
+        <p>${icon('i-phone', 'sm')} Sign in on another phone with your number</p>
+      </div>
+      <div class="btn-stack" style="margin-top:0">
+        <button class="btn primary block" data-action="startAccount" data-mode="create">Create account</button>
+        <button class="btn text block" data-action="startAccount" data-mode="signin">I already have an account</button>
+      </div>
+      <h3 class="section-title">Recent activity</h3>${historyList()}`;
+    return;
+  }
+  const plates = a.plates.map((p) => `<div class="row">${icon('i-car')}<span>${esc(p)}<small>${p === a.plate ? 'Default for reservations' : 'Vehicle'}</small></span>
+      ${p === a.plate ? '<span class="chip plain">Default</span>' : `<button class="link-btn" data-action="defaultPlate" data-plate="${esc(p)}">Make default</button>`}
+      <button class="icon-btn" data-action="removePlate" data-plate="${esc(p)}" aria-label="Remove ${esc(p)}">${icon('i-close', 'sm')}</button></div>`).join('');
   $('#profileBody').innerHTML = `
-    <div class="center"><div class="big-icon">${icon('i-user')}</div>
-      <h2 style="margin:0">${id ? esc(id.value) : 'Guest'}</h2>
-      <p class="lead" style="margin-top:4px">${id ? `Signed in with ${id.type === 'plate' ? 'plate number' : 'phone OTP'}` : "You're using Uy Parking! without an account."}</p></div>
+    <div class="acct-head">${avatar(a, 'avatar lg')}
+      <div><h2>${esc(acctName(a))}</h2><p class="caption">Account made with ${a.via === 'plate' ? 'a plate number' : 'phone OTP'}</p></div></div>
+
+    <h3 class="section-title">Profile</h3>
+    <label class="field"><span>Name</span><input value="${esc(a.name)}" placeholder="Add your name" maxlength="40" autocomplete="name" data-action-change="acctField" data-field="name"></label>
+    <label class="field"><span>Email for receipts <small class="muted">(optional)</small></span><input type="email" value="${esc(a.email)}" placeholder="you@example.com" autocomplete="email" data-action-change="acctField" data-field="email"></label>
     <div class="list">
-      ${id ? `<div class="row">${icon(id.type === 'plate' ? 'i-car' : 'i-user')}<span>${esc(id.value)}<small>${id.type === 'plate' ? 'Plate number' : 'Phone number'}</small></span></div>
-        <button class="row" data-action="signOut"><span>Remove from this device</span><small class="danger-text">Remove</small></button>`
-      : `<button class="row" data-action="addIdentity">${icon('i-car')}<span>Add plate number or phone<small>Optional. Only needed to reserve or pay.</small></span>${icon('i-chevron', 'sm')}</button>`}
+      ${a.phone ? `<div class="row">${icon('i-phone')}<span>${esc(a.phone)}<small>${icon('i-check', 'xs')} Verified</small></span>
+          <button class="link-btn" data-action="startAccount" data-mode="phone">Change</button></div>`
+        : `<button class="row" data-action="startAccount" data-mode="phone">${icon('i-phone')}<span>Add mobile number<small>Verify by SMS to sign in on other phones</small></span>${icon('i-chevron', 'sm')}</button>`}
     </div>
-    <h3 class="section-title">Recent activity</h3>${historyList()}`;
+
+    <h3 class="section-title">Vehicles</h3>
+    <div class="list">${plates || `<p class="empty" style="padding:14px 16px;margin:0">No vehicles yet. Add a plate to reserve without typing it.</p>`}</div>
+    <div class="add-row">
+      <input id="newPlate" placeholder="Add a plate, e.g. NBC 1234" maxlength="9" autocomplete="off" aria-label="New plate number">
+      <button class="btn secondary" data-action="addPlate">${icon('i-plus', 'sm')} Add</button>
+    </div>
+
+    <h3 class="section-title">Default payment</h3>
+    <div class="segmented">
+      <button class="seg ${a.payMethod === 'qrph' ? 'active' : ''}" data-action="payDefault" data-m="qrph">${icon('i-qr', 'sm')} QR Ph</button>
+      <button class="seg ${a.payMethod === 'nfc' ? 'active' : ''}" data-action="payDefault" data-m="nfc">${icon('i-nfc', 'sm')} NFC</button>
+    </div>
+    <p class="caption" style="margin-top:-8px">Selected first when you pay a reservation fee or parking fee. You can still switch at checkout.</p>
+
+    <h3 class="section-title">Recent activity</h3>${historyList()}
+
+    <h3 class="section-title">Account</h3>
+    <div class="list">
+      <button class="row" data-action="signOut"><span>Sign out<small>${a.phone ? 'Sign back in anytime with your number' : 'Without a mobile number, this account can’t be restored'}</small></span></button>
+      <button class="row" data-action="deleteAccount"><span class="danger-text">${ui.confirmDelete ? 'Tap again to delete for good' : 'Delete account'}<small>Removes your name, plates, phone and email</small></span></button>
+    </div>`;
 }
 
 function renderDrawer() {
-  $('#drawerName').textContent = state.identity ? state.identity.value : 'Guest';
-  $('#drawerSub').textContent = state.identity ? (state.identity.type === 'plate' ? 'Plate number' : 'Phone number') : 'Using the app without an account';
+  const a = state.account;
+  $('#drawerAvatar').outerHTML = avatar(a).replace('<span class="avatar"', '<span class="avatar" id="drawerAvatar"');
+  $('#drawerName').textContent = acctName(a);
+  $('#drawerSub').textContent = a ? (a.name ? acctKey(a) : a.plate ? 'Plate number' : 'Phone number') : 'Using the app without an account';
+  $('#drawerCta').innerHTML = a ? '' : `
+    <button class="btn primary block" data-action="startAccount" data-mode="create">Create account</button>
+    <button class="btn text block" data-action="startAccount" data-mode="signin">Sign in</button>`;
+}
+
+function renderSettings() {
+  applyTheme(); applyOffline();
+  const a = state.account;
+  $('#settingsAccount').innerHTML = a
+    ? `<button class="row" data-action="go" data-to="profile">${avatar(a, 'avatar sm')}<span>${esc(acctName(a))}<small>Profile, vehicles, phone, payment</small></span>${icon('i-chevron', 'sm')}</button>`
+    : `<button class="row" data-action="startAccount" data-mode="create">${icon('i-user')}<span>Create account<small>Optional. Save plates, phone and payment method.</small></span>${icon('i-chevron', 'sm')}</button>`;
+  $$('[data-pref]').forEach((el) => { el.checked = !!state.prefs[el.dataset.pref]; });
+  $('#receiptsSub').textContent = a?.email ? `In the app and to ${a.email}` : 'In the app';
+  $('#smsSub').textContent = a?.phone ? `To ${a.phone}` : 'Needs a verified mobile number';
 }
 function openDrawer() { renderDrawer(); $('#app').classList.add('drawer-open'); }
 function closeDrawer() { $('#app').classList.remove('drawer-open'); }
@@ -1197,7 +1354,7 @@ const ACTIONS = {
   back,
   home: () => { closeSheet(); tab('map'); },
   openDrawer, closeDrawer,
-  drawerGo: (d) => (TABS.includes(d.to) ? tab(d.to) : goFrom(current === 'map' || TABS.includes(current) ? current : 'map', d.to)),
+  drawerGo: (d) => (TABS.includes(d.to) ? tab(d.to) : fromRoot(d.to)),
   openLot: (d) => { if (current !== 'map') tab('map'); openLot(d.id); },
   closeSheet,
   pickLot: (d) => pickLot(d.id),
@@ -1223,16 +1380,20 @@ const ACTIONS = {
   trendBar: (d) => { ui.trendSel = Number(d.i); renderTrend(lotById(ui.selectedLot)); },
   reserve: (d) => { ui.pendingLot = d.id; go('reserve'); },
   reserveAgain: (d) => { tab('map'); openLot(d.id); },
-  confirmReserve: () => { if (state.identity) afterIdentity(); else go('otp'); },
+  confirmReserve: () => { if (state.account) toPay(); else { ui.idCtx = 'reserve'; go('otp'); } },
+  startAccount: (d) => {
+    ui.idCtx = d.mode;
+    if ($('#app').classList.contains('drawer-open')) fromRoot('otp'); else go('otp');
+  },
   idTab: (d) => {
     $$('#screen-otp .seg').forEach((b) => b.classList.toggle('active', b.dataset.tabId === d.tabId));
     $('#idPlate').hidden = d.tabId !== 'plate';
     $('#idPhone').hidden = d.tabId !== 'phone';
   },
   savePlate: () => {
-    const v = $('#plateInput').value.trim().toUpperCase();
-    if (v.replace(/\s/g, '').length < 4) { toast('Enter a valid plate number, e.g. NBC 1234.'); return; }
-    state.identity = { type: 'plate', value: v }; save(); afterIdentity();
+    const v = cleanPlate($('#plateInput').value);
+    if (!v) { toast('Enter a valid plate number, e.g. NBC 1234.'); return; }
+    afterIdentity('plate', v);
   },
   sendOtp: () => {
     const v = $('#phoneInput').value.replace(/\D/g, '');
@@ -1248,12 +1409,38 @@ const ACTIONS = {
     if (!/^\d{6}$/.test(code)) { boxes.classList.add('error'); $('#otpError').hidden = false; return; }
     boxes.classList.remove('error'); boxes.classList.add('ok'); $('#otpError').hidden = true;
     const digits = $('#phoneInput').value.replace(/\D/g, '');
-    state.identity = { type: 'phone', value: `+63 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}` };
-    save();
-    setTimeout(afterIdentity, 400);
+    setTimeout(() => afterIdentity('phone', `+63 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`), 400);
   },
-  addIdentity: () => go('otp'),
-  signOut: () => { state.identity = null; save(); renderProfile(); renderDrawer(); toast('Removed from this device.'); },
+  addPlate: () => {
+    const a = state.account, v = cleanPlate($('#newPlate').value);
+    if (!v) { toast('Enter a valid plate number, e.g. NBC 1234.'); return; }
+    if (a.plates.includes(v)) { toast(`${v} is already saved.`); return; }
+    a.plates.push(v);
+    a.plate ||= v;
+    save(); renderProfile(); renderDrawer();
+    toast(`${v} added.`);
+  },
+  defaultPlate: (d) => { state.account.plate = d.plate; save(); renderProfile(); renderDrawer(); },
+  removePlate: (d) => {
+    const a = state.account;
+    if (a.plates.length === 1 && !a.phone) { toast('Add a mobile number first. Your account needs a plate or a phone.'); return; }
+    a.plates = a.plates.filter((p) => p !== d.plate);
+    if (a.plate === d.plate) a.plate = a.plates[0] || null;
+    save(); renderProfile(); renderDrawer();
+    toast(`${d.plate} removed.`);
+  },
+  payDefault: (d) => { state.account.payMethod = d.m; save(); renderProfile(); },
+  signOut: () => {
+    state.account = null; state.prefs.sms = false; ui.confirmDelete = false;
+    save(); renderProfile(); renderDrawer();
+    toast('Signed out on this device.');
+  },
+  deleteAccount: () => {
+    if (!ui.confirmDelete) { ui.confirmDelete = true; renderProfile(); return; }
+    state.account = null; state.prefs.sms = false; ui.confirmDelete = false;
+    save(); renderProfile(); renderDrawer();
+    toast('Account deleted.');
+  },
   payMethod: (d) => { ui.payMethod = d.m; renderPay(); },
   paid,
   cancelReservation: () => {
@@ -1262,11 +1449,12 @@ const ACTIONS = {
     toast('Reservation cancelled.');
   },
   entryScan: (d) => entryScan(d.via),
-  walkinAt: (d) => { ui.walkinLot = d.id; ui.walkinQr = false; goFrom('scan', 'walkin'); },
+  walkinAt: (d) => { ui.walkinLot = d.id; ui.walkinQr = false; goFrom(d.from || 'scan', 'walkin'); },
+  rateTip: (d, el) => el.setAttribute('aria-expanded', el.parentElement.classList.toggle('open')),
   genWalkin: () => { ui.walkinQr = true; renderWalkin(); },
   print: () => toast('Ticket sent to the gate printer.'),
   slotTaken: () => toast('Staff have been notified. They will direct you to another slot and give you a voucher.'),
-  payExit: () => { ui.payCtx = 'exit'; ui.payMethod = 'qrph'; go('pay'); },
+  payExit: () => { ui.payCtx = 'exit'; ui.payMethod = state.account?.payMethod || 'qrph'; go('pay'); },
   payVendor: () => { state.session.payMethod = 'vendor'; save(); ui.exitDone = false; go('exit'); },
   exitScan,
   ownerTab: (d) => { ui.ownerTab = d.tabId; renderOwner(); },
@@ -1304,20 +1492,17 @@ const RENDER = {
   session: renderSession,
   exit: renderExit,
   explore: renderExplore,
-  profile: renderProfile,
+  profile: () => { ui.confirmDelete = false; renderProfile(); },
   owner: renderOwner,
-  settings: () => { applyTheme(); applyOffline(); },
-  otp: () => {
-    $('#otpBlock').hidden = true;
-    $('#sendOtpBtn').textContent = 'Send code';
-    $$('#otpBoxes input').forEach((i) => { i.value = ''; });
-    $('#otpBoxes').classList.remove('error', 'ok');
-    $('#otpError').hidden = true;
-  },
+  settings: renderSettings,
+  otp: renderIdentity,
 };
 
 // ---------- wiring ----------
 document.addEventListener('click', (e) => {
+  $$('.rate-wrap.open').forEach((w) => {   // a tap anywhere else closes the rate breakdown
+    if (!w.contains(e.target)) { w.classList.remove('open'); w.firstElementChild.setAttribute('aria-expanded', false); }
+  });
   const el = e.target.closest('[data-action]');
   if (!el || el.tagName === 'INPUT') {
     if (!e.target.closest('.search, .search-panel')) hideSearch();
@@ -1332,7 +1517,21 @@ document.addEventListener('change', (e) => {
   if (el.matches('[data-action="toggleTheme"]')) ACTIONS.toggleTheme();
   else if (el.matches('[data-action="toggleOffline"]')) ACTIONS.toggleOffline();
   else if (el.dataset.actionChange === 'trendDay') { ui.trendDay = Number(el.value); ui.trendSel = null; renderTrend(lotById(ui.selectedLot)); }
-  else if (el.dataset.actionChange === 'walkinLot') { ui.walkinLot = el.value; ui.walkinQr = false; renderWalkin(); ui.focusLot = el.value; focusLot(el.value); renderMap(); }
+  else if (el.dataset.pref) {
+    if (el.dataset.pref === 'sms' && el.checked && !state.account?.phone) {
+      el.checked = false; toast('Add a verified mobile number in Account first.'); return;
+    }
+    state.prefs[el.dataset.pref] = el.checked; save();
+  } else if (el.dataset.actionChange === 'acctField') {
+    const v = el.value.trim();
+    if (el.dataset.field === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { toast('Enter a valid email, e.g. you@example.com.'); return; }
+    state.account[el.dataset.field] = v; save(); renderDrawer();
+    if (el.dataset.field === 'name') {   // patch the header in place so focus can move on to the next field
+      $('.acct-head h2').textContent = acctName();
+      $('.acct-head .avatar').outerHTML = avatar(state.account, 'avatar lg');
+    }
+    toast(v ? 'Saved.' : 'Removed.');
+  } else if (el.dataset.actionChange === 'walkinLot') { ui.walkinLot = el.value; ui.walkinQr = false; renderWalkin(); ui.focusLot = el.value; focusLot(el.value); renderMap(); }
 });
 
 const searchInput = $('#searchInput');
@@ -1341,6 +1540,10 @@ searchInput.addEventListener('input', () => renderSearch(searchInput.value));
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { searchInput.blur(); hideSearch(); }
   if (e.key === 'Enter') { const first = $('#searchResults [data-action="pickLot"]'); if (first) pickLot(first.dataset.id); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
 });
 
 // OTP boxes: auto-advance and backspace

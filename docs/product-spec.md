@@ -25,7 +25,8 @@ The primary consumer shell is a map-first mobile layout:
   availability directly on each marker.
 - **Bottom:** three-tab navigation — Map, Scan, and Explore — plus a locate-me control.
 - **Lot detail:** a rounded bottom sheet opened by selecting a map marker. It contains the
-  lot name, photo, attributes, hourly rate, trend chart, and a prominent Reserve button.
+  lot name, photo, attributes, tiered parking rate (hover or tap for the full breakdown),
+  trend chart, a prominent Reserve button, and a Walk in now button.
 - **Reservation banner:** after a reservation, a compact teal banner identifies the lot and
   assigned reservation reference while the user returns to the map.
 
@@ -40,7 +41,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 | Map home | OpenStreetMap view of Metro Manila (opening on Ortigas Center), teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
 | Search results | List and map pins for nearby lots ranked by proximity and availability |
-| Lot detail sheet | Lot photo, name, aggregate availability, accessible/EV/covered attributes, hourly rate, and trends |
+| Lot detail sheet | Lot photo, name, slots left / total, accessible/EV/covered attributes, tiered rate with breakdown, trends, Reserve and Walk in now |
 | Reservation confirmation | Selected lot, automatic-space-assignment notice, fee breakdown, grace-period reminder, and optional accessibility notice |
 | Assignment confirmation | System-assigned floor/slot after entry scan, photo or map reference, and directions to the assigned space |
 
@@ -63,9 +64,10 @@ should preserve this shell where practical rather than introducing unrelated pag
 ### Sidebar and owner views
 | Screen | Purpose |
 |---|---|
-| User profile | Works unauthenticated; shows plate/phone if added; recent activity |
-| Settings | Theme, notifications, saved plates — mostly non-functional toggles |
-| OTP / identity | Appears only at reserve/pay; plate number or phone-number OTP |
+| Sidebar | Guest: Create account / Sign in; signed in: name and default plate, opens Account |
+| Account | Guest: perks + Create account / Sign in. Signed in: name, email for receipts, verified phone, saved plates with a default, default payment method, recent activity, sign out, delete account |
+| Settings | Account shortcut, theme, notification toggles (saved locally; SMS alerts need a verified phone) |
+| OTP / identity | At reserve/pay for guests (plate number or phone OTP); also create account (plate or phone), sign in (phone only), add/change phone |
 | Owner statistics | Mock occupancy, peak-time, and lot-performance cards |
 | Owner financials | Mock revenue, reservation-fee, and transaction summary |
 
@@ -110,19 +112,25 @@ should preserve this shell where practical rather than introducing unrelated pag
 - First-time vs. returning user — "continue without account" vs. cached recents
 - Reservation fee payment confirmation — ₱50 paid, ₱35 exit deduction explained
 - Accessibility slot reminder — non-blocking eligibility notice
-- Reserved versus parked split — counts are explicit on the lot detail sheet
+- Reserved versus parked split — shown on the owner dashboard; the lot detail sheet keeps
+  to slots left and total
 
 ## Notes for the writeup / defense
 
-- **Reserved counts as taken.** Prevents phantom availability. Always show the split
-  on lot detail so panelists don't read it as a bug.
+- **Reserved counts as taken.** Prevents phantom availability. Drivers see only slots
+  left / total; the parked vs. reserved split is on the owner dashboard.
+- **Rates.** Each lot's car rate is tiered (first N hours, then per succeeding hour,
+  weekend flat rate where the mall has one), taken from published parking guides where
+  available. Real rates change, so treat them as illustrative.
 - **1 h 15 min grace, auto-release.** Countdown is front and center on the QR screen; the
   expired state is prototyped.
 - **Payment.** A ₱50 consumer-side reservation fee is paid before the reservation QR is
   shown; ₱35 is deductible from the final parking fee. Universal QR Ph/NFC is shown on
   exit as a visual mock only. Settlement, refunds, and disputes are out of scope.
-- **Identity.** No account needed to browse or locate parking. Plate number or phone
-  OTP only at reserve/pay. Recents live in local cache.
+- **Identity.** No account needed to browse or locate parking. Guests are asked for a
+  plate number or phone OTP only at reserve/pay; an account is optional and can be made
+  from the sidebar. Accounts made with only a plate stay on that device; adding a phone
+  lets you sign in elsewhere. Recents live in local cache.
 - **Accessibility.** The app is a locator, not an enforcement authority — no eligibility
   check. Lot attributes can identify accessible facilities, but the user does not select
   a specific accessible slot. An optional non-blocking reminder on reserve costs nothing

@@ -38,9 +38,10 @@ Each of these flows follows `docs/user-flowchart.png`.
    as small pins. Solid teal means plenty of space, pale teal means nearly full and grey
    means full. Zoom in to see the free-space count on every lot.
    Drag to pan; scroll, double-click or pinch to zoom; ⌖ recentres on your (mock) location.
-2. The details sheet shows free spaces, the *parked + reserved* split, the address, features
-   (accessible, EV, covered), the hourly rate and a **trends** chart. Tap any bar to see
-   that hour's typical availability, or change the day.
+2. The details sheet shows slots left and total, the address, features (accessible, EV,
+   covered), the parking rate and a **trends** chart. Hover over or tap the rate (e.g.
+   *₱50/3h*) for the full breakdown. Tap any bar to see that hour's typical availability, or
+   change the day. Already at the gate? **Walk in now** skips the reservation.
 3. Tap **Reserve**, review the ₱50 fee (₱35 is credited at exit), then continue.
 4. Enter a plate number, or use **Phone (OTP)**. Any 6 digits work as the code; no text is
    actually sent.
@@ -78,6 +79,8 @@ Open the **☰ menu** → **Parking owner view**, then switch between **Statisti
 | Lot full | Tap the grey **FULL** marker, or Presentation controls → **Lot full state** |
 | Offline / underground | Presentation controls → **Toggle offline**, or actually disconnect. A stale-data notice appears, QR codes still show and the map stops loading new tiles. |
 | Dark mode | Settings → **Dark mode**. It follows your system setting by default. |
+| Create an account / sign in | Open the menu (☰) as a guest → **Create account** (plate or phone OTP) or **Sign in** (phone OTP). Any 6 digits work as the code. |
+| Account settings | Menu → **Account**: name, email for receipts, mobile number, saved plates and default, default payment method, sign out, delete account |
 | Search, saved places, recents | Tap **Where to?** on the map |
 | Favourites | Tap the heart on a lot's details sheet; it appears in Explore |
 

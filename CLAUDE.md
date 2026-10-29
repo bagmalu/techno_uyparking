@@ -55,12 +55,15 @@ See `docs/product-spec.md` for the full screen inventory and the nav/sidebar lay
   final parking fee, and payment on exit is shown through a visual
   **Universal QR Ph / NFC integration**. Settlement, refunds, and disputes are out of scope.
 - **Occupancy display:** heatmap and lot-level counts show *total taken = parked +
-  reserved*. Show the split on lot detail (e.g. "28 parked + 6 reserved / 40") so it
-  reads as intentional. Floor and slot data may be shown only as system-assigned
+  reserved*. Lot detail shows only slots left and total (e.g. "6 slots left · 40 total");
+  the parked/reserved split stays on the owner dashboard. Floor and slot data may be shown only as system-assigned
   location details, never as user selection controls.
 - **Identity:** no account required to use the app. An account, when created, is keyed
   on **plate number or phone-number OTP**. Recent reservations and similar are kept in
-  local cache. The OTP prompt appears only at reserve/pay.
+  local cache. Guests are prompted for a plate/OTP only at reserve/pay, but can also
+  create an account or sign in (phone OTP only) from the sidebar. The Account screen holds
+  name, email for receipts, verified phone, saved plates (one default), and default
+  payment method (QR Ph / NFC) — all local, no backend.
 - **Accessibility:** the app is a **locator, not an enforcement authority** — no
   eligibility check. Accessible facilities or spaces may be indicated, but users do not
   select a specific accessible slot. An optional non-blocking notice is allowed.

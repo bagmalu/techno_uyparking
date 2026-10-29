@@ -149,8 +149,8 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Bottom nav | 3 tabs — Map, Scan, Explore; active / inactive |
 | Map pin | single / cluster; numeric label; heat-band colored; selected |
 | Lot card / detail sheet | default; fullness chip; favorited; expanded with photo and trends |
-| Attribute row | accessible; EV charging; covered; hourly rate |
-| Availability summary | lot/floor aggregate counts; parked/reserved split; available, filling, and full states |
+| Attribute row | accessible; EV charging; covered; rate chip (first-block price, hover/tap for the breakdown card) |
+| Availability summary | slots left / total for drivers (parked/reserved split on the owner dashboard); available, filling, and full states |
 | Automatic assignment card | waiting for entry scan / assigning / assigned / unavailable; assigned floor and slot shown after scan |
 | Occupancy bar | total taken plus parked vs. reserved split |
 | Trend chart | static bars; selected time; day selector; live availability label |
