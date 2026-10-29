@@ -67,11 +67,19 @@ Chosen **blue → amber → red** so it never collides with the teal accent, and
 distinguishable under red-green color-vision deficiency. **Always pair with an icon or
 label — never color alone.**
 
-| Token | Hex | Meaning |
-|---|---|---|
-| status-available | `#2563eb` | open slots |
-| status-filling | `#f59e0b` | few left |
-| status-full | `#dc2626` | none available |
+| Token | Hex | Chip label | Rule (share of capacity taken) |
+|---|---|---|---|
+| status-available | `#2563eb` | Available | under 70% taken |
+| status-filling | `#f59e0b` | Filling up | 70% or more taken, at least 1 slot left |
+| status-full | `#dc2626` | Full | 0 slots left |
+
+The status chip is based on the **percentage** taken, so it says how close the lot is to
+capacity regardless of its size. The map heatmap below is based on the **count** of slots
+left instead, which reflects your chance of getting a space. Big lots can therefore show
+"Filling up" on solid teal (e.g. 240 of 300 taken: 80%, but 60 left), and small lots
+"Available" on pale teal (e.g. 6 of 15 taken: 40%, but 9 left). This is intentional: the
+chip shows how fast the lot is filling, the marker shows how much room is left. Both
+rules live in `stats()` in `../source/app.js`.
 
 ### Heatmap scale — lot availability on the map
 
@@ -79,7 +87,7 @@ Matches the mockups (`mockup/default.png`, `mockup/zoomed in.png`): markers are 
 their strength shows how much space is left. The count appears on every marker once the map
 is zoomed in (and always on the selected marker), so color is never the only signal.
 
-| Band | Hex | Spaces left |
+| Band | Hex | Spaces left (count, not %) |
 |---|---|---|
 | lot-high | `#009f8b` | 20 or more |
 | lot-mid | `#2cac9d` | 10–19 |
