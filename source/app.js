@@ -200,11 +200,31 @@ function metres([lat1, lng1], [lat2, lng2]) {
   const r = Math.PI / 180, x = (lng2 - lng1) * r * Math.cos(((lat1 + lat2) / 2) * r), y = (lat2 - lat1) * r;
   return 6371000 * Math.hypot(x, y);
 }
+const fmtDist = (m) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`);
 LOTS.forEach((lot) => {
   lot.center = centroid(lot.shape);
   lot.metres = metres(ME, lot.center);
-  lot.distance = lot.metres < 1000 ? `${Math.round(lot.metres / 10) * 10} m` : `${(lot.metres / 1000).toFixed(1)} km`;
+  lot.distance = fmtDist(lot.metres);
 });
+
+// "Parking near <business>" fallback: lots within walking distance of a place in places.js
+const NEAR_M = 700;
+const compact = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function placeHits(q) {
+  const cq = compact(q);
+  if (cq.length < 3) return [];
+  return PLACES.map((p, i) => ({ p, i, names: [p.name, ...(p.alias || [])].map(compact) }))
+    .filter((h) => h.names.some((n) => n.includes(cq)))
+    .map(({ p, i, names }) => ({ p, i, prefix: names.some((n) => n.startsWith(cq)) }));
+}
+// lots near a place, each with its closest branch; chains sort by distance from you, single places by distance from the place
+function lotsNear(place) {
+  const near = LOTS.map((lot) => {
+    const best = place.at.map((pt, j) => ({ j, m: metres(lot.center, pt) })).sort((a, b) => a.m - b.m)[0];
+    return { lot, j: best.j, m: best.m };
+  }).filter((n) => n.m <= NEAR_M);
+  return near.sort(place.at.length > 1 ? (a, b) => a.lot.metres - b.lot.metres : (a, b) => a.m - b.m);
+}
 
 const SAVED_PLACES = [
   { icon: 'i-home', name: 'Home', sub: 'Shaw Blvd., Mandaluyong', lotId: 'riverside' },
@@ -252,7 +272,7 @@ function defaultState() {
 let state = load();
 const ui = { selectedLot: null, pendingLot: null, payCtx: 'reserve', payMethod: 'qrph',
   walkinLot: 'sm-b1', walkinQr: false, focusLot: null, assignLot: null, exitDone: false, ownerTab: 'stats', trendDay: new Date().getDay(), trendSel: null,
-  idCtx: 'reserve', confirmDelete: false };   // idCtx: why the identity screen is open — reserve | create | signin | phone
+  idCtx: 'reserve', confirmDelete: false, near: null };   // near: business a lot was found through (search fallback)   // idCtx: why the identity screen is open — reserve | create | signin | phone
 
 function load() {
   try {
@@ -475,14 +495,16 @@ function focusLot(id, animate = true) {
   map.invalidateSize({ pan: false });   // the sheet / tab bar may have just changed the map's size
   if (!focused) { userView = { center: map.getCenter(), zoom: map.getZoom() }; focused = true; }
   const size = map.getSize();
-  const b = lotLayers[id].poly.getBounds();
+  const b = L.latLngBounds(lotLayers[id].poly.getBounds().getNorthWest(), lotLayers[id].poly.getBounds().getSouthEast());
+  const near = ui.near?.lotId === id && ui.selectedLot === id ? ui.near : null;
+  if (near) b.extend(near.pt);   // keep the business it was searched from in view too
   const fits = (z) => {
     const nw = map.project(b.getNorthWest(), z), se = map.project(b.getSouthEast(), z);
     return se.x - nw.x <= size.x * .7 && se.y - nw.y <= size.y * .16;
   };
   let z = 18;
-  while (z > 15 && !fits(z)) z -= .25;
-  const centre = map.unproject(map.project(lot.center, z).add([0, size.y * (.5 - .19)]), z);
+  while (z > (near ? 14 : 15) && !fits(z)) z -= .25;
+  const centre = map.unproject(map.project(near ? b.getCenter() : lot.center, z).add([0, size.y * (.5 - .19)]), z);
   if (animate) fly(centre, z, .6);
   else map.setView(centre, z, { animate: false });
 }
@@ -558,6 +580,7 @@ function fromRoot(name) { goFrom(current === 'map' || TABS.includes(current) ? c
 
 // ---------- map ----------
 function renderMap() {
+  if (ui.near && ui.selectedLot !== ui.near.lotId) { ui.near = null; syncNearMarker(); }   // sheet closed by a flow (paid, parked)
   LOTS.forEach((lot) => {
     const s = stats(lot);
     const { poly, label } = lotLayers[lot.id];
@@ -592,9 +615,22 @@ function renderBanners() {
   tick();
 }
 
+// pin for the business a lot was found through (search fallback), shown while its sheet is open
+let nearMarker = null;
+function syncNearMarker() {
+  nearMarker?.remove();
+  nearMarker = null;
+  const n = ui.near;
+  if (!n || ui.selectedLot !== n.lotId) return;
+  nearMarker = L.marker(n.pt, { icon: L.divIcon({ className: 'place-pin', iconSize: [0, 0], html: `<span>${icon('i-store', 'sm')}${esc(n.name)}</span>` }),
+    interactive: false, keyboard: false, title: n.name }).addTo(map);
+}
+
 function openLot(id) {
   hideSearch();
+  if (ui.near?.lotId !== id) ui.near = null;
   ui.selectedLot = id;
+  syncNearMarker();
   ui.trendSel = null;
   ui.trendDay = new Date().getDay();
   renderSheet();
@@ -606,6 +642,8 @@ function openLot(id) {
 function closeSheet() {
   if (!ui.selectedLot) return;
   ui.selectedLot = null;
+  ui.near = null;
+  syncNearMarker();
   $('#app').classList.remove('sheet-open');
   if (current === 'map') restoreView();
   renderMap();
@@ -635,6 +673,7 @@ function renderSheet() {
   const s = stats(lot);
   const fav = state.favorites.includes(lot.id);
   const mine = state.reservation?.lotId === lot.id;
+  const near = ui.near?.lotId === lot.id ? ui.near : null;
   const alternative = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0).sort((a, b) => a.metres - b.metres)[0];
 
   let cta;
@@ -654,6 +693,8 @@ function renderSheet() {
     </div>
     <p class="lot-sub"><b>${s.left ? `${s.left} slots left` : 'Full'}</b> · ${lot.capacity} total · <span style="white-space:nowrap">${lot.distance}</span></p>
     <p class="lot-addr" title="${esc(lot.address)}">${icon('i-pin')}<span>${esc(lot.address)}</span></p>
+    ${near ? `<p class="near-tag">${icon('i-store', 'sm')}<span><b>${fmtDist(metres(lot.center, near.pt))} from ${esc(near.name)}${near.branch ? ` ${esc(near.branch)}` : ''}</b>
+      This lot is nearby. ${esc(near.name)} isn't listed as a parking lot in Uy Parking!</span></p>` : ''}
 
     ${lotPhoto(lot)}
 
@@ -709,7 +750,26 @@ function renderSearch(q = '') {
   let html;
   if (query) {
     const hits = LOTS.filter((l) => `${l.name} ${l.area} ${l.address}`.toLowerCase().includes(query));
-    html = `<h4>Parking near “${esc(q.trim())}”</h4>` + (hits.length ? hits.map((l) => lotRow(l)).join('') : `<p class="empty" style="padding:8px 16px">No lots found. Try “Megamall”, “Podium” or “EDSA”.</p>`);
+    if (hits.length) html = `<h4>Parking near “${esc(q.trim())}”</h4>` + hits.map((l) => lotRow(l)).join('');
+    else {
+      // no lot by that name: try businesses and landmarks, and list the lots near them
+      // name matches first, then the place whose nearby lots are closest to you
+      const groups = placeHits(q).map((h) => ({ ...h, near: lotsNear(h.p) })).filter((g) => g.near.length)
+        .map((g) => ({ ...g, from: Math.min(...g.near.map((n) => n.lot.metres)) }))
+        .sort((a, b) => b.prefix - a.prefix || a.from - b.from).slice(0, 3);
+      html = groups.length ? groups.map(({ p, i, near }) => {
+        const chain = p.at.length > 1;
+        return `<h4>Parking near ${esc(p.name)} <small>${esc(p.kind)}</small></h4>
+          <div class="near-note">${icon('i-info', 'sm')}<span><b>${esc(p.name)} isn't listed as a parking lot in Uy Parking!</b>
+            ${chain ? `These lots are near a ${esc(p.name)} branch.` : 'These lots are nearby.'}</span></div>`
+          + near.slice(0, groups.length > 1 ? 3 : 5).map(({ lot, j, m }) => {
+            const branch = p.at[j][2] ? ` ${p.at[j][2]}` : '';
+            return `<button class="row" data-action="pickLot" data-id="${lot.id}" data-place="${i}" data-pt="${j}">${icon('i-pin')}
+              <span>${esc(lot.name)}<small>${fmtDist(m)} from ${esc(p.name + branch)} · ${lot.distance} from you</small></span>${statusChip(stats(lot))}</button>`;
+          }).join('');
+      }).join('')
+        : `<h4>Parking near “${esc(q.trim())}”</h4><p class="empty" style="padding:8px 16px">No lots found. Try “Megamall”, “Jollibee” or “EDSA”.</p>`;
+    }
   } else {
     html = `<h4>Saved places</h4>` + SAVED_PLACES.map((p) => `<button class="row" data-action="pickLot" data-id="${p.lotId}">${icon(p.icon)}
       <span>${p.name}<small>${p.sub} · nearest: ${esc(lotById(p.lotId).name)}</small></span>${icon('i-chevron', 'sm')}</button>`).join('')
@@ -1357,7 +1417,11 @@ const ACTIONS = {
   drawerGo: (d) => (TABS.includes(d.to) ? tab(d.to) : fromRoot(d.to)),
   openLot: (d) => { if (current !== 'map') tab('map'); openLot(d.id); },
   closeSheet,
-  pickLot: (d) => pickLot(d.id),
+  pickLot: (d) => {
+    const p = d.place && PLACES[d.place];
+    ui.near = p ? { lotId: d.id, name: p.name, branch: p.at[d.pt][2] || '', pt: p.at[d.pt].slice(0, 2) } : null;
+    pickLot(d.id);
+  },
   expand: (d, el) => el.closest('.panel').classList.toggle('expanded'),
   locate: () => {
     flyHome(ME, 17);
@@ -1539,7 +1603,7 @@ searchInput.addEventListener('focus', () => { closeSheet(); renderSearch(searchI
 searchInput.addEventListener('input', () => renderSearch(searchInput.value));
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { searchInput.blur(); hideSearch(); }
-  if (e.key === 'Enter') { const first = $('#searchResults [data-action="pickLot"]'); if (first) pickLot(first.dataset.id); }
+  if (e.key === 'Enter') { const first = $('#searchResults [data-action="pickLot"]'); if (first) ACTIONS.pickLot(first.dataset); }
 });
 
 document.addEventListener('keydown', (e) => {

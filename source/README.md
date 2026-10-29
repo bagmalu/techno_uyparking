@@ -9,6 +9,9 @@ Open `index.html` directly, or run `python -m http.server 8777` in this folder a
   (`initMap`, `focusLot`, `renderMap`), the screen router (`go` / `back` / `tab`), the 1 hour 15 minute
   reservation countdown (`tick`), automatic slot assignment (`entryScan`) and the demo
   shortcuts (`DEMO_FLOWS`)
+- `places.js` — popular businesses (Jollibee, McDonald's, Starbucks, Mercury Drug, banks, …)
+  and landmarks from OpenStreetMap, kept only within 700 m of a lot. Search falls back to
+  these when no lot matches (`placeHits`, `lotsNear` in `app.js`)
 - `vendor/leaflet/` — Leaflet 1.9.4. Tiles come from `tile.openstreetmap.org`, or from
   `tile.openstreetmap.de` when the page is opened as `file://` (openstreetmap.org rejects
   requests without a Referer). The base map needs an internet connection.

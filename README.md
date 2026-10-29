@@ -82,6 +82,7 @@ Open the **☰ menu** → **Parking owner view**, then switch between **Statisti
 | Create an account / sign in | Open the menu (☰) as a guest → **Create account** (plate or phone OTP) or **Sign in** (phone OTP). Any 6 digits work as the code. |
 | Account settings | Menu → **Account**: name, email for receipts, mobile number, saved plates and default, default payment method, sign out, delete account |
 | Search, saved places, recents | Tap **Where to?** on the map |
+| Parking near a business or landmark | Search for something that isn't a lot, e.g. **Jollibee**, **mcdo**, **Starbucks** or **St. Luke's**. The results list lots within 700 m, with a note that the business isn't listed as a parking lot in Uy Parking! Opening one pins the business on the map. |
 | Favourites | Tap the heart on a lot's details sheet; it appears in Explore |
 
 ## Presentation controls

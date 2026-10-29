@@ -40,7 +40,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 |---|---|
 | Map home | OpenStreetMap view of Metro Manila (opening on Ortigas Center), teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
-| Search results | List and map pins for nearby lots ranked by proximity and availability |
+| Search results | List and map pins for nearby lots ranked by proximity and availability. With no lot match, falls back to popular businesses and landmarks (OSM data) and lists lots within 700 m, labelled "<business> isn't listed as a parking lot in Uy Parking!"; the business is pinned on the map when a lot is opened |
 | Lot detail sheet | Lot photo, name, slots left / total, accessible/EV/covered attributes, tiered rate with breakdown, trends, Reserve and Walk in now |
 | Reservation confirmation | Selected lot, automatic-space-assignment notice, fee breakdown, grace-period reminder, and optional accessibility notice |
 | Assignment confirmation | System-assigned floor/slot after entry scan, photo or map reference, and directions to the assigned space |
