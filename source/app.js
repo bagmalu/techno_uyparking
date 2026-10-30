@@ -226,11 +226,13 @@ function lotsNear(place) {
   return near.sort(place.at.length > 1 ? (a, b) => a.lot.metres - b.lot.metres : (a, b) => a.m - b.m);
 }
 
-const SAVED_PLACES = [
-  { icon: 'i-home', name: 'Home', sub: 'Shaw Blvd., Mandaluyong', lotId: 'riverside' },
-  { icon: 'i-pin', name: 'SM Megamall', sub: 'Preset · EDSA, Mandaluyong', lotId: 'sm-b1' },
-  { icon: 'i-pin', name: 'Office', sub: 'ADB Ave., Ortigas Center', lotId: 'north' },
-];
+// saved places: one Home, one Work and any number of named places, one per lot (state.places)
+const PLACE_KIND = {
+  home: { label: 'Home', icon: 'i-home' },
+  work: { label: 'Work', icon: 'i-work' },
+  custom: { label: 'Other', icon: 'i-heart' },
+};
+const shortName = (lot) => lot.name.replace(/\s+(parking|car ?park)$/i, '');
 
 // typical occupancy 6 AM → 9 PM (16 hourly bars), scaled per lot and day
 const BASE_TREND = [.22, .27, .3, .36, .32, .45, .6, .5, .42, .52, .62, .72, .84, .78, .62, .5];
@@ -256,7 +258,11 @@ function defaultState() {
     reservation: null,   // { lotId, ref, createdAt, expiresAt }
     session: null,       // { lotId, floor, slot, landmark, enteredAt, reserved, ref, paid, payMethod }
     lastExpired: null,
-    favorites: ['sm-b1'],
+    places: [   // { kind: 'home' | 'work' | 'custom', name, lotId }, kept in PLACE_KIND order
+      { kind: 'home', name: 'Home', lotId: 'riverside' },
+      { kind: 'work', name: 'Work', lotId: 'north' },
+      { kind: 'custom', name: 'SM Megamall', lotId: 'sm-b1' },
+    ],
     recents: ['north', 'plaza'],
     history: [
       { lotId: 'north', ref: '#188', date: 'Oct 21', status: 'Completed' },
@@ -272,13 +278,18 @@ function defaultState() {
 let state = load();
 const ui = { selectedLot: null, pendingLot: null, payCtx: 'reserve', payMethod: 'qrph',
   walkinLot: 'sm-b1', walkinQr: false, focusLot: null, assignLot: null, exitDone: false, ownerTab: 'stats', trendDay: new Date().getDay(), trendSel: null,
-  idCtx: 'reserve', confirmDelete: false, near: null };   // near: business a lot was found through (search fallback)   // idCtx: why the identity screen is open — reserve | create | signin | phone
+  idCtx: 'reserve', confirmDelete: false, near: null, saveDraft: null };   // saveDraft: { lotId, kind, name } while the save dialog is open   // near: business a lot was found through (search fallback)   // idCtx: why the identity screen is open — reserve | create | signin | phone
 
 function load() {
   try {
     const s = Object.assign(defaultState(), JSON.parse(localStorage.getItem(STORE_KEY)) || {});
     if (s.identity && !s.account) s.account = newAccount(s.identity.type, s.identity.value);   // saved before accounts existed
     delete s.identity;
+    (s.favorites || []).forEach((id) => {   // favorites became saved places
+      const lot = LOTS.find((l) => l.id === id);
+      if (lot && !s.places.some((p) => p.lotId === id)) s.places.push({ kind: 'custom', name: shortName(lot), lotId: id });
+    });
+    delete s.favorites;
     return s;
   } catch { return defaultState(); }
 }
@@ -337,7 +348,8 @@ function stats(lot) {
   const pct = taken / lot.capacity;
   // marker strength (mockup): solid teal = plenty of space, pale = nearly full
   const lvl = left === 0 ? 'full' : left >= 20 ? 'high' : left >= 10 ? 'mid' : 'low';
-  const status = left === 0 ? 'full' : pct >= .7 ? 'filling' : 'available';
+  // status chip follows the same count, so the chip and marker never disagree: only the solid band is "available"
+  const status = lvl === 'full' ? 'full' : lvl === 'high' ? 'available' : 'filling';
   return { parked, reserved, taken, left, pct, lvl, status };
 }
 const STATUS_LABEL = { available: 'Available', filling: 'Filling up', full: 'Full' };
@@ -671,7 +683,7 @@ function renderSheet() {
   const lot = lotById(ui.selectedLot);
   if (!lot) return;
   const s = stats(lot);
-  const fav = state.favorites.includes(lot.id);
+  const saved = placeFor(lot.id);
   const mine = state.reservation?.lotId === lot.id;
   const near = ui.near?.lotId === lot.id ? ui.near : null;
   const alternative = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0).sort((a, b) => a.metres - b.metres)[0];
@@ -689,7 +701,8 @@ function renderSheet() {
   $('#sheetBody').innerHTML = `
     <div class="sheet-title">
       <h1 class="panel-title">${esc(lot.name)}</h1>
-      <button class="fav-btn ${fav ? 'on' : ''}" data-action="fav" data-id="${lot.id}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favorites">${icon('i-heart')}</button>
+      <button class="fav-btn ${saved ? 'on' : ''}" data-action="editPlace" data-id="${lot.id}" aria-pressed="${!!saved}"
+        aria-label="${saved ? `Saved as ${esc(saved.name)}. Edit` : 'Save this lot'}">${icon('i-heart')}</button>
     </div>
     <p class="lot-sub"><b>${s.left ? `${s.left} slots left` : 'Full'}</b> · ${lot.capacity} total · <span style="white-space:nowrap">${lot.distance}</span></p>
     <p class="lot-addr" title="${esc(lot.address)}">${icon('i-pin')}<span>${esc(lot.address)}</span></p>
@@ -742,10 +755,10 @@ function renderTrend(lot) {
 // ---------- search ----------
 function renderSearch(q = '') {
   const query = q.trim().toLowerCase();
-  const lotRow = (lot, ic = 'i-pin', sub) => {
+  const lotRow = (lot, ic = 'i-pin', sub, title = lot.name) => {
     const s = stats(lot);
     return `<button class="row" data-action="pickLot" data-id="${lot.id}">${icon(ic)}
-      <span>${esc(lot.name)}<small>${sub || `${esc(lot.area)} · ${lot.distance}`}</small></span>${statusChip(s)}</button>`;
+      <span>${esc(title)}<small>${sub || `${esc(lot.area)} · ${lot.distance}`}</small></span>${statusChip(s)}</button>`;
   };
   let html;
   if (query) {
@@ -771,8 +784,10 @@ function renderSearch(q = '') {
         : `<h4>Parking near “${esc(q.trim())}”</h4><p class="empty" style="padding:8px 16px">No lots found. Try “Megamall”, “Jollibee” or “EDSA”.</p>`;
     }
   } else {
-    html = `<h4>Saved places</h4>` + SAVED_PLACES.map((p) => `<button class="row" data-action="pickLot" data-id="${p.lotId}">${icon(p.icon)}
-      <span>${p.name}<small>${p.sub} · nearest: ${esc(lotById(p.lotId).name)}</small></span>${icon('i-chevron', 'sm')}</button>`).join('')
+    html = `<h4>Saved places</h4>` + (state.places.length ? state.places.map((p) => {
+      const lot = lotById(p.lotId);
+      return lotRow(lot, PLACE_KIND[p.kind].icon, `${esc(p.name === shortName(lot) ? lot.area : lot.name)} · ${lot.distance}`, p.name);
+    }).join('') : `<p class="empty" style="padding:8px 16px">Tap ♡ on a lot to save it as Home, Work or a place of your own.</p>`)
       + `<h4>Recent searches</h4>` + (state.recents.length ? state.recents.map((id) => lotRow(lotById(id), 'i-history')).join('') : `<p class="empty" style="padding:8px 16px">Nothing yet.</p>`)
       + `<h4>Nearby</h4>` + [...LOTS].sort((a, b) => a.metres - b.metres).slice(0, 3).map((l) => lotRow(l)).join('');
   }
@@ -1055,7 +1070,7 @@ function renderWalkin() {
         <div class="big-icon full">${icon('i-warn')}</div>
         <h2 style="margin:0 0 8px">${esc(lot.name)} is full</h2>
         <p class="lead">All ${lot.capacity} spaces are parked or reserved, so the gate can't assign you a slot right now.</p></div>
-      <h3 class="section-title">Nearby lots with space</h3>${alts.map(lotCard).join('')}`;
+      <h3 class="section-title">Nearby lots with space</h3>${alts.map((l) => lotCard(l)).join('')}`;
   } else if (!ui.walkinQr) {
     body = `<div class="card"><div class="kv"><span>Spaces left</span><span>${s.left} ${statusChip(s)}</span></div>
         <div class="kv"><span>Rate</span><span>${rateShort(lot.rate)} · pay on exit</span></div></div>
@@ -1210,25 +1225,26 @@ function exitScan() {
 }
 
 // ---------- explore ----------
-function lotCard(lot) {
+function lotCard(lot, place) {
   const s = stats(lot);
   return `<button class="lot-card" data-action="pickLot" data-id="${lot.id}">
     ${lotPhoto(lot, 'lot-thumb')}
-    <span class="info"><b>${esc(lot.name)}</b><small>${lot.distance} · ${rateShort(lot.rate)}</small>${statusChip(s)}</span>
+    <span class="info"><b>${esc(place ? place.name : lot.name)}</b>
+      <small>${place && place.name !== shortName(lot) ? `${esc(lot.name)} · ` : ''}${lot.distance} · ${rateShort(lot.rate)}</small>${statusChip(s)}</span>
     <span class="count lvl-${s.lvl}">${s.left || 'Full'}</span></button>`;
 }
 
 function renderExplore() {
   const near = [...LOTS].sort((a, b) => a.metres - b.metres);
-  const favs = LOTS.filter((l) => state.favorites.includes(l.id));
   let html = '';
   if (state.session) {
     const lot = lotById(state.session.lotId);
     html += `<button class="choice" data-action="go" data-to="locator"><span class="ic-wrap">${icon('i-car')}</span>
       <span><b>You're parked</b><small>${esc(lot.name)} · Floor ${esc(state.session.floor)} · Slot ${state.session.slot}</small></span>${icon('i-chevron')}</button>`;
   }
-  html += `<h3 class="section-title">Parking near you</h3>${near.slice(0, 4).map(lotCard).join('')}`;
-  html += `<h3 class="section-title">Favorites</h3>` + (favs.length ? favs.map(lotCard).join('') : `<p class="empty">Tap the heart on a lot to save it here.</p>`);
+  html += `<h3 class="section-title">Parking near you</h3>${near.slice(0, 4).map((l) => lotCard(l)).join('')}`;
+  html += `<h3 class="section-title">Saved places</h3>` + (state.places.length ? state.places.map((p) => lotCard(lotById(p.lotId), p)).join('')
+    : `<p class="empty">Tap the heart on a lot to save it as Home, Work or a place of your own.</p>`);
   html += `<h3 class="section-title">Recent reservations</h3>` + historyList();
   $('#exploreBody').innerHTML = html;
 }
@@ -1262,6 +1278,7 @@ function renderProfile() {
         <button class="btn primary block" data-action="startAccount" data-mode="create">Create account</button>
         <button class="btn text block" data-action="startAccount" data-mode="signin">I already have an account</button>
       </div>
+      <h3 class="section-title">Saved places</h3>${savedPlacesList()}
       <h3 class="section-title">Recent activity</h3>${historyList()}`;
     return;
   }
@@ -1295,6 +1312,8 @@ function renderProfile() {
     </div>
     <p class="caption" style="margin-top:-8px">Selected first when you pay a reservation fee or parking fee. You can still switch at checkout.</p>
 
+    <h3 class="section-title">Saved places</h3>${savedPlacesList()}
+
     <h3 class="section-title">Recent activity</h3>${historyList()}
 
     <h3 class="section-title">Account</h3>
@@ -1312,6 +1331,50 @@ function renderDrawer() {
   $('#drawerCta').innerHTML = a ? '' : `
     <button class="btn primary block" data-action="startAccount" data-mode="create">Create account</button>
     <button class="btn text block" data-action="startAccount" data-mode="signin">Sign in</button>`;
+}
+
+// ---------- saved places ----------
+const placeFor = (lotId) => state.places.find((p) => p.lotId === lotId);
+
+function savedPlacesList() {
+  if (!state.places.length) return `<p class="empty">Tap the heart on a lot to save it as Home, Work or a place of your own.</p>`;
+  return `<div class="list">${state.places.map((p) => `<div class="row">${icon(PLACE_KIND[p.kind].icon)}
+      <span>${esc(p.name)}<small>${esc(lotById(p.lotId).name)}</small></span>
+      <button class="link-btn" data-action="editPlace" data-id="${p.lotId}">Edit</button>
+      <button class="icon-btn" data-action="removePlace" data-id="${p.lotId}" aria-label="Remove ${esc(p.name)}">${icon('i-close', 'sm')}</button></div>`).join('')}</div>`;
+}
+
+function openSave(lotId) {
+  const p = placeFor(lotId);
+  ui.saveDraft = { lotId, kind: p?.kind || 'custom', name: p?.kind === 'custom' ? p.name : shortName(lotById(lotId)) };
+  renderSaveModal();
+  $('#saveModal').hidden = $('#saveBackdrop').hidden = false;
+}
+function closeSave() {
+  ui.saveDraft = null;
+  $('#saveModal').hidden = $('#saveBackdrop').hidden = true;
+}
+function renderSaveModal() {
+  const d = ui.saveDraft, lot = lotById(d.lotId), saved = placeFor(d.lotId);
+  const other = d.kind !== 'custom' && state.places.find((p) => p.kind === d.kind && p.lotId !== d.lotId);
+  $('#saveModal').innerHTML = `
+    <h3 id="saveTitle">${saved ? 'Edit saved place' : 'Save this lot'}</h3>
+    <p class="caption">${esc(lot.name)}</p>
+    <div class="segmented">${Object.entries(PLACE_KIND).map(([k, v]) => `<button class="seg ${d.kind === k ? 'active' : ''}"
+      data-action="saveKind" data-kind="${k}">${icon(v.icon, 'sm')} ${v.label}</button>`).join('')}</div>
+    ${d.kind === 'custom'
+      ? `<label class="field"><span>Name</span><input id="saveName" value="${esc(d.name)}" maxlength="24" placeholder="e.g. Gym, Mom's place"></label>`
+      : `<p class="caption">${other ? `Replaces your current ${PLACE_KIND[d.kind].label}, ${esc(lotById(other.lotId).name)}.` : `Shown first in search as ${PLACE_KIND[d.kind].label}.`}</p>`}
+    <div class="btn-stack" style="margin-top:6px">
+      <button class="btn primary block" data-action="savePlace">Save</button>
+      ${saved ? `<button class="btn text block danger-text" data-action="unsavePlace">Remove from saved places</button>`
+        : `<button class="btn text block" data-action="closeSave">Cancel</button>`}
+    </div>`;
+}
+function removePlace(lotId) {
+  state.places = state.places.filter((p) => p.lotId !== lotId);
+  save(); RENDER[current]?.();
+  toast('Removed from saved places.');
 }
 
 function renderSettings() {
@@ -1435,12 +1498,25 @@ const ACTIONS = {
     else flyHome([14.5852, 121.0575], 17.5);
   },
   voice: () => toast("Voice search isn't available yet."),
-  fav: (d) => {
-    const on = state.favorites.includes(d.id);
-    state.favorites = on ? state.favorites.filter((f) => f !== d.id) : [...state.favorites, d.id];
-    save(); renderSheet();
-    toast(on ? 'Removed from favorites' : 'Saved to favorites');
+  editPlace: (d) => openSave(d.id),
+  removePlace: (d) => removePlace(d.id),
+  closeSave,
+  saveKind: (d) => {
+    if ($('#saveName')) ui.saveDraft.name = $('#saveName').value;   // keep a typed name while switching
+    ui.saveDraft.kind = d.kind;
+    renderSaveModal();
   },
+  savePlace: () => {
+    const d = ui.saveDraft, lot = lotById(d.lotId);
+    const name = d.kind === 'custom' ? $('#saveName').value.trim() || shortName(lot) : PLACE_KIND[d.kind].label;
+    const replaced = d.kind !== 'custom' && state.places.find((p) => p.kind === d.kind && p.lotId !== d.lotId);
+    const order = Object.keys(PLACE_KIND);
+    state.places = [...state.places.filter((p) => p.lotId !== d.lotId && p !== replaced), { kind: d.kind, name, lotId: d.lotId }]
+      .sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));   // Home, Work, then named places in the order saved
+    save(); closeSave(); RENDER[current]?.();
+    toast(replaced ? `${name} is now ${shortName(lot)}.` : `Saved as ${name}.`);
+  },
+  unsavePlace: () => { const id = ui.saveDraft.lotId; closeSave(); removePlace(id); },
   trendBar: (d) => { ui.trendSel = Number(d.i); renderTrend(lotById(ui.selectedLot)); },
   reserve: (d) => { ui.pendingLot = d.id; go('reserve'); },
   reserveAgain: (d) => { tab('map'); openLot(d.id); },
@@ -1608,6 +1684,8 @@ searchInput.addEventListener('keydown', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
+  if (e.key === 'Enter' && e.target.id === 'saveName') ACTIONS.savePlace();
+  if (e.key === 'Escape' && ui.saveDraft) closeSave();
 });
 
 // OTP boxes: auto-advance and backspace

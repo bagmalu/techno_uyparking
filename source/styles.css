@@ -180,6 +180,7 @@ input, select { font: inherit; color: inherit; }
 .btn.secondary { background: var(--surface); border-color: var(--border); color: var(--text-primary); }
 .btn.secondary:hover { border-color: var(--accent-500); }
 .btn.text { background: none; color: var(--accent-text); min-height: 40px; font-size: 15px; }
+.btn.text.danger-text { color: var(--status-full); }
 .btn-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; width: 100%; }
 
 /* ---------- cards / lists (mockup: thin grey outline, 10px radius) ---------- */
@@ -554,7 +555,7 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 .drawer-open .drawer { transform: none; }
 .drawer-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
 .drawer-head { padding: 36px 22px 18px; border-bottom: 1px solid var(--border); }
-.brand { font-size: 30px; line-height: 36px; font-weight: 800; letter-spacing: -.02em; color: var(--accent-500); margin-bottom: 18px; }
+.brand { display: block; width: 216px; max-width: 100%; height: auto; margin-bottom: 18px; }
 .drawer-user { display: flex; gap: 12px; align-items: center; width: 100%; border: 0; background: none; padding: 6px; margin: -6px; border-radius: 16px; text-align: left; }
 .drawer-user:hover { background: var(--surface-2); }
 .drawer-user b { display: block; }
@@ -567,6 +568,18 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 .avatar.sm .ic { width: 18px; height: 18px; }
 .avatar.lg { width: 64px; height: 64px; font-size: 24px; }
 .avatar.lg .ic { width: 32px; height: 32px; }
+
+/* ---------- save-place dialog (bottom card over any screen) ---------- */
+.modal-backdrop { position: absolute; inset: 0; z-index: 24; background: rgba(0,0,0,.35); }
+.modal {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 25;
+  padding: 20px 20px 10px; border-radius: 28px; background: var(--surface); color: var(--text-primary);
+  box-shadow: var(--shadow-pop); animation: rise .22s cubic-bezier(.2,.8,.2,1);
+}
+.modal h3 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -.01em; }
+.modal > .caption { margin: 2px 0 14px; }
+.modal .segmented { margin-bottom: 12px; }
+.modal .field { margin-bottom: 4px; }
 
 /* ---------- account ---------- */
 .acct-head { display: flex; gap: 14px; align-items: center; margin: 4px 0 4px; }

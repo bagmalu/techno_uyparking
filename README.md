@@ -83,7 +83,7 @@ Open the **☰ menu** → **Parking owner view**, then switch between **Statisti
 | Account settings | Menu → **Account**: name, email for receipts, mobile number, saved plates and default, default payment method, sign out, delete account |
 | Search, saved places, recents | Tap **Where to?** on the map |
 | Parking near a business or landmark | Search for something that isn't a lot, e.g. **Jollibee**, **mcdo**, **Starbucks** or **St. Luke's**. The results list lots within 700 m, with a note that the business isn't listed as a parking lot in Uy Parking! Opening one pins the business on the map. |
-| Favourites | Tap the heart on a lot's details sheet; it appears in Explore |
+| Saved places | Tap the heart on a lot's details sheet and save it as **Home**, **Work** or your own name (one Home, one Work). Saved places appear first in search, in Explore and in Account, where you can rename or remove them. |
 
 ## Presentation controls
 
@@ -118,7 +118,7 @@ scans and lot counts. Tapping a gate QR code stands in for the gate's scanner re
   straight-line from that point.
 
 - **Your progress is saved in this browser** (`localStorage`), including reservations,
-  favourites, recents and plate/phone, just as the real app would keep a local cache.
+  saved places, recents and plate/phone, just as the real app would keep a local cache.
   Use **Reset demo data** or Settings → **Clear local data** to start fresh.
 - **The countdown is real time.** A reservation genuinely expires 1 hour 15 minutes later, even
   after a page reload. Use the controls to skip ahead.

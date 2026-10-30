@@ -59,7 +59,8 @@ should preserve this shell where practical rather than introducing unrelated pag
 ### Explore
 | Screen | Purpose |
 |---|---|
-| Explore home | Parking near you, recent reservations (from cache), favorite lots |
+| Explore home | Parking near you, saved places, recent reservations (from cache) |
+| Save place dialog | From the heart on a lot sheet: save as Home, Work (one each; saving again replaces it) or a custom name; edit or remove. Saved places lead the search panel and are listed in Explore and Account |
 
 ### Sidebar and owner views
 | Screen | Purpose |

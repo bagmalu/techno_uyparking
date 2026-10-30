@@ -17,8 +17,10 @@ the visual reference:
 - Use a rounded bottom sheet for lot details; it may contain a drag handle, lot photo,
   attribute row, trend chart, and one prominent Reserve action.
 - Keep the three-item bottom navigation visible on map, scan, and explore roots.
-- Use teal for brand actions and selected parking markers; use the separate heatmap ramp
-  for fullness so accent teal remains an interaction color.
+- Use teal for brand actions and for parking markers, as in the mockups: the heatmap ramp
+  runs from accent teal (plenty of space) to pale teal (nearly full) and grey (full), always
+  with a count. Keep blue / amber / red for status chips only, so a status never reads as a
+  button or a selected marker.
 - Prefer short labels and numeric availability such as `23 spaces left`; do not make
   users decode marker color without a number or status label.
 
@@ -61,25 +63,32 @@ text on `#009f8b` is only ~3:1 — if you need white ink, use an `#006b5f` fill.
 | text-secondary | `#8fa9a6` |
 | text-primary | `#eaf3f1` |
 
-### Semantic status — slot / floor availability
+### Semantic status — lot availability chips
 
-Chosen **blue → amber → red** so it never collides with the teal accent, and it stays
-distinguishable under red-green color-vision deficiency. **Always pair with an icon or
-label — never color alone.**
+Status is lot-level only (aggregate counts); floors and slots are never given a status,
+since users don't pick them. Chosen **blue → amber → red** so it never collides with the
+teal accent, and it stays distinguishable under red-green color-vision deficiency.
+**Always pair with an icon or label — never color alone.**
 
-| Token | Hex | Chip label | Rule (share of capacity taken) |
+| Token | Hex (dot / icon) | Label | Rule (spaces left) |
 |---|---|---|---|
-| status-available | `#2563eb` | Available | under 70% taken |
-| status-filling | `#f59e0b` | Filling up | 70% or more taken, at least 1 slot left |
-| status-full | `#dc2626` | Full | 0 slots left |
+| status-available | `#2563eb` | Available | 20 or more |
+| status-filling | `#f59e0b` | Filling up | 1–19 |
+| status-full | `#dc2626` | Full | 0 |
 
-The status chip is based on the **percentage** taken, so it says how close the lot is to
-capacity regardless of its size. The map heatmap below is based on the **count** of slots
-left instead, which reflects your chance of getting a space. Big lots can therefore show
-"Filling up" on solid teal (e.g. 240 of 300 taken: 80%, but 60 left), and small lots
-"Available" on pale teal (e.g. 6 of 15 taken: 40%, but 9 left). This is intentional: the
-chip shows how fast the lot is filling, the marker shows how much room is left. Both
-rules live in `stats()` in `../source/app.js`.
+The rule uses the **count** of spaces left, the same bands as the map heatmap below
+(Available = lot-high, Filling up = lot-mid or lot-low, Full = lot-full), so a chip and its
+marker always agree. "Filling up" describes how full the lot is now, not how fast it is
+filling; the trends chart shows when a lot usually fills. The "Saved place is filling up"
+notification uses the same rule. Both live in `stats()` in `../source/app.js`.
+
+The chips themselves are tinted pills, not the token hex (`.chip.*` in `../source/styles.css`):
+
+| Chip | Light (fill / text) | Dark (fill / text) |
+|---|---|---|
+| Available | `#e3ecfd` / `#1d4ed8` | `#13254d` / `#93b4ff` |
+| Filling up | `#fff1d6` / `#92400e` | `#3a2a0c` / `#fcd34d` |
+| Full | `#fde2e2` / `#b91c1c` | `#401414` / `#fca5a5` |
 
 ### Heatmap scale — lot availability on the map
 
@@ -87,14 +96,16 @@ Matches the mockups (`mockup/default.png`, `mockup/zoomed in.png`): markers are 
 their strength shows how much space is left. The count appears on every marker once the map
 is zoomed in (and always on the selected marker), so color is never the only signal.
 
-| Band | Hex | Spaces left (count, not %) |
+| Band | Hex | Spaces left |
 |---|---|---|
 | lot-high | `#009f8b` | 20 or more |
 | lot-mid | `#2cac9d` | 10–19 |
 | lot-low | `#b3d6d4` (ink `#0b5e55`) | 1–9 |
 | lot-full | `#d3d9d9` (ink `#6b7574`, label "Full") | 0 |
 
-Selected marker: `#009f8b` with a `#aeb3bd` ring.
+Selected marker: always `#009f8b` with a `#aeb3bd` ring, whatever its band, with the count
+shown in white (or "Full"). Its availability is read from the count and the status chip in
+the lot sheet, not from the marker's shade.
 
 Base map: OpenStreetMap tiles, greyed with a CSS filter (`.osm-tiles`) so they read like the
 mockups' pale map; dark mode inverts them to a deep teal. Map background while tiles load:
@@ -156,7 +167,8 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Top controls | hamburger; search idle/focused; voice affordance; locate-me |
 | Bottom nav | 3 tabs — Map, Scan, Explore; active / inactive |
 | Map pin | single / cluster; numeric label; heat-band colored; selected |
-| Lot card / detail sheet | default; fullness chip; favorited; expanded with photo and trends |
+| Lot card / detail sheet | default; fullness chip; saved (filled heart, card titled with the place name); expanded with photo and trends |
+| Save place dialog | bottom card over a dimmed screen; Home / Work / Other segmented control; name field for Other; replaces-Home/Work note; Save, Remove (when saved) or Cancel |
 | Attribute row | accessible; EV charging; covered; rate chip (first-block price, hover/tap for the breakdown card) |
 | Availability summary | slots left / total for drivers (parked/reserved split on the owner dashboard); available, filling, and full states |
 | Automatic assignment card | waiting for entry scan / assigning / assigned / unavailable; assigned floor and slot shown after scan |
