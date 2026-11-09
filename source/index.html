@@ -268,6 +268,7 @@
             <h3 class="section-title">Appearance</h3>
             <div class="list">
               <label class="row toggle-row"><span>Dark mode</span><input type="checkbox" id="themeToggle" data-action="toggleTheme"></label>
+              <label class="row toggle-row"><span>Presentation mode<small>Show the shortcuts for presenting a demo</small></span><input type="checkbox" id="presentToggle" data-action="togglePresent"></label>
             </div>
             <h3 class="section-title">Notifications</h3>
             <div class="list">
@@ -336,8 +337,13 @@
   </div>
 
   <!-- ============ DEMO CONTROLS (outside the phone) ============ -->
+  <button class="demo-fab" data-action="openDemo" aria-label="Open presentation controls"><svg class="ic sm"><use href="#i-gear"/></svg></button>
+  <div class="demo-backdrop" data-action="closeDemo"></div>
   <aside class="demo" aria-label="Presentation controls">
-    <h2>Presentation controls</h2>
+    <div class="demo-head">
+      <h2>Presentation controls</h2>
+      <button class="demo-close" data-action="closeDemo" aria-label="Close presentation controls"><svg class="ic sm"><use href="#i-close"/></svg></button>
+    </div>
     <p>Shortcuts for presenting.</p>
 
     <h3>Jump to a flow</h3>

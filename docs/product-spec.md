@@ -67,7 +67,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 |---|---|
 | Sidebar | Guest: Create account / Sign in; signed in: name and default plate, opens Account |
 | Account | Guest: perks + Create account / Sign in. Signed in: name, email for receipts, verified phone, saved plates with a default, default payment method, recent activity, sign out, delete account |
-| Settings | Account shortcut, theme, notification toggles (saved locally; SMS alerts need a verified phone) |
+| Settings | Account shortcut, theme, Presentation mode (shows or hides the demo controls; on by default on desktop, off on phones, kept by a data reset), notification toggles (saved locally; SMS alerts need a verified phone) |
 | OTP / identity | At reserve/pay for guests (plate number or phone OTP); also create account (plate or phone), sign in (phone only), add/change phone |
 | Owner statistics | Mock occupancy, peak-time, and lot-performance cards |
 | Owner financials | Mock revenue, reservation-fee, and transaction summary |

@@ -271,6 +271,7 @@ function defaultState() {
     account: null,       // see newAccount(); keyed on a plate number or an OTP-verified phone
     prefs: { remind: true, filling: false, receipts: true, sms: false },
     theme: null,
+    present: null,       // presentation mode: null until chosen, see applyPresent()
     offline: false,
   };
 }
@@ -1435,6 +1436,14 @@ function applyTheme() {
   document.documentElement.dataset.theme = theme;
   $('#themeToggle').checked = theme === 'dark';
 }
+const PHONE = matchMedia('(max-width: 520px)');
+function applyPresent() {
+  const on = state.present ?? !PHONE.matches;   // not chosen yet: on where the panel fits beside the phone
+  $('.stage').classList.toggle('presenting', on);
+  if (!on) closeDemo();
+  $('#presentToggle').checked = on;
+}
+function closeDemo() { $('.stage').classList.remove('demo-open'); }
 function applyOffline() {
   $('#offlineBar').hidden = !state.offline;
   const wasOffline = $('#map').classList.contains('offline');
@@ -1602,10 +1611,13 @@ const ACTIONS = {
     state.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     save(); applyTheme();
   },
+  togglePresent: () => { state.present = !$('.stage').classList.contains('presenting'); save(); applyPresent(); },
+  openDemo: () => $('.stage').classList.add('demo-open'),
+  closeDemo,
   toggleOffline: () => { state.offline = !state.offline; save(); applyOffline(); RENDER[current]?.(); },
   resetDemo: () => {
     closeSheet();
-    state = defaultState(); save();
+    state = { ...defaultState(), present: state.present }; save();   // presentation mode survives a reset
     Object.assign(ui, { selectedLot: null, pendingLot: null, walkinQr: false, exitDone: false });
     applyTheme(); applyOffline(); tab('map');
     toast('Local data cleared.');
@@ -1649,12 +1661,16 @@ document.addEventListener('click', (e) => {
     return;
   }
   const fn = ACTIONS[el.dataset.action];
-  if (fn) { e.preventDefault(); fn(el.dataset, el); }
+  if (fn) {
+    e.preventDefault(); fn(el.dataset, el);
+    if (el.closest('.demo')) closeDemo();   // on a phone, get the panel out of the way of what the shortcut opened
+  }
 });
 
 document.addEventListener('change', (e) => {
   const el = e.target;
   if (el.matches('[data-action="toggleTheme"]')) ACTIONS.toggleTheme();
+  else if (el.matches('[data-action="togglePresent"]')) ACTIONS.togglePresent();
   else if (el.matches('[data-action="toggleOffline"]')) ACTIONS.toggleOffline();
   else if (el.dataset.actionChange === 'trendDay') { ui.trendDay = Number(el.value); ui.trendSel = null; renderTrend(lotById(ui.selectedLot)); }
   else if (el.dataset.pref) {
@@ -1686,6 +1702,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
   if (e.key === 'Enter' && e.target.id === 'saveName') ACTIONS.savePlace();
   if (e.key === 'Escape' && ui.saveDraft) closeSave();
+  if (e.key === 'Escape') closeDemo();
 });
 
 // OTP boxes: auto-advance and backspace
@@ -1702,6 +1719,8 @@ addEventListener('offline', () => { state.offline = true; save(); applyOffline()
 addEventListener('online', () => { state.offline = false; save(); applyOffline(); RENDER[current]?.(); });
 initMap();
 applyTheme();
+applyPresent();
+PHONE.addEventListener('change', applyPresent);
 applyOffline();
 renderDrawer();
 if (state.reservation && state.reservation.expiresAt <= Date.now()) expireReservation();

@@ -26,7 +26,8 @@ Then open <http://localhost:8777>. On a phone, use your computer's local IP addr
 for example `http://192.168.1.20:8777`.
 
 On a desktop the app appears inside a phone frame, with a **Presentation controls** panel
-beside it. On a phone-sized screen it fills the screen, and the controls panel is below it.
+beside it. On a phone-sized screen it fills the screen and the controls are hidden; turn on
+**Settings → Presentation mode** to open them from a small tab on the right edge.
 
 ## Walkthrough
 
@@ -89,7 +90,8 @@ Open the **☰ menu** → **Parking owner view**, then switch between **Statisti
 
 The panel next to the phone is for demos and presentations only. It is not part of the app
 design. It can jump straight to any flow, fast-forward or expire the reservation timer,
-toggle offline or dark mode, and **reset all demo data**.
+toggle offline or dark mode, and **reset all demo data**. **Settings → Presentation mode**
+shows or hides it, and a reset leaves that setting as it is.
 
 The app screens themselves use real-app wording (**I've paid**, **Check in with NFC**, and so
 on) with no "mock" or "prototype" labels, so they read as the finished product in a
