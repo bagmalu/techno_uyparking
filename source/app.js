@@ -562,11 +562,11 @@ function clearLeaving() {
   clearTimeout(leaveTimer);
   $$('.screen.leaving').forEach((s) => {
     s.classList.remove('leaving', 'falling');
-    s.querySelector('.panel:not(.sheet)').style.top = '';
+    s.querySelector('.panel').style.top = '';
   });
 }
 function show(name, returning = false) {
-  stopSheetMotion();
+  releaseSheets();
   clearLeaving();
   current = name;
   const app = $('#app');
@@ -574,7 +574,7 @@ function show(name, returning = false) {
   const old = $('.screen.active');
   if (old !== screen) {
     screen.classList.toggle('returning', returning);   // the sheet coming back is already there, under the one leaving
-    const oldPanel = old?.querySelector('.panel:not(.sheet)');
+    const oldPanel = old?.querySelector(app.classList.contains('sheet-open') ? '.panel' : '.panel:not(.sheet)');   // an open lot sheet stays under the new screen too
     if (oldPanel) {
       const falling = returning || !screen.querySelector('.panel:not(.sheet)');
       oldPanel.style.top = `${oldPanel.offsetTop}px`;   // the next screen's layout must not shift it on the way out
@@ -593,7 +593,7 @@ function show(name, returning = false) {
   hideSearch();
   RENDER[name]?.();
   const panel = screen.querySelector('.panel:not(.sheet)');
-  if (panel) { panel.classList.remove('expanded'); panel.scrollTop = 0; }
+  if (panel) { setExpanded(panel, false); panel.scrollTop = 0; }
 
   const focusId = FOCUS[name]?.();
   ui.focusLot = focusId || null;
@@ -664,6 +664,7 @@ function syncNearMarker() {
 }
 
 function openLot(id) {
+  releaseSheets();   // a spring still running belongs to the previous lot
   hideSearch();
   if (ui.near?.lotId !== id) ui.near = null;
   ui.selectedLot = id;
@@ -672,7 +673,7 @@ function openLot(id) {
   ui.trendDay = new Date().getDay();
   renderSheet();
   $('#sheet').scrollTop = 0;
-  $('#sheet').classList.remove('expanded');
+  setExpanded($('#sheet'), false);
   $('#app').classList.add('sheet-open');
   focusLot(id);
   renderMap();
@@ -691,6 +692,7 @@ function grabSheet(panel) {
   stopSheetMotion();
   const parent = panel.offsetParent;
   const y = panel.getBoundingClientRect().top - parent.getBoundingClientRect().top;
+  const scrolled = panel.scrollTop;
   panel.getAnimations().forEach((a) => a.cancel());   // from here on, this code owns the position
   panel.classList.add('moving');
   const wasExpanded = panel.classList.contains('expanded');
@@ -702,6 +704,8 @@ function grabSheet(panel) {
   if (panel.classList.contains('sheet')) stops.push(parent.clientHeight + 24);   // only the lot sheet can be dismissed
   motion = { panel, stops, y, v: 0, raf: 0, history: [] };
   panel.style.top = `${stops[0]}px`;
+  panel.style.setProperty('--sheet-grow', `${wasExpanded ? 0 : stops[1] - stops[0]}px`);
+  panel.scrollTop = scrolled;   // measuring the stops may have clamped it
   placeSheet(y);
   return motion;
 }
@@ -713,6 +717,7 @@ function unplaceSheet(panel) {
   panel.style.top = panel.style.transform = '';
   void panel.offsetHeight;   // apply the resting position before transitions come back
   panel.classList.remove('moving');
+  panel.style.removeProperty('--sheet-grow');
 }
 function stopSheetMotion() {
   if (!motion) return;
@@ -721,11 +726,19 @@ function stopSheetMotion() {
   motion = null;
   unplaceSheet(panel);
 }
+function releaseSheets() {   // the sheet under the finger has closed or changed, so the finger lets go of it
+  gesture = touch = null;
+  stopSheetMotion();
+}
+function setExpanded(panel, on) {
+  panel.classList.toggle('expanded', on);
+  panel.querySelector(':scope > button.sheet-handle')?.setAttribute('aria-label', on ? 'Collapse sheet' : 'Expand sheet');
+}
 function finishSheet(target) {
   const { panel, stops } = motion;
   motion = null;
   if (target === stops[2]) closeSheet();
-  else panel.classList.toggle('expanded', target === stops[0]);
+  else setExpanded(panel, target === stops[0]);
   unplaceSheet(panel);
 }
 function settleSheet(target, v = 0) {
@@ -754,6 +767,7 @@ const nearestStop = (stops, y) => stops.reduce((best, s, i) => (Math.abs(s - y) 
 const rubberband = (over) => (over * 200 * 0.55) / (200 + 0.55 * over);   // the further past the end, the less it follows
 
 function toggleSheet(panel) {
+  if (panel.id === 'sheet' && !ui.selectedLot) return;   // its handle stays focusable while it is closed
   const m = grabSheet(panel);
   settleSheet(m.stops[nearestStop(m.stops, m.y) === 0 ? 1 : 0], m.v);
 }
@@ -796,7 +810,7 @@ function endGesture() {
 
 function closeSheet() {
   if (!ui.selectedLot) return;
-  stopSheetMotion();
+  releaseSheets();
   ui.selectedLot = null;
   ui.near = null;
   syncNearMarker();
@@ -1604,10 +1618,11 @@ function toast(msg, undoAction) {
   const t = $('#toast');
   t.textContent = msg;
   if (undoAction) t.insertAdjacentHTML('beforeend', `<button data-action="${undoAction}">Undo</button>`);
+  else ui.undoState = null;   // Undo lasts only as long as its toast
   t.classList.toggle('has-action', !!undoAction);
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), undoAction ? 6000 : 2800);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); ui.undoState = null; }, undoAction ? 6000 : 2800);
 }
 
 // ---------- demo shortcuts ----------
@@ -1767,7 +1782,7 @@ const ACTIONS = {
   toggleOffline: () => { state.offline = !state.offline; save(); applyOffline(); RENDER[current]?.(); },
   resetDemo: () => {
     closeSheet();
-    ui.undoState = state;
+    ui.undoState ??= state;   // a second reset must not replace the real data with the blank copy
     state = { ...defaultState(), present: state.present }; save();   // presentation mode survives a reset
     Object.assign(ui, { selectedLot: null, pendingLot: null, walkinQr: false, exitDone: false });
     applyTheme(); applyOffline(); tab('map');
@@ -1815,7 +1830,7 @@ document.addEventListener('click', (e) => {   // a drag that ends on a handle is
 
 document.addEventListener('pointerdown', (e) => {
   const handle = e.target.closest('button.sheet-handle');
-  if (!handle || e.button) return;
+  if (!handle || e.button || gesture) return;
   handle.setPointerCapture(e.pointerId);
   beginGesture(handle.closest('.panel'), e.clientY, e.pointerId);
 });
@@ -1828,17 +1843,20 @@ document.addEventListener('pointerup', endPointer);
 document.addEventListener('pointercancel', endPointer);
 
 // a sheet's content drags the sheet when it has nothing left to scroll that way; this listener also turns on :active in iOS Safari
+const dragFinger = (e) => Array.from(e.touches).find((t) => t.identifier === touch?.id);   // a drag follows the finger that started it
 document.addEventListener('touchstart', (e) => {
+  if (gesture) return;
   touch = null;
   const panel = e.target.closest?.('.panel');
   if (!panel || e.touches.length > 1 || !panel.querySelector(':scope > button.sheet-handle')
     || e.target.closest('.sheet-handle, input, select, textarea')) return;
-  touch = { panel, y: e.touches[0].clientY, active: false };
+  touch = { panel, id: e.touches[0].identifier, y: e.touches[0].clientY, active: false };
   if (motion?.panel === panel) { beginGesture(panel, touch.y); touch.active = true; }
 }, { passive: true });
 document.addEventListener('touchmove', (e) => {
-  if (!touch) return;
-  const y = e.touches[0].clientY;
+  const finger = dragFinger(e);
+  if (!finger) return;
+  const y = finger.clientY;
   if (!touch.active) {
     const dy = y - touch.y;
     if (Math.abs(dy) < 4) return;
@@ -1850,7 +1868,11 @@ document.addEventListener('touchmove', (e) => {
   e.preventDefault();
   if (gesture) moveGesture(y);
 }, { passive: false });
-const endTouch = () => { if (touch?.active && gesture) endGesture(); touch = null; };
+const endTouch = (e) => {
+  if (dragFinger(e)) return;   // only another finger lifted
+  if (touch?.active && gesture && endGesture() && e.cancelable) e.preventDefault();   // the touch that caught a moving sheet is not also a tap
+  touch = null;
+};
 document.addEventListener('touchend', endTouch);
 document.addEventListener('touchcancel', endTouch);
 
@@ -1904,7 +1926,7 @@ searchInput.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
   if (e.key === 'Enter' && e.target.id === 'saveName' && ui.saveDraft) ACTIONS.savePlace();
-  if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else closeSheet(); closeDemo(); }
+  if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else if (current === 'map') closeSheet(); closeDemo(); }
 });
 
 // OTP boxes: auto-advance and backspace

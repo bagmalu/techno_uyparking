@@ -198,7 +198,7 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Top controls | hamburger; search idle/focused; voice affordance; locate-me |
 | Bottom nav | 3 tabs — Map, Scan, Explore; active / inactive |
 | Map pin | single / cluster; numeric label; heat-band colored; selected |
-| Bottom sheet motion | drag from the handle (or content at scroll top); default and expanded stops; a flick carries to the next stop; rubber-bands at the ends; only the lot sheet drags away to close |
+| Bottom sheet motion | drag from the handle (or content at scroll top); default and expanded stops; a flick carries to the next stop; rubber-bands at the ends; only the lot sheet drags away to close, and it has a Close details button that appears on keyboard focus |
 | Lot card / detail sheet | default; fullness chip; saved (filled heart, card titled with the place name); expanded with photo and trends |
 | Save place dialog | bottom card over a dimmed screen; Home / Work / Other segmented control; name field for Other; replaces-Home/Work note; Save, Remove (when saved) or Cancel |
 | Attribute row | accessible; EV charging; covered; rate chip (first-block price, hover/tap for the breakdown card) |
