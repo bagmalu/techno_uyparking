@@ -490,7 +490,7 @@ function initMap() {
   };
   map.on('zoomend', onZoom);
   onZoom();
-  // the map grows when the tab bar hides (lot sheet open), so keep Leaflet's size in sync
+  // keep Leaflet's size in sync when the window or offline bar changes the map's size
   new ResizeObserver(() => {
     const before = map.getSize();
     map.invalidateSize({ pan: flyingTo === null });   // keep the centre, unless a fly animation owns the view
@@ -505,7 +505,7 @@ function initMap() {
 function focusLot(id, animate = true) {
   const lot = lotById(id);
   if (!lot) return;
-  map.invalidateSize({ pan: false });   // the sheet / tab bar may have just changed the map's size
+  map.invalidateSize({ pan: false });   // the window may have just changed the map's size
   if (!focused) { userView = { center: map.getCenter(), zoom: map.getZoom() }; focused = true; }
   const size = map.getSize();
   const b = L.latLngBounds(lotLayers[id].poly.getBounds().getNorthWest(), lotLayers[id].poly.getBounds().getSouthEast());
@@ -523,6 +523,7 @@ function focusLot(id, animate = true) {
 }
 function fly(center, zoom, duration) {
   map.invalidateSize({ pan: false });
+  if (REDUCED_MOTION.matches) { map.setView(center, zoom, { animate: false }); return; }
   flyingTo = zoom;
   map.flyTo(center, zoom, { duration });
 }
@@ -555,11 +556,33 @@ const TABS = ['map', 'scan', 'explore'];
 let stack = ['map'];
 let current = 'map';
 
-function show(name) {
+// The screen being left stays up briefly: under a new sheet rising over it, or sliding back down the way it came.
+let leaveTimer;
+function clearLeaving() {
+  clearTimeout(leaveTimer);
+  $$('.screen.leaving').forEach((s) => {
+    s.classList.remove('leaving', 'falling');
+    s.querySelector('.panel:not(.sheet)').style.top = '';
+  });
+}
+function show(name, returning = false) {
   stopSheetMotion();
+  clearLeaving();
   current = name;
   const app = $('#app');
   const screen = $(`#screen-${name}`);
+  const old = $('.screen.active');
+  if (old !== screen) {
+    screen.classList.toggle('returning', returning);   // the sheet coming back is already there, under the one leaving
+    const oldPanel = old?.querySelector('.panel:not(.sheet)');
+    if (oldPanel) {
+      const falling = returning || !screen.querySelector('.panel:not(.sheet)');
+      oldPanel.style.top = `${oldPanel.offsetTop}px`;   // the next screen's layout must not shift it on the way out
+      old.classList.add('leaving');
+      old.classList.toggle('falling', falling);
+      leaveTimer = setTimeout(clearLeaving, 300);
+    }
+  }
   $$('.screen').forEach((s) => s.classList.toggle('active', s === screen));
   app.dataset.screen = name;
   app.classList.toggle('has-tabs', TABS.includes(name));
@@ -585,7 +608,7 @@ function back() {
   if (mode === 'none') return;
   if (mode === 'home' || stack.length <= 1) { ACTIONS.home(); return; }
   stack.pop();
-  show(stack[stack.length - 1]);
+  show(stack[stack.length - 1], true);
 }
 function tab(name) { stack = [name]; show(name); }
 function goFrom(root, name) { stack = [root, name]; show(name); }
@@ -1465,15 +1488,20 @@ function savedPlacesList() {
       <button class="icon-btn" data-action="removePlace" data-id="${p.lotId}" aria-label="Remove ${esc(p.name)}">${icon('i-close', 'sm')}</button></div>`).join('')}</div>`;
 }
 
+let saveCloseTimer;
 function openSave(lotId) {
   const p = placeFor(lotId);
   ui.saveDraft = { lotId, kind: p?.kind || 'custom', name: p?.kind === 'custom' ? p.name : shortName(lotById(lotId)) };
   renderSaveModal();
-  $('#saveModal').hidden = $('#saveBackdrop').hidden = false;
+  clearTimeout(saveCloseTimer);
+  [$('#saveModal'), $('#saveBackdrop')].forEach((el) => { el.hidden = false; el.classList.remove('closing'); });
 }
 function closeSave() {
   ui.saveDraft = null;
-  $('#saveModal').hidden = $('#saveBackdrop').hidden = true;
+  const parts = [$('#saveModal'), $('#saveBackdrop')];
+  parts.forEach((el) => el.classList.add('closing'));
+  clearTimeout(saveCloseTimer);
+  saveCloseTimer = setTimeout(() => parts.forEach((el) => { el.hidden = true; el.classList.remove('closing'); }), 200);
 }
 function renderSaveModal() {
   const d = ui.saveDraft, lot = lotById(d.lotId), saved = placeFor(d.lotId);
@@ -1875,7 +1903,7 @@ searchInput.addEventListener('keydown', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
-  if (e.key === 'Enter' && e.target.id === 'saveName') ACTIONS.savePlace();
+  if (e.key === 'Enter' && e.target.id === 'saveName' && ui.saveDraft) ACTIONS.savePlace();
   if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else closeSheet(); closeDemo(); }
 });
 
@@ -1889,6 +1917,14 @@ $('#otpBoxes').addEventListener('keydown', (e) => {
 });
 
 // ---------- boot ----------
+// iOS exposes the phone's text-size setting only through this system font (17px at the default size)
+if (navigator.maxTouchPoints > 0 && CSS.supports('font', '-apple-system-body')) {
+  const root = document.documentElement;
+  root.style.font = '-apple-system-body';
+  const size = parseFloat(getComputedStyle(root).fontSize);
+  root.style.font = '';
+  root.style.setProperty('--system-text', `${(size / 17) * 100}%`);
+}
 addEventListener('offline', () => { state.offline = true; save(); applyOffline(); RENDER[current]?.(); });
 addEventListener('online', () => { state.offline = false; save(); applyOffline(); RENDER[current]?.(); });
 initMap();

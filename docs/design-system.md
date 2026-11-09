@@ -125,6 +125,25 @@ mockups' pale map; dark mode inverts them to a deep teal. Map background while t
 The mockup's large teal markers are intentionally legible at a glance. Keep marker labels
 large enough to survive map scaling and pair every color state with text.
 
+## Materials
+
+Controls that float over the map (search field, round map buttons, tab bar) are translucent so
+the map stays visible behind them. The map runs under the tab bar; sheets on tab screens
+scroll under it too. Everything else stays solid: sheets, the search results, the drawer and
+dialogs carry content people read.
+
+| Token | Light | Dark |
+|---|---|---|
+| material | `rgba(255,255,255,.78)` | `rgba(10,42,41,.78)` |
+| material-edge | `rgba(255,255,255,.6)` | `rgba(255,255,255,.1)` |
+| material-blur | `blur(20px) saturate(170%)` | same |
+| material-text | accent-700 `#006b5f` | accent-300 `#5cc4b7` |
+
+Teal text on a material uses material-text, not accent-500, so it stays legible when a teal
+lot passes behind it. The search field turns solid while typing. Under reduced transparency or
+increased contrast settings, materials become solid `surface`. Keep the OSM credit above the
+tab bar.
+
 ## Type scale
 
 System font stack. Base 16px.
@@ -138,6 +157,10 @@ System font stack. Base 16px.
 | title | 20 / 28 | screen section headers |
 | heading | 24 / 32 | screen titles |
 | display | 30 / 38 | availability counts, countdown timer |
+
+Weights: 700 for screen titles and large numbers, 600 for section headings, buttons and card
+titles, 400–500 for body. In code, sizes are in `rem` (px ÷ 16) so they follow the device's
+text-size setting, capped at a 21px root so the phone layout holds. Map labels stay fixed.
 
 ## Spacing scale (4-based)
 
@@ -158,6 +181,14 @@ Buttons and inputs: md. Cards and sheets: lg. QR sheet: xl.
 | e3 | `0 12px 32px rgba(2,28,28,.18)` | modals |
 
 On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shadows.
+
+## Touch and motion
+
+- Every tappable control has a touch area of at least 44 × 44, even when it is drawn smaller.
+- A panel leaves the way it came. A new screen rises over the old one; going back or to the
+  map slides the top sheet down over what is underneath. The save dialog does the same.
+- With reduced motion on, nothing slides, scales or loops, map moves jump, and these
+  transitions become short fades.
 
 ## Components to build (with states)
 
