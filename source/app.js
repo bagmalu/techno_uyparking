@@ -556,6 +556,7 @@ let stack = ['map'];
 let current = 'map';
 
 function show(name) {
+  stopSheetMotion();
   current = name;
   const app = $('#app');
   const screen = $(`#screen-${name}`);
@@ -648,12 +649,131 @@ function openLot(id) {
   ui.trendDay = new Date().getDay();
   renderSheet();
   $('#sheet').scrollTop = 0;
+  $('#sheet').classList.remove('expanded');
   $('#app').classList.add('sheet-open');
   focusLot(id);
   renderMap();
 }
+// ---------- draggable sheets ----------
+// A sheet follows the finger, then settles on a spring from wherever it is, so it can be caught mid-flight.
+// While moving it is laid out at its tallest and placed with a transform; at rest its classes take over again.
+const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)');
+let motion = null;    // the sheet in motion: { panel, stops: [expanded, default, closed?], y, v, raf, history }
+let gesture = null;   // the finger on it: { panel, y0, start, grabbed, caught, pointer }
+let touch = null;     // a touch on a sheet's content that may turn into a drag
+let skipClick = false;
+
+function grabSheet(panel) {
+  if (motion?.panel === panel) { cancelAnimationFrame(motion.raf); return motion; }
+  stopSheetMotion();
+  const parent = panel.offsetParent;
+  const y = panel.getBoundingClientRect().top - parent.getBoundingClientRect().top;
+  panel.getAnimations().forEach((a) => a.cancel());   // from here on, this code owns the position
+  panel.classList.add('moving');
+  const wasExpanded = panel.classList.contains('expanded');
+  panel.classList.add('expanded');
+  const stops = [panel.offsetTop];
+  panel.classList.remove('expanded');
+  stops.push(panel.offsetTop);
+  panel.classList.toggle('expanded', wasExpanded);
+  if (panel.classList.contains('sheet')) stops.push(parent.clientHeight + 24);   // only the lot sheet can be dismissed
+  motion = { panel, stops, y, v: 0, raf: 0, history: [] };
+  panel.style.top = `${stops[0]}px`;
+  placeSheet(y);
+  return motion;
+}
+function placeSheet(y) {
+  motion.y = y;
+  motion.panel.style.transform = `translateY(${y - motion.stops[0]}px)`;
+}
+function unplaceSheet(panel) {
+  panel.style.top = panel.style.transform = '';
+  void panel.offsetHeight;   // apply the resting position before transitions come back
+  panel.classList.remove('moving');
+}
+function stopSheetMotion() {
+  if (!motion) return;
+  const { panel, raf } = motion;
+  cancelAnimationFrame(raf);
+  motion = null;
+  unplaceSheet(panel);
+}
+function finishSheet(target) {
+  const { panel, stops } = motion;
+  motion = null;
+  if (target === stops[2]) closeSheet();
+  else panel.classList.toggle('expanded', target === stops[0]);
+  unplaceSheet(panel);
+}
+function settleSheet(target, v = 0) {
+  if (REDUCED_MOTION.matches) { finishSheet(target); return; }
+  const m = motion;
+  const omega = 2 * Math.PI / 0.35;
+  const damping = Math.abs(v) > 300 ? 0.85 : 1;   // a little bounce only when a flick threw it
+  m.v = v;
+  let last = performance.now();
+  const step = (now) => {
+    if (!m.panel.offsetParent) { finishSheet(target); return; }
+    let left = Math.min(now - last, 64) / 1000;
+    last = now;
+    for (; left > 0; left -= 1 / 240) {
+      const dt = Math.min(left, 1 / 240);
+      m.v += (-omega * omega * (m.y - target) - 2 * damping * omega * m.v) * dt;
+      m.y += m.v * dt;
+    }
+    if (Math.abs(m.v) < 8 && Math.abs(m.y - target) < 0.5) { finishSheet(target); return; }
+    placeSheet(m.y);
+    m.raf = requestAnimationFrame(step);
+  };
+  m.raf = requestAnimationFrame(step);
+}
+const nearestStop = (stops, y) => stops.reduce((best, s, i) => (Math.abs(s - y) < Math.abs(stops[best] - y) ? i : best), 0);
+const rubberband = (over) => (over * 200 * 0.55) / (200 + 0.55 * over);   // the further past the end, the less it follows
+
+function toggleSheet(panel) {
+  const m = grabSheet(panel);
+  settleSheet(m.stops[nearestStop(m.stops, m.y) === 0 ? 1 : 0], m.v);
+}
+function beginGesture(panel, y, pointer) {
+  gesture = { panel, y0: y, grabbed: false, caught: motion?.panel === panel, pointer };
+  if (gesture.caught) grabGesture(y);
+}
+function grabGesture(y) {
+  const m = grabSheet(gesture.panel);
+  m.v = 0;
+  m.history = [];
+  Object.assign(gesture, { grabbed: true, y0: y, start: m.y });
+}
+function moveGesture(y) {
+  if (!gesture.grabbed) {
+    if (Math.abs(y - gesture.y0) < 4) return;
+    grabGesture(y);
+  }
+  if (!motion) return;
+  const raw = gesture.start + y - gesture.y0;
+  const first = motion.stops[0];
+  const last = motion.stops[motion.stops.length - 1];
+  placeSheet(raw < first ? first - rubberband(first - raw) : raw > last ? last + rubberband(raw - last) : raw);
+  motion.history.push({ t: performance.now(), y: motion.y });
+}
+function endGesture() {
+  const { grabbed } = gesture;
+  gesture = null;
+  if (!grabbed || !motion) return false;
+  const { stops, y, history } = motion;
+  const recent = history.filter((p) => performance.now() - p.t < 100);   // a finger that stopped before lifting has no speed
+  const span = recent.length > 1 ? recent[recent.length - 1].t - recent[0].t : 0;
+  const v = span ? ((recent[recent.length - 1].y - recent[0].y) / span) * 1000 : 0;
+  const landing = y + (v / 1000) * (0.998 / 0.002);   // where a flick would coast to
+  const from = nearestStop(stops, y);
+  const to = Math.max(from - 1, Math.min(from + 1, nearestStop(stops, landing)));   // one stop at a time
+  settleSheet(stops[to], v);
+  return true;
+}
+
 function closeSheet() {
   if (!ui.selectedLot) return;
+  stopSheetMotion();
   ui.selectedLot = null;
   ui.near = null;
   syncNearMarker();
@@ -1452,12 +1572,14 @@ function applyOffline() {
 }
 
 let toastTimer;
-function toast(msg) {
+function toast(msg, undoAction) {
   const t = $('#toast');
   t.textContent = msg;
+  if (undoAction) t.insertAdjacentHTML('beforeend', `<button data-action="${undoAction}">Undo</button>`);
+  t.classList.toggle('has-action', !!undoAction);
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => t.classList.remove('show'), undoAction ? 6000 : 2800);
 }
 
 // ---------- demo shortcuts ----------
@@ -1494,7 +1616,7 @@ const ACTIONS = {
     ui.near = p ? { lotId: d.id, name: p.name, branch: p.at[d.pt][2] || '', pt: p.at[d.pt].slice(0, 2) } : null;
     pickLot(d.id);
   },
-  expand: (d, el) => el.closest('.panel').classList.toggle('expanded'),
+  expand: (d, el) => toggleSheet(el.closest('.panel')),
   locate: () => {
     flyHome(ME, 17);
     toast('Showing your location.');
@@ -1617,10 +1739,18 @@ const ACTIONS = {
   toggleOffline: () => { state.offline = !state.offline; save(); applyOffline(); RENDER[current]?.(); },
   resetDemo: () => {
     closeSheet();
+    ui.undoState = state;
     state = { ...defaultState(), present: state.present }; save();   // presentation mode survives a reset
     Object.assign(ui, { selectedLot: null, pendingLot: null, walkinQr: false, exitDone: false });
     applyTheme(); applyOffline(); tab('map');
-    toast('Local data cleared.');
+    toast('Local data cleared.', 'undoReset');
+  },
+  undoReset: () => {
+    if (!ui.undoState) return;
+    state = { ...ui.undoState, present: state.present };
+    ui.undoState = null;
+    save(); applyTheme(); applyOffline(); tab('map');
+    toast('Local data restored.');
   },
   demoFlow: (d) => DEMO_FLOWS[d.flow](),
   demoTime: (d) => {
@@ -1651,6 +1781,51 @@ const RENDER = {
 };
 
 // ---------- wiring ----------
+document.addEventListener('click', (e) => {   // a drag that ends on a handle is not a tap on it
+  if (skipClick) { skipClick = false; e.stopPropagation(); e.preventDefault(); }
+}, true);
+
+document.addEventListener('pointerdown', (e) => {
+  const handle = e.target.closest('button.sheet-handle');
+  if (!handle || e.button) return;
+  handle.setPointerCapture(e.pointerId);
+  beginGesture(handle.closest('.panel'), e.clientY, e.pointerId);
+});
+document.addEventListener('pointermove', (e) => { if (gesture && e.pointerId === gesture.pointer) moveGesture(e.clientY); });
+const endPointer = (e) => {
+  if (!gesture || e.pointerId !== gesture.pointer) return;
+  if (endGesture()) { skipClick = true; setTimeout(() => { skipClick = false; }, 50); }
+};
+document.addEventListener('pointerup', endPointer);
+document.addEventListener('pointercancel', endPointer);
+
+// a sheet's content drags the sheet when it has nothing left to scroll that way; this listener also turns on :active in iOS Safari
+document.addEventListener('touchstart', (e) => {
+  touch = null;
+  const panel = e.target.closest?.('.panel');
+  if (!panel || e.touches.length > 1 || !panel.querySelector(':scope > button.sheet-handle')
+    || e.target.closest('.sheet-handle, input, select, textarea')) return;
+  touch = { panel, y: e.touches[0].clientY, active: false };
+  if (motion?.panel === panel) { beginGesture(panel, touch.y); touch.active = true; }
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+  if (!touch) return;
+  const y = e.touches[0].clientY;
+  if (!touch.active) {
+    const dy = y - touch.y;
+    if (Math.abs(dy) < 4) return;
+    const { panel } = touch;
+    if (panel.scrollTop > 0 || (dy < 0 && panel.classList.contains('expanded')) || !e.cancelable) { touch = null; return; }
+    beginGesture(panel, y);
+    touch.active = true;
+  }
+  e.preventDefault();
+  if (gesture) moveGesture(y);
+}, { passive: false });
+const endTouch = () => { if (touch?.active && gesture) endGesture(); touch = null; };
+document.addEventListener('touchend', endTouch);
+document.addEventListener('touchcancel', endTouch);
+
 document.addEventListener('click', (e) => {
   $$('.rate-wrap.open').forEach((w) => {   // a tap anywhere else closes the rate breakdown
     if (!w.contains(e.target)) { w.classList.remove('open'); w.firstElementChild.setAttribute('aria-expanded', false); }
@@ -1701,8 +1876,7 @@ searchInput.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
   if (e.key === 'Enter' && e.target.id === 'saveName') ACTIONS.savePlace();
-  if (e.key === 'Escape' && ui.saveDraft) closeSave();
-  if (e.key === 'Escape') closeDemo();
+  if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else closeSheet(); closeDemo(); }
 });
 
 // OTP boxes: auto-advance and backspace

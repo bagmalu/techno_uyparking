@@ -91,7 +91,7 @@
         <section class="screen" id="screen-map">
           <div class="sheet-backdrop" data-action="closeSheet"></div>
           <div class="panel sheet" id="sheet" role="dialog" aria-label="Parking lot details">
-            <button class="sheet-handle" data-action="closeSheet" aria-label="Close details"></button>
+            <button class="sheet-handle" data-action="expand" aria-label="Expand sheet"></button>
             <div id="sheetBody"></div>
           </div>
         </section>
@@ -267,15 +267,15 @@
             <div class="list" id="settingsAccount"></div>
             <h3 class="section-title">Appearance</h3>
             <div class="list">
-              <label class="row toggle-row"><span>Dark mode</span><input type="checkbox" id="themeToggle" data-action="toggleTheme"></label>
-              <label class="row toggle-row"><span>Presentation mode<small>Show the shortcuts for presenting a demo</small></span><input type="checkbox" id="presentToggle" data-action="togglePresent"></label>
+              <label class="row toggle-row"><span>Dark mode</span><input type="checkbox" role="switch" id="themeToggle" data-action="toggleTheme"></label>
+              <label class="row toggle-row"><span>Presentation mode<small>Show the shortcuts for presenting a demo</small></span><input type="checkbox" role="switch" id="presentToggle" data-action="togglePresent"></label>
             </div>
             <h3 class="section-title">Notifications</h3>
             <div class="list">
-              <label class="row toggle-row"><span>Reservation reminders<small>2 minutes before your grace period ends</small></span><input type="checkbox" data-pref="remind"></label>
-              <label class="row toggle-row"><span>Saved place is filling up<small>When fewer than 20 spaces are left</small></span><input type="checkbox" data-pref="filling"></label>
-              <label class="row toggle-row"><span>Payment receipts<small id="receiptsSub">In the app</small></span><input type="checkbox" data-pref="receipts"></label>
-              <label class="row toggle-row"><span>SMS alerts<small id="smsSub">Needs a verified mobile number</small></span><input type="checkbox" data-pref="sms"></label>
+              <label class="row toggle-row"><span>Reservation reminders<small>2 minutes before your grace period ends</small></span><input type="checkbox" role="switch" data-pref="remind"></label>
+              <label class="row toggle-row"><span>Saved place is filling up<small>When fewer than 20 spaces are left</small></span><input type="checkbox" role="switch" data-pref="filling"></label>
+              <label class="row toggle-row"><span>Payment receipts<small id="receiptsSub">In the app</small></span><input type="checkbox" role="switch" data-pref="receipts"></label>
+              <label class="row toggle-row"><span>SMS alerts<small id="smsSub">Needs a verified mobile number</small></span><input type="checkbox" role="switch" data-pref="sms"></label>
             </div>
             <h3 class="section-title">Data</h3>
             <div class="list">

@@ -167,6 +167,7 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Top controls | hamburger; search idle/focused; voice affordance; locate-me |
 | Bottom nav | 3 tabs — Map, Scan, Explore; active / inactive |
 | Map pin | single / cluster; numeric label; heat-band colored; selected |
+| Bottom sheet motion | drag from the handle (or content at scroll top); default and expanded stops; a flick carries to the next stop; rubber-bands at the ends; only the lot sheet drags away to close |
 | Lot card / detail sheet | default; fullness chip; saved (filled heart, card titled with the place name); expanded with photo and trends |
 | Save place dialog | bottom card over a dimmed screen; Home / Work / Other segmented control; name field for Other; replaces-Home/Work note; Save, Remove (when saved) or Cancel |
 | Attribute row | accessible; EV charging; covered; rate chip (first-block price, hover/tap for the breakdown card) |
@@ -180,12 +181,14 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Scan mode selector | reservation QR/NFC; walk-in |
 | Parked confirmation | assigned location, photo/map dot, find-where-you-parked action |
 | Session/payment summary | duration; parking fee; deduction; amount due; QR Ph/NFC options |
+| Press feedback | every tappable control responds the moment it is pressed: icons and cards scale, list rows tint; hover styles apply only to devices that hover |
 | Primary button | default / hover / pressed / disabled / loading |
 | Secondary button | default / disabled |
 | OTP input | empty / partial / error / verified |
 | Status chip | available / filling / full |
+| Switch | off / on / pressed (knob widens); 51 × 31, accent-500 when on |
 | Search bar | idle / focused / with recent-searches dropdown |
-| Toast / notice | info (e.g. accessibility notice), stale-data warning |
+| Toast / notice | info (e.g. accessibility notice), stale-data warning, with Undo after clearing local data |
 
 ## Screen-specific composition
 
