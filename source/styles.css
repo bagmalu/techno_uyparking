@@ -467,9 +467,11 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 .bars {
   display: flex; align-items: flex-end; gap: 7px; height: 76px; padding: 0 6px;
   background: repeating-linear-gradient(to top, transparent 0 18px, var(--border) 18px 19px);
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;   /* a sideways slide reads the bars */
 }
 .bar { flex: 1; border: 0; padding: 0; background: var(--bar); position: relative; min-height: 4px; }
-.bar::after { content: ""; position: absolute; left: -3px; right: -4px; bottom: 0; height: 76px; }   /* the whole column is the target */
+.bar::after { content: ""; position: absolute; left: -3px; right: -4px; bottom: -20px; height: 96px; }   /* the whole column and its axis label are the target */
+.bar:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 2px; }
 .bar.sel { background: var(--bar-sel); }
 .bar.is-live { background: var(--bar); }
 .bar .live { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent-500); }
@@ -588,6 +590,7 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 }
 .cbar { flex: 1; min-width: 0; position: relative; border: 0; padding: 0; background: none; border-radius: 4px 4px 0 0; cursor: pointer; }
 .cbar i { position: absolute; left: 0; right: 0; bottom: 0; min-height: 3px; border-radius: 3px 3px 0 0; }
+.cbar::after { content: ""; position: absolute; left: -2px; right: -2px; top: -6px; bottom: -20px; }   /* the gaps either side and the axis label below count too */
 .cbar .val { background: var(--bar); }
 .cbar .exp { border: 1.5px dashed var(--bar); border-bottom: 0; }
 .cbar.sel { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
@@ -604,7 +607,7 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 .segmented.compact { margin: 8px 0 0; }
 .segmented.compact .seg { font-size: 0.8125rem; }
 .occ-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); margin: 6px 0 4px; }
-.occ-bar .parked { background: var(--accent-500); }
+.occ-bar .parked, .occ-bar .share { background: var(--accent-500); }
 .occ-bar .reserved { background: repeating-linear-gradient(45deg, var(--accent-300), var(--accent-300) 3px, var(--accent-100) 3px, var(--accent-100) 6px); }
 .occ-legend { display: flex; gap: 14px; font-size: 0.75rem; color: var(--text-secondary); }
 .occ-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }

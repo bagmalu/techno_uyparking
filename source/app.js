@@ -240,16 +240,6 @@ const DAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Frid
 const DAY_FACTOR = [1.12, .9, .92, .95, 1, 1.06, 1.15];
 const usualTrend = (lot, day) => BASE_TREND.map((v, i) => Math.min(.98, v * lot.busy * DAY_FACTOR[day] + (seeded(lot.id + i)() - .5) * .06));
 
-const OWNER = {
-  txns: [
-    { what: 'Parking fee · NBC 1234', when: 'Today 5:42 PM', amt: 85 },
-    { what: 'Reservation fee · #204', when: 'Today 5:31 PM', amt: 50 },
-    { what: 'Parking fee · walk-in', when: 'Today 5:18 PM', amt: 120 },
-    { what: 'Reservation fee · #203', when: 'Today 5:02 PM', amt: 50 },
-    { what: 'Parking fee · ABK 772', when: 'Today 4:47 PM', amt: 45 },
-  ],
-};
-
 // ---------- state (kept in local cache, like the real app would) ----------
 const STORE_KEY = 'uyparking-proto-v1';
 
@@ -349,12 +339,13 @@ function usualAt(usual, h) {   // the usual curve between its hourly bars; quiet
   const i = Math.floor(h);
   return usual[i] + (usual[Math.min(HOURS - 1, i + 1)] - usual[i]) * (h - i);
 }
+const liveKey = () => `${new Date().toDateString()} ${Math.floor(nowHour() * 4)}`;   // live data moves on every 15 minutes
 const liveCache = new Map();
 function liveShare(lot) {
   if (lot.parked + lot.reserved >= lot.capacity) return 1;
-  const h = Math.floor(nowHour() * 4) / 4, day = new Date().getDay(), key = `${lot.id} ${day} ${h}`;   // changes every 15 minutes
+  const h = Math.floor(nowHour() * 4) / 4, key = `${lot.id} ${liveKey()}`;
   if (!liveCache.has(key)) {
-    const usual = usualTrend(lot, day);
+    const usual = usualTrend(lot, new Date().getDay());
     liveCache.set(key, Math.min(1, usualAt(usual, h) / Math.max(...usual)));
   }
   return liveCache.get(key);
@@ -699,7 +690,7 @@ function openLot(id) {
   renderSheet();
   $('#sheet').scrollTop = 0;
   setExpanded($('#sheet'), false);
-  $('#app').classList.add('sheet-open');
+  setSheetOpen(true);
   focusLot(id);
   renderMap();
 }
@@ -833,13 +824,17 @@ function endGesture() {
   return true;
 }
 
+function setSheetOpen(on) {   // a closed sheet is off screen, so it is inert: out of the tab order and away from screen readers
+  $('#app').classList.toggle('sheet-open', on);
+  $('#sheet').inert = !on;
+}
 function closeSheet() {
   if (!ui.selectedLot) return;
   releaseSheets();
   ui.selectedLot = null;
   ui.near = null;
   syncNearMarker();
-  $('#app').classList.remove('sheet-open');
+  setSheetOpen(false);
   if (current === 'map') restoreView();
   renderMap();
 }
@@ -907,28 +902,29 @@ function renderSheet() {
   renderTrend(lot);
 }
 
+// the lot sheet's chart works like the owner charts: tap a bar, slide across them, or use the arrow keys
 function renderTrend(lot) {
   const vals = usualTrend(lot, ui.trendDay);
   const isToday = ui.trendDay === new Date().getDay();
   const live = isToday ? liveIndex() : -1;
   const sel = ui.trendSel ?? (live >= 0 ? live : 10);
   const s = stats(lot);
+  const read = (i) => {
+    if (i === live) return `<b>Live ${hourLabel(i)}</b> • ${s.left} slots left`;
+    const left = Math.round(lot.capacity * (1 - vals[i]));
+    return `${hourLabel(i)} • Usually has ${Math.max(0, left - 3)}-${left + 2} slots left`;
+  };
+  CHARTS.trend = { n: vals.length, read, get: () => ui.trendSel ?? sel, set: (i) => { ui.trendSel = i; } };
 
-  let label;
-  if (sel === live) label = `<b>Live ${hourLabel(sel)}</b> • ${s.left} slots left`;
-  else {
-    const left = Math.round(lot.capacity * (1 - vals[sel]));
-    label = `${hourLabel(sel)} • Usually has ${Math.max(0, left - 3)}-${left + 2} slots left`;
-  }
-
+  $('#trend').dataset.chartRoot = 'trend';
   $('#trend').innerHTML = `
     <select data-action-change="trendDay" aria-label="Day of week">
       ${DAYS.map((d, i) => `<option value="${i}" ${i === ui.trendDay ? 'selected' : ''}>${d}</option>`).join('')}
     </select>
-    <div class="trend-label">${label}</div>
-    <div class="bars">
+    <div class="trend-label" data-readout aria-live="polite">${read(sel)}</div>
+    <div class="bars" data-scrub data-chart="trend" role="group" aria-label="Usual occupancy by hour">
       ${vals.map((v, i) => `<button class="bar ${i === sel ? 'sel' : ''} ${i === live ? 'is-live' : ''}" style="height:${Math.round(v * 100)}%"
-          data-action="trendBar" data-i="${i}" aria-label="${hourLabel(i)}">
+          data-action="chartPick" data-chart="trend" data-i="${i}" aria-pressed="${i === sel}" tabindex="${i === sel ? 0 : -1}" aria-label="${i === live ? 'Live, ' : ''}${hourLabel(i)}">
           ${i === live ? `<span class="live" style="height:${Math.min(100, Math.round((s.pct / v) * 100))}%"></span>` : ''}</button>`).join('')}
     </div>
     <div class="bar-axis"><span>6a</span><span>9a</span><span>12p</span><span>3p</span><span>6p</span><span>9p</span></div>`;
@@ -1109,7 +1105,7 @@ function paid() {
     state.reservation = { lotId: ui.pendingLot, ref: `#${200 + Math.floor(Math.random() * 90)}`, createdAt: now, expiresAt: now + GRACE_MS };
     state.history.unshift({ lotId: ui.pendingLot, ref: state.reservation.ref, date: today(), status: 'Active' });
     save();
-    $('#app').classList.remove('sheet-open');
+    setSheetOpen(false);
     ui.selectedLot = null;
     goFrom('map', 'resqr');
     toast(`${peso(RESERVATION_FEE)} paid. Your reservation is ready.`);
@@ -1296,7 +1292,7 @@ function entryScan(via) {
     state.reservation = null;
     ui.walkinQr = false;
     save();
-    $('#app').classList.remove('sheet-open');   // a walk-in may have started from the lot sheet
+    setSheetOpen(false);   // a walk-in may have started from the lot sheet
     ui.selectedLot = null;
     goFrom('map', 'parked');
   }, 450 * (items.length + 1));
@@ -1649,30 +1645,32 @@ function peakOf(lot, ago) {   // a day's busiest hour; today only counts up to n
 }
 
 // ---------- owner charts: tap a bar, press and slide across them, or use the arrow keys ----------
-const CHARTS = {};   // id → { n, read(i) }: what a chart says about each bar
+// CHARTS: id → { n, read(i), get(), set(i) }: how many bars, what each says, and where the selection is kept.
+// The markup: a [data-chart-root] holding a [data-readout] and the [data-i] bars.
+const CHARTS = {};
 function chart({ id, title, bars, sel, read, axis }) {
-  CHARTS[id] = { n: bars.length, read };
+  CHARTS[id] = { n: bars.length, read, get: () => ui.chartSel[id], set: (i) => { ui.chartSel[id] = i; } };
   sel = ui.chartSel[id] ??= sel;
   const h = (x) => `${Math.round(Math.min(1, x) * 100)}%`;
-  return `<div class="chart" id="chart-${id}">
-    <p class="chart-readout" aria-live="polite">${read(sel)}</p>
-    <div class="chart-bars" data-chart="${id}" role="group" aria-label="${title}">${bars.map((b, i) => `<button class="cbar ${b.kind}${i === sel ? ' sel' : ''}"
+  return `<div class="chart" id="chart-${id}" data-chart-root="${id}">
+    <p class="chart-readout" data-readout aria-live="polite">${read(sel)}</p>
+    <div class="chart-bars" data-scrub data-chart="${id}" role="group" aria-label="${title}">${bars.map((b, i) => `<button class="cbar ${b.kind}${i === sel ? ' sel' : ''}"
       data-action="chartPick" data-chart="${id}" data-i="${i}" aria-pressed="${i === sel}" tabindex="${i === sel ? 0 : -1}" aria-label="${b.label}">${
       b.e != null ? `<i class="exp" style="height:${h(b.e)}"></i>` : ''}${b.v != null ? `<i class="val" style="height:${h(b.v)}"></i>` : ''}</button>`).join('')}</div>
     ${axis}</div>`;
 }
 function pickBar(id, i) {
-  const c = CHARTS[id], root = $(`#chart-${id}`);
+  const c = CHARTS[id], root = $(`[data-chart-root="${id}"]`);
   if (!c || !root) return;
   i = Math.max(0, Math.min(c.n - 1, i));
-  if (ui.chartSel[id] === i) return;
-  ui.chartSel[id] = i;
-  root.querySelectorAll('.cbar').forEach((b, j) => {
+  if (c.get() === i) return;
+  c.set(i);
+  root.querySelectorAll('[data-i]').forEach((b, j) => {
     b.classList.toggle('sel', j === i);
     b.setAttribute('aria-pressed', j === i);
     b.tabIndex = j === i ? 0 : -1;
   });
-  root.querySelector('.chart-readout').innerHTML = c.read(i);
+  root.querySelector('[data-readout]').innerHTML = c.read(i);
 }
 const HOUR_AXIS = '<div class="bar-axis"><span>6a</span><span>9a</span><span>12p</span><span>3p</span><span>6p</span><span>9p</span></div>';
 function hourChart(id, title, bars, cap, live) {   // live: { parked, reserved } right now
@@ -1722,6 +1720,8 @@ function renderOwner() {
     const week = LOTS.flatMap((l) => [1, 2, 3, 4, 5, 6, 7].map((ago) => dayStats(l, ago)));
     const before = LOTS.flatMap((l) => [8, 9, 10, 11, 12, 13, 14].map((ago) => dayStats(l, ago)));
     const reservations = sumOf(today, 'reservations'), kept = reservations - sumOf(today, 'noShows');
+    const byLot = LOTS.map((l, i) => ({ l, d: today[i] })).sort((a, b) => b.d.revenue - a.d.revenue);
+    const topRevenue = byLot[0].d.revenue || 1;
     $('#ownerBody').innerHTML = `
       <div class="stat-grid">
         <div class="stat"><small>Revenue today</small><b>${peso(sumOf(today, 'revenue'))}</b>${delta(sumOf(today, 'revenue'), sumOf(then, 'revenue'), vsLastWeek)}</div>
@@ -1729,13 +1729,34 @@ function renderOwner() {
         <div class="stat"><small>Reservation fees</small><b>${peso(sumOf(today, 'resFees'))}</b><div class="delta">${reservations} × ${peso(RESERVATION_FEE)}</div></div>
         <div class="stat"><small>Credits applied</small><b>−${peso(sumOf(today, 'credits'))}</b><div class="delta">${kept} × ${peso(FEE_CREDIT)}</div></div>
       </div>
-      <div class="card"><h3>Payment mix</h3>
+      <div class="card"><h3>Revenue by lot</h3><p class="caption" style="margin:0 0 4px">Today so far · tap a lot for its recent performance</p>${byLot.map(({ l, d }) => `
+        <button class="lot-occ" data-action="ownerLot" data-id="${l.id}" aria-label="${esc(l.name)}: ${peso(d.revenue)} today. Recent performance">
+          <span class="top"><span>${esc(l.name)}</span><span>${peso(d.revenue)}${icon('i-chevron', 'sm')}</span></span>
+          <span class="occ-bar"><i class="share" style="width:${(d.revenue / topRevenue) * 100}%"></i></span></button>`).join('')}</div>
+      <div class="card"><h3>Payment mix</h3><p class="caption" style="margin:0 0 4px">Last 7 days</p>
         <div class="kv"><span>QR Ph (in app)</span><span>54%</span></div>
         <div class="kv"><span>NFC</span><span>18%</span></div>
         <div class="kv"><span>Cashier / vendor</span><span>28%</span></div></div>
-      <div class="card"><h3>Recent transactions</h3>${OWNER.txns.map((t) => `<div class="txn"><span>${t.what}<small>${t.when}</small></span><b>${peso(t.amt)}</b></div>`).join('')}</div>
+      <div class="card"><h3>Recent transactions</h3>${recentTxns().map((t) => `<div class="txn"><span>${esc(t.what)}<small>${t.when}</small></span><b>${peso(t.amt)}</b></div>`).join('')}</div>
       <p class="caption center">Updated ${fmtTime(Date.now())}</p>`;
   }
+}
+
+// the latest payments, ending a few minutes ago; a new list every 15 minutes, like the live counts
+function recentTxns() {
+  const rnd = seeded(`txns ${liveKey()}`);
+  const pick = (list) => list[Math.floor(rnd() * list.length)];
+  const plate = () => `${[0, 1, 2].map(() => pick('ABCDEFGHJKLMNPRSTUVWXYZ')).join('')} ${1000 + Math.floor(rnd() * 9000)}`;
+  const kinds = ['plate', 'reservation', 'walk-in', 'credit', 'plate'], turn = Math.floor(rnd() * kinds.length);   // a mix, in a different order each time
+  let t = Date.now() - (2 + Math.floor(rnd() * 5)) * 60000;
+  return kinds.map((_, i) => {
+    const kind = kinds[(i + turn) % kinds.length], lot = pick(LOTS), when = `${fmtTime(t)} · ${shortName(lot)}`;
+    t -= (3 + Math.floor(rnd() * 14)) * 60000;
+    if (kind === 'reservation') return { what: `Reservation fee · #${200 + Math.floor(rnd() * 90)}`, when, amt: RESERVATION_FEE };
+    const fee = parkingFee(lot.rate, 1 + Math.floor(rnd() * 5), isWeekend());
+    if (kind === 'credit') return { what: `Parking fee · ${plate()} · ₱${FEE_CREDIT} credit`, when, amt: fee - FEE_CREDIT };   // a kept reservation
+    return { what: `Parking fee · ${kind === 'walk-in' ? 'walk-in' : plate()}`, when, amt: fee };
+  });
 }
 
 // one lot's recent performance, opened from the dashboard's By lot list
@@ -1789,6 +1810,25 @@ function weekCard(lot) {
       bars: days.map((x, i) => ({ kind: x.ago ? 'past' : 'now', v: val(x) / top, e: x.ago ? null : expect / top, label: `${name(x.ago, x.d)}, ${fmt(val(x))}` })),
       axis: `<div class="chart-axis">${days.map(({ ago, d }) => `<span>${ago ? weekday(d.date) : 'Today'}</span>`).join('')}</div>` })}
     <div class="chart-legend"><span><i></i>Earlier days</span><span><i class="now"></i>Today so far</span><span><i class="exp"></i>Expected</span></div>`;
+}
+
+// ---------- live refresh ----------
+// When the live counts move on, the map and any open screen that shows them are redrawn. A screen in use
+// (a sheet dragged, a chart scrubbed, keyboard focus or a field inside it, the drawer or save dialog open) waits for the next check.
+const LIVE_SCREENS = ['map', 'explore', 'owner', 'ownerlot'];
+let lastLive = liveKey(), livePending = false;
+function refreshLive() {
+  if (liveKey() !== lastLive) {
+    lastLive = liveKey();
+    renderMap();
+    livePending = LIVE_SCREENS.includes(current);
+  }
+  if (!livePending) return;
+  const panel = current === 'map' ? $('#sheet') : $(`#screen-${current} .panel`), a = document.activeElement;
+  const inUse = panel?.contains(a) && (a.matches(':focus-visible') || /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName));
+  if (motion || gesture || scrub || inUse || ui.saveDraft || $('#app').classList.contains('drawer-open')) return;
+  livePending = false;
+  RENDER[current]();
 }
 
 // ---------- theme / offline / toast ----------
@@ -1890,7 +1930,6 @@ const ACTIONS = {
     toast(replaced ? `${name} is now ${shortName(lot)}.` : `Saved as ${name}.`);
   },
   unsavePlace: () => { const id = ui.saveDraft.lotId; closeSave(); removePlace(id); },
-  trendBar: (d) => { ui.trendSel = Number(d.i); renderTrend(lotById(ui.selectedLot)); },
   reserve: (d) => { ui.pendingLot = d.id; go('reserve'); },
   reserveAgain: (d) => { tab('map'); openLot(d.id); },
   confirmReserve: () => { if (state.account) toPay(); else { ui.idCtx = 'reserve'; go('otp'); } },
@@ -2047,13 +2086,15 @@ document.addEventListener('pointercancel', endPointer);
 
 // press and slide across a chart to read each bar; a finger starts after a sideways move, so scrolling past doesn't
 let scrub = null;
-function scrubTo(x) {
-  const r = scrub.bars.getBoundingClientRect(), id = scrub.bars.dataset.chart;
-  pickBar(id, Math.floor(((x - r.left) / r.width) * CHARTS[id].n));
+function scrubTo(x) {   // the bar whose middle is nearest the pointer
+  const mid = (b) => { const r = b.getBoundingClientRect(); return (r.left + r.right) / 2; };
+  const bars = [...scrub.bars.querySelectorAll('[data-i]')];
+  const i = bars.reduce((best, b, j) => (Math.abs(mid(b) - x) < Math.abs(mid(bars[best]) - x) ? j : best), 0);
+  pickBar(scrub.bars.dataset.chart, i);
 }
 document.addEventListener('pointerdown', (e) => {
-  const bars = e.target.closest?.('.chart-bars');
-  if (!bars || e.button) return;
+  const bars = e.target.closest?.('[data-scrub]');
+  if (!bars || e.button || motion?.panel === bars.closest('.panel')) return;   // a touch on a moving sheet only catches it
   scrub = { bars, pointer: e.pointerId, x0: e.clientX, live: e.pointerType !== 'touch' };
   if (scrub.live) scrubTo(e.clientX);
 });
@@ -2077,6 +2118,7 @@ document.addEventListener('touchstart', (e) => {
     || e.target.closest('.sheet-handle, input, select, textarea')) return;
   touch = { panel, id: e.touches[0].identifier, y: e.touches[0].clientY, active: false };
   if (motion?.panel === panel) { beginGesture(panel, touch.y); touch.active = true; }
+  else if (e.target.closest('[data-scrub]')) touch = null;   // a finger on a chart reads it instead of dragging the sheet
 }, { passive: true });
 document.addEventListener('touchmove', (e) => {
   const finger = dragFinger(e);
@@ -2150,11 +2192,11 @@ searchInput.addEventListener('keydown', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
-  const bar = e.target.closest?.('.cbar'), step = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity }[e.key];
+  const bar = e.target.closest?.('[data-chart][data-i]'), step = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity }[e.key];
   if (bar && step) {   // arrow keys move along a chart's bars
     e.preventDefault();
     pickBar(bar.dataset.chart, Math.max(-1, Math.min(99, Number(bar.dataset.i) + step)));
-    $(`#chart-${bar.dataset.chart} .cbar.sel`).focus();
+    bar.parentElement.querySelector('.sel')?.focus();
   }
   if (e.key === 'Enter' && e.target.id === 'saveName' && ui.saveDraft) ACTIONS.savePlace();
   if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else if (current === 'map') closeSheet(); closeDemo(); }
@@ -2189,3 +2231,5 @@ renderDrawer();
 if (state.reservation && state.reservation.expiresAt <= Date.now()) expireReservation();
 tab('map');
 setInterval(tick, 1000);
+setInterval(refreshLive, 20000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLive(); });

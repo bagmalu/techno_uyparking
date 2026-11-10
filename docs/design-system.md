@@ -205,8 +205,9 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Availability summary | slots left / total for drivers (parked/reserved split on the owner dashboard); available, filling, and full states |
 | Automatic assignment card | waiting for entry scan / assigning / assigned / unavailable; assigned floor and slot shown after scan |
 | Occupancy bar | total taken plus parked vs. reserved split |
-| Trend chart | static bars; selected time; day selector; live availability label |
-| Owner chart | bars you tap, slide a finger across, or step through with arrow keys; the selected column is tinted and a readout above it explains the bar; earlier = gray, now = teal, usual/expected = dashed outline |
+| Trend chart | usual bars with the live count inside the current hour; day selector; label above for the selected time. Same interaction as the owner charts |
+| Owner chart | the selected column is tinted and a readout above it explains the bar; earlier = gray, now = teal, expected = dashed outline |
+| Chart interaction (trend and owner) | tap a bar, slide a finger or pointer across the bars (a finger starts after a small sideways move, so scrolling past doesn't change it), or use arrow keys / Home / End (one tab stop per chart). Each bar's target includes the gaps beside it and the axis label below |
 | QR sheet | placeholder QR, lot/reservation summary, unassigned state, countdown timer, expired variant |
 | Countdown timer | running / < 2 min (warning) / expired |
 | Reservation fee summary | ₱50 paid; ₱35 deductible at exit |

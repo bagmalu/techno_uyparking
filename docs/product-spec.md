@@ -71,7 +71,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 | OTP / identity | At reserve/pay for guests (plate number or phone OTP); also create account (plate or phone), sign in (phone only), add/change phone |
 | Owner statistics | Mock occupancy, peak-time, entries and no-show cards; hourly occupancy for today (tap or slide across the bars: earlier hours, now, and the usual for later hours); By lot list with the parked/reserved split, each lot opening its own page |
 | Owner lot performance | One lot: live parked/reserved split, today's entries, revenue, average stay and no-shows against the same day last week, its hourly chart, a 7-day chart (entries, revenue or peak), turnover, reservations kept, revenue per space, and when it is usually full |
-| Owner financials | Mock revenue (today and the last 7 days), reservation fees, ₱35 credits applied, payment mix, recent transactions |
+| Owner financials | Mock revenue (today and the last 7 days), reservation fees, ₱35 credits applied, revenue by lot (each opens that lot's page), payment mix, recent transactions (the last few, timed from now) |
 
 
 ## Golden-path user flows (make these clickable)
@@ -126,7 +126,8 @@ financial totals are sums of the lots. Today counts only up to the current time.
 
 - **Live counts follow the time of day.** The mock parked/reserved counts are each lot at its
   usual evening peak and scale along that lot's usual hourly curve (refreshed every 15 minutes),
-  so mornings are quieter than evenings. Lots that are full in the mock data (Megamall Building C,
+  so mornings are quieter than evenings. The map and any open screen showing counts redraw when
+  they move on, unless that screen is in use at the moment. Lots that are full in the mock data (Megamall Building C,
   Market! Market! Car Park) stay full all day, so the lot-full state can always be demonstrated.
 - **Reserved counts as taken.** Prevents phantom availability. Drivers see only slots
   left / total; the parked vs. reserved split is on the owner dashboard.
