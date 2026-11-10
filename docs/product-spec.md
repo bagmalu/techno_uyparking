@@ -69,8 +69,9 @@ should preserve this shell where practical rather than introducing unrelated pag
 | Account | Guest: perks + Create account / Sign in. Signed in: name, email for receipts, verified phone, saved plates with a default, default payment method, recent activity, sign out, delete account |
 | Settings | Account shortcut, theme, Presentation mode (shows or hides the demo controls; on by default on desktop, off on phones, kept by a data reset), notification toggles (saved locally; SMS alerts need a verified phone) |
 | OTP / identity | At reserve/pay for guests (plate number or phone OTP); also create account (plate or phone), sign in (phone only), add/change phone |
-| Owner statistics | Mock occupancy, peak-time, and lot-performance cards |
-| Owner financials | Mock revenue, reservation-fee, and transaction summary |
+| Owner statistics | Mock occupancy, peak-time, entries and no-show cards; hourly occupancy for today (tap or slide across the bars: earlier hours, now, and the usual for later hours); By lot list with the parked/reserved split, each lot opening its own page |
+| Owner lot performance | One lot: live parked/reserved split, today's entries, revenue, average stay and no-shows against the same day last week, its hourly chart, a 7-day chart (entries, revenue or peak), turnover, reservations kept, revenue per space, and when it is usually full |
+| Owner financials | Mock revenue (today and the last 7 days), reservation fees, ₱35 credits applied, payment mix, recent transactions |
 
 
 ## Golden-path user flows (make these clickable)
@@ -103,7 +104,12 @@ should preserve this shell where practical rather than introducing unrelated pag
 
 **5. Parking owner**
 1. Owner entry → Owner stats
-2. Switch tab → Owner financials
+2. Tap or slide across the hourly chart to read each hour
+3. Tap a lot in By lot → that lot's recent performance → Back
+4. Switch tab → Owner financials
+
+All owner figures are mock data from one generator per lot and day, so the dashboard and the
+financial totals are sums of the lots. Today counts only up to the current time.
 
 ## Secondary states (one screen each — shows rigor at defense)
 
@@ -118,6 +124,10 @@ should preserve this shell where practical rather than introducing unrelated pag
 
 ## Notes for the writeup / defense
 
+- **Live counts follow the time of day.** The mock parked/reserved counts are each lot at its
+  usual evening peak and scale along that lot's usual hourly curve (refreshed every 15 minutes),
+  so mornings are quieter than evenings. Lots that are full in the mock data (Megamall Building C,
+  Market! Market! Car Park) stay full all day, so the lot-full state can always be demonstrated.
 - **Reserved counts as taken.** Prevents phantom availability. Drivers see only slots
   left / total; the parked vs. reserved split is on the owner dashboard.
 - **Rates.** Each lot's car rate is tiered (first N hours, then per succeeding hour,

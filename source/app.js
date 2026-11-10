@@ -238,9 +238,9 @@ const shortName = (lot) => lot.name.replace(/\s+(parking|car ?park)$/i, '');
 const BASE_TREND = [.22, .27, .3, .36, .32, .45, .6, .5, .42, .52, .62, .72, .84, .78, .62, .5];
 const DAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
 const DAY_FACTOR = [1.12, .9, .92, .95, 1, 1.06, 1.15];
+const usualTrend = (lot, day) => BASE_TREND.map((v, i) => Math.min(.98, v * lot.busy * DAY_FACTOR[day] + (seeded(lot.id + i)() - .5) * .06));
 
 const OWNER = {
-  hourly: [18, 25, 31, 42, 40, 55, 71, 64, 52, 60, 74, 86, 93, 88, 70, 54],
   txns: [
     { what: 'Parking fee · NBC 1234', when: 'Today 5:42 PM', amt: 85 },
     { what: 'Reservation fee · #204', when: 'Today 5:31 PM', amt: 50 },
@@ -279,6 +279,7 @@ function defaultState() {
 let state = load();
 const ui = { selectedLot: null, pendingLot: null, payCtx: 'reserve', payMethod: 'qrph',
   walkinLot: 'sm-b1', walkinQr: false, focusLot: null, assignLot: null, exitDone: false, ownerTab: 'stats', trendDay: new Date().getDay(), trendSel: null,
+  ownerLot: null, lotMetric: 'entries', chartSel: {},   // chartSel: the selected bar of each owner chart
   idCtx: 'reserve', confirmDelete: false, near: null, saveDraft: null };   // saveDraft: { lotId, kind, name } while the save dialog is open   // near: business a lot was found through (search fallback)   // idCtx: why the identity screen is open — reserve | create | signin | phone
 
 function load() {
@@ -340,10 +341,30 @@ function seeded(str) {
   return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
 }
 
+// The mock counts are each lot at its usual evening peak; live, they follow the time of day along the lot's
+// usual curve. A lot that is full in the mock data stays full, so the lot-full state can always be shown.
+function usualAt(usual, h) {   // the usual curve between its hourly bars; quieter before 6 AM and after 10 PM
+  if (h < 0) return usual[0] * .5;
+  if (h >= HOURS) return usual[HOURS - 1] * .6;
+  const i = Math.floor(h);
+  return usual[i] + (usual[Math.min(HOURS - 1, i + 1)] - usual[i]) * (h - i);
+}
+const liveCache = new Map();
+function liveShare(lot) {
+  if (lot.parked + lot.reserved >= lot.capacity) return 1;
+  const h = Math.floor(nowHour() * 4) / 4, day = new Date().getDay(), key = `${lot.id} ${day} ${h}`;   // changes every 15 minutes
+  if (!liveCache.has(key)) {
+    const usual = usualTrend(lot, day);
+    liveCache.set(key, Math.min(1, usualAt(usual, h) / Math.max(...usual)));
+  }
+  return liveCache.get(key);
+}
+
 // Live counts: total taken = parked + reserved (the user's own booking/session included).
 function stats(lot) {
-  const reserved = lot.reserved + (state.reservation?.lotId === lot.id ? 1 : 0);
-  const parked = lot.parked + (state.session?.lotId === lot.id ? 1 : 0);
+  const k = liveShare(lot);
+  const reserved = Math.round(lot.reserved * k) + (state.reservation?.lotId === lot.id ? 1 : 0);
+  const parked = Math.round(lot.parked * k) + (state.session?.lotId === lot.id ? 1 : 0);
   const taken = Math.min(lot.capacity, parked + reserved);
   const left = lot.capacity - taken;
   const pct = taken / lot.capacity;
@@ -549,6 +570,7 @@ const FOCUS = {
   locator: () => state.session?.lotId,
   session: () => state.session?.lotId,
   exit: () => state.session?.lotId,
+  ownerlot: () => ui.ownerLot,
 };
 
 // ---------- router ----------
@@ -558,6 +580,7 @@ let current = 'map';
 
 // The screen being left stays up briefly: under a new sheet rising over it, or sliding back down the way it came.
 let leaveTimer;
+const scrolls = {};   // how far each screen was scrolled, for going back to it
 function clearLeaving() {
   clearTimeout(leaveTimer);
   $$('.screen.leaving').forEach((s) => {
@@ -573,6 +596,8 @@ function show(name, returning = false) {
   const screen = $(`#screen-${name}`);
   const old = $('.screen.active');
   if (old !== screen) {
+    const oldMain = old?.querySelector('.panel:not(.sheet)');
+    if (oldMain) scrolls[old.id] = oldMain.scrollTop;
     screen.classList.toggle('returning', returning);   // the sheet coming back is already there, under the one leaving
     const oldPanel = old?.querySelector(app.classList.contains('sheet-open') ? '.panel' : '.panel:not(.sheet)');   // an open lot sheet stays under the new screen too
     if (oldPanel) {
@@ -593,7 +618,7 @@ function show(name, returning = false) {
   hideSearch();
   RENDER[name]?.();
   const panel = screen.querySelector('.panel:not(.sheet)');
-  if (panel) { setExpanded(panel, false); panel.scrollTop = 0; }
+  if (panel) { setExpanded(panel, false); panel.scrollTop = returning ? scrolls[screen.id] || 0 : 0; }
 
   const focusId = FOCUS[name]?.();
   ui.focusLot = focusId || null;
@@ -883,8 +908,7 @@ function renderSheet() {
 }
 
 function renderTrend(lot) {
-  const f = DAY_FACTOR[ui.trendDay];
-  const vals = BASE_TREND.map((v, i) => Math.min(.98, v * lot.busy * f + (seeded(lot.id + i)() - .5) * .06));
+  const vals = usualTrend(lot, ui.trendDay);
   const isToday = ui.trendDay === new Date().getDay();
   const live = isToday ? liveIndex() : -1;
   const sel = ui.trendSel ?? (live >= 0 ? live : 10);
@@ -1553,35 +1577,157 @@ function renderSettings() {
 function openDrawer() { renderDrawer(); $('#app').classList.add('drawer-open'); }
 function closeDrawer() { $('#app').classList.remove('drawer-open'); }
 
+// ---------- owner data ----------
+// Mock, but consistent: every figure comes from one generator per lot and day, so the dashboard and the
+// financials are sums of the lots. Today counts only up to now; the hours after now show what usually happens.
+const HOURS = BASE_TREND.length;   // 6 AM → 9 PM
+const nowHour = () => { const d = new Date(); return d.getHours() - 6 + d.getMinutes() / 60; };   // hours into the chart's day
+const sumOf = (list, k) => list.reduce((a, d) => a + d[k], 0);
+const weekday = (d) => d.toLocaleDateString('en-PH', { weekday: 'short' });
+const fmtStay = (min) => `${Math.floor(min / 60)} h ${min % 60} min`;
+const pctText = (x) => `${Math.round(x * 100)}%`;
+
+const dayCache = new Map();
+function lotDay(lot, ago) {   // the whole of one day at a lot; ago: 0 = today, 1 = yesterday …
+  const date = new Date();
+  date.setDate(date.getDate() - ago);
+  const key = `${lot.id} ${date.toDateString()}`;
+  if (!dayCache.has(key)) {
+    const rnd = seeded(key), weekend = isWeekend(date);
+    const hourly = usualTrend(lot, date.getDay()).map((v) => Math.min(.98, Math.max(.05, v + (rnd() - .5) * .08)));
+    const avgStay = Math.round(105 + rnd() * 50 + (weekend ? 25 : 0));   // minutes
+    const entries = Math.round((lot.capacity * hourly.reduce((a, v) => a + v, 0) * 60) / avgStay);   // space-hours ÷ hours per car
+    const reservations = Math.round(entries * (.1 + rnd() * .06));
+    dayCache.set(key, { date, hourly, avgStay, entries, reservations, noShows: Math.round(reservations * (.05 + rnd() * .07)),
+      fees: entries * parkingFee(lot.rate, Math.ceil(avgStay / 60), weekend) });
+  }
+  return dayCache.get(key);
+}
+// the share of a day's parking that has happened by now
+function dayDone(hourly) {
+  const h = nowHour();
+  if (h <= 0) return 0;
+  if (h >= HOURS) return 1;
+  const i = Math.floor(h);
+  return (hourly.slice(0, i).reduce((a, v) => a + v, 0) + hourly[i] * (h - i)) / hourly.reduce((a, v) => a + v, 0);
+}
+function withMoney(d, share = 1) {   // counts up to a share of the day, and what they earned
+  const n = (k) => Math.round(d[k] * share);
+  const out = { ...d, entries: n('entries'), reservations: n('reservations'), noShows: n('noShows'), fees: n('fees') };
+  out.resFees = out.reservations * RESERVATION_FEE;
+  out.credits = (out.reservations - out.noShows) * FEE_CREDIT;   // kept reservations pay ₱35 less at exit
+  out.revenue = out.fees + out.resFees - out.credits;
+  return out;
+}
+const todayShare = (lot) => dayDone(lotDay(lot, 0).hourly);
+const dayStats = (lot, ago = 0) => withMoney(lotDay(lot, ago), ago ? 1 : todayShare(lot));   // today: so far
+const lastWeekNow = (lot) => withMoney(lotDay(lot, 7), todayShare(lot));   // the same weekday last week, at this time
+
+// today by the hour: what happened, now (the live count), then what to expect.
+// The earlier hours lead up to the live count, and the forecast drifts from it back to the usual.
+const clampPct = (x) => Math.min(.98, Math.max(.02, x));
+function hourBars(lot) {
+  const day = lotDay(lot, 0), usual = usualTrend(lot, new Date().getDay()), h = nowHour(), now = Math.floor(h);
+  const live = stats(lot).pct, usualNow = usualAt(usual, Math.floor(h * 4) / 4);   // the same moment the live count is for
+  const gap = now >= 0 && now < HOURS ? live - day.hourly[now] : 0, lean = gap ? live - usualNow : 0;
+  return day.hourly.map((v, i) => {
+    if (i < now) return { kind: 'past', v: clampPct(v + (gap * (i + 1)) / (now + 1)) };
+    if (i === now) return { kind: 'now', v: live, e: usualNow };
+    return { kind: 'later', e: clampPct(usual[i] + lean * 0.6 ** (i - now)) };
+  });
+}
+function allHourBars() {   // all lots, weighted by size
+  const cap = sumOf(LOTS, 'capacity'), per = LOTS.map(hourBars);
+  const mix = (i, k) => (per[0][i][k] == null ? null : per.reduce((a, bars, j) => a + bars[i][k] * LOTS[j].capacity, 0) / cap);
+  return per[0].map((b, i) => ({ kind: b.kind, v: mix(i, 'v'), e: mix(i, 'e') }));
+}
+const busiest = (vals) => vals.indexOf(Math.max(...vals));
+function peakOf(lot, ago) {   // a day's busiest hour; today only counts up to now
+  const vals = ago ? lotDay(lot, ago).hourly : hourBars(lot).map((b) => (b.kind === 'later' ? -1 : b.v));
+  const i = busiest(vals);
+  return vals[i] < 0 ? null : { i, pct: vals[i] };
+}
+
+// ---------- owner charts: tap a bar, press and slide across them, or use the arrow keys ----------
+const CHARTS = {};   // id → { n, read(i) }: what a chart says about each bar
+function chart({ id, title, bars, sel, read, axis }) {
+  CHARTS[id] = { n: bars.length, read };
+  sel = ui.chartSel[id] ??= sel;
+  const h = (x) => `${Math.round(Math.min(1, x) * 100)}%`;
+  return `<div class="chart" id="chart-${id}">
+    <p class="chart-readout" aria-live="polite">${read(sel)}</p>
+    <div class="chart-bars" data-chart="${id}" role="group" aria-label="${title}">${bars.map((b, i) => `<button class="cbar ${b.kind}${i === sel ? ' sel' : ''}"
+      data-action="chartPick" data-chart="${id}" data-i="${i}" aria-pressed="${i === sel}" tabindex="${i === sel ? 0 : -1}" aria-label="${b.label}">${
+      b.e != null ? `<i class="exp" style="height:${h(b.e)}"></i>` : ''}${b.v != null ? `<i class="val" style="height:${h(b.v)}"></i>` : ''}</button>`).join('')}</div>
+    ${axis}</div>`;
+}
+function pickBar(id, i) {
+  const c = CHARTS[id], root = $(`#chart-${id}`);
+  if (!c || !root) return;
+  i = Math.max(0, Math.min(c.n - 1, i));
+  if (ui.chartSel[id] === i) return;
+  ui.chartSel[id] = i;
+  root.querySelectorAll('.cbar').forEach((b, j) => {
+    b.classList.toggle('sel', j === i);
+    b.setAttribute('aria-pressed', j === i);
+    b.tabIndex = j === i ? 0 : -1;
+  });
+  root.querySelector('.chart-readout').innerHTML = c.read(i);
+}
+const HOUR_AXIS = '<div class="bar-axis"><span>6a</span><span>9a</span><span>12p</span><span>3p</span><span>6p</span><span>9p</span></div>';
+function hourChart(id, title, bars, cap, live) {   // live: { parked, reserved } right now
+  const now = bars.findIndex((b) => b.kind === 'now');
+  const read = (i) => {
+    const b = bars[i];
+    if (b.kind === 'later') return `<b>${hourLabel(i)}</b> · expected ${pctText(b.e)} full<br>About ${Math.round(b.e * cap)} of ${cap} spaces taken`;
+    if (b.kind === 'now') return `<b>Now · ${hourLabel(i)}</b> · ${pctText(b.v)} full, usually ${pctText(b.e)}<br>${live.parked} parked + ${live.reserved} reserved of ${cap}`;
+    return `<b>${hourLabel(i)}</b> · ${pctText(b.v)} full<br>${Math.round(b.v * cap)} of ${cap} spaces taken`;
+  };
+  return chart({ id, title, read, axis: HOUR_AXIS,
+    bars: bars.map((b, i) => ({ ...b, label: b.kind === 'later' ? `${hourLabel(i)}, expected ${pctText(b.e)} full` : `${b.kind === 'now' ? 'Now' : hourLabel(i)}, ${pctText(b.v)} full` })),
+    sel: now >= 0 ? now : busiest(bars.map((b) => b.v ?? b.e)) })
+    + '<div class="chart-legend"><span><i></i>Earlier</span><span><i class="now"></i>Now</span><span><i class="exp"></i>Expected</span></div>';
+}
+const OCC_LEGEND = '<div class="occ-legend"><span><i class="parked"></i>Parked</span><span><i class="reserved"></i>Reserved</span></div>';
+const occBar = (s, lot) => `<span class="occ-bar"><i class="parked" style="width:${(s.parked / lot.capacity) * 100}%"></i><i class="reserved" style="width:${(s.reserved / lot.capacity) * 100}%"></i></span>`;
+function delta(now, then, what) {   // "▲ 8% vs last Thu", "Same as last Thu"
+  if (!then) return '';
+  const p = Math.round(((now - then) / then) * 100);
+  return `<div class="delta${p < 0 ? ' down' : ''}">${p ? `${p < 0 ? '▼' : '▲'} ${Math.abs(p)}% vs` : 'Same as'} ${what}</div>`;
+}
+
 // ---------- owner ----------
 function renderOwner() {
   $$('#screen-owner .seg').forEach((b) => b.classList.toggle('active', b.dataset.tabId === ui.ownerTab));
-  const totalCap = LOTS.reduce((a, l) => a + l.capacity, 0);
-  const totalTaken = LOTS.reduce((a, l) => a + stats(l).taken, 0);
-  const max = Math.max(...OWNER.hourly);
+  const today = LOTS.map((l) => dayStats(l)), then = LOTS.map(lastWeekNow);
+  const vsLastWeek = `last ${weekday(new Date())}`;
   if (ui.ownerTab === 'stats') {
+    const live = LOTS.map(stats), cap = sumOf(LOTS, 'capacity'), taken = sumOf(live, 'taken');
+    const bars = allHourBars(), peak = busiest(bars.map((b) => b.v ?? b.e)), entries = sumOf(today, 'entries');
     $('#ownerBody').innerHTML = `
       <div class="stat-grid">
-        <div class="stat"><small>Occupancy now</small><b>${Math.round((totalTaken / totalCap) * 100)}%</b><div class="delta">${totalTaken} / ${totalCap} spaces</div></div>
-        <div class="stat"><small>Peak time today</small><b>6 PM</b><div class="delta">93% full</div></div>
-        <div class="stat"><small>Entries today</small><b>412</b><div class="delta">▲ 8% vs last Thu</div></div>
-        <div class="stat"><small>No-shows</small><b>6</b><div class="delta">of 58 reservations</div></div>
+        <div class="stat"><small>Occupancy now</small><b>${pctText(taken / cap)}</b><div class="delta">${taken} / ${cap} spaces</div></div>
+        <div class="stat"><small>Peak time today</small><b>${hourLabel(peak)}</b><div class="delta">${pctText(bars[peak].v ?? bars[peak].e)} full${bars[peak].kind === 'later' ? ', expected' : ''}</div></div>
+        <div class="stat"><small>Entries today</small><b>${entries}</b>${delta(entries, sumOf(then, 'entries'), vsLastWeek)}</div>
+        <div class="stat"><small>No-shows</small><b>${sumOf(today, 'noShows')}</b><div class="delta">of ${sumOf(today, 'reservations')} reservations</div></div>
       </div>
       <div class="card"><h3>Hourly occupancy</h3><p class="caption" style="margin:0">Today · all lots</p>
-        <div class="mini-bars">${OWNER.hourly.map((v) => `<i class="${v === max ? 'peak' : ''}" style="height:${v}%" title="${v}%"></i>`).join('')}</div>
-        <div class="bar-axis"><span>6a</span><span>9a</span><span>12p</span><span>3p</span><span>6p</span><span>9p</span></div></div>
-      <div class="card"><h3>By lot</h3>${LOTS.map((l) => { const s = stats(l); return `<div class="lot-occ">
-        <div class="top"><span>${esc(l.name)}</span><span>${s.parked} + ${s.reserved} / ${l.capacity}</span></div>
-        <div class="occ-bar"><i class="parked" style="width:${(s.parked / l.capacity) * 100}%"></i><i class="reserved" style="width:${(s.reserved / l.capacity) * 100}%"></i></div></div>`; }).join('')}
-        <div class="occ-legend"><span><i class="parked"></i>Parked</span><span><i class="reserved"></i>Reserved</span></div></div>
+        ${hourChart('all', 'Hourly occupancy, all lots', bars, cap, { parked: sumOf(live, 'parked'), reserved: sumOf(live, 'reserved') })}</div>
+      <div class="card"><h3>By lot</h3><p class="caption" style="margin:0 0 4px">Tap a lot for its recent performance</p>${LOTS.map((l, i) => { const s = live[i]; return `
+        <button class="lot-occ" data-action="ownerLot" data-id="${l.id}" aria-label="${esc(l.name)}: ${s.parked} parked and ${s.reserved} reserved of ${l.capacity}. Recent performance">
+          <span class="top"><span>${esc(l.name)}</span><span>${s.parked} + ${s.reserved} / ${l.capacity}${icon('i-chevron', 'sm')}</span></span>${occBar(s, l)}</button>`; }).join('')}
+        ${OCC_LEGEND}</div>
       <p class="caption center">Updated ${fmtTime(Date.now())}</p>`;
   } else {
+    const week = LOTS.flatMap((l) => [1, 2, 3, 4, 5, 6, 7].map((ago) => dayStats(l, ago)));
+    const before = LOTS.flatMap((l) => [8, 9, 10, 11, 12, 13, 14].map((ago) => dayStats(l, ago)));
+    const reservations = sumOf(today, 'reservations'), kept = reservations - sumOf(today, 'noShows');
     $('#ownerBody').innerHTML = `
       <div class="stat-grid">
-        <div class="stat"><small>Revenue today</small><b>${peso(38450)}</b><div class="delta">▲ 5% vs last Thu</div></div>
-        <div class="stat"><small>This week</small><b>${peso(214900)}</b><div class="delta">▲ 3%</div></div>
-        <div class="stat"><small>Reservation fees</small><b>${peso(2900)}</b><div class="delta">58 × ${peso(RESERVATION_FEE)}</div></div>
-        <div class="stat"><small>Credits applied</small><b>−${peso(1820)}</b><div class="delta">52 × ${peso(FEE_CREDIT)}</div></div>
+        <div class="stat"><small>Revenue today</small><b>${peso(sumOf(today, 'revenue'))}</b>${delta(sumOf(today, 'revenue'), sumOf(then, 'revenue'), vsLastWeek)}</div>
+        <div class="stat"><small>Last 7 days</small><b>${peso(sumOf(week, 'revenue'))}</b>${delta(sumOf(week, 'revenue'), sumOf(before, 'revenue'), 'the 7 days before')}</div>
+        <div class="stat"><small>Reservation fees</small><b>${peso(sumOf(today, 'resFees'))}</b><div class="delta">${reservations} × ${peso(RESERVATION_FEE)}</div></div>
+        <div class="stat"><small>Credits applied</small><b>−${peso(sumOf(today, 'credits'))}</b><div class="delta">${kept} × ${peso(FEE_CREDIT)}</div></div>
       </div>
       <div class="card"><h3>Payment mix</h3>
         <div class="kv"><span>QR Ph (in app)</span><span>54%</span></div>
@@ -1590,6 +1736,59 @@ function renderOwner() {
       <div class="card"><h3>Recent transactions</h3>${OWNER.txns.map((t) => `<div class="txn"><span>${t.what}<small>${t.when}</small></span><b>${peso(t.amt)}</b></div>`).join('')}</div>
       <p class="caption center">Updated ${fmtTime(Date.now())}</p>`;
   }
+}
+
+// one lot's recent performance, opened from the dashboard's By lot list
+function renderOwnerLot() {
+  const lot = lotById(ui.ownerLot), s = stats(lot), t = dayStats(lot), then = lastWeekNow(lot);
+  const past = [1, 2, 3, 4, 5, 6, 7].map((ago) => dayStats(lot, ago));
+  const vsLastWeek = `last ${weekday(new Date())}`;
+  const kept = sumOf(past, 'reservations') ? (sumOf(past, 'reservations') - sumOf(past, 'noShows')) / sumOf(past, 'reservations') : 1;
+  // the hours a lot is usually full on this weekday
+  const usual = usualTrend(lot, new Date().getDay()), full = usual.map((v, i) => (v >= .9 ? i : -1)).filter((i) => i >= 0);
+  const fullText = full.length ? `${hourLabel(full[0])} – ${hourLabel(full[full.length - 1] + 1)}` : `Rarely; busiest at ${hourLabel(busiest(usual))}`;
+  $('#ownerLotTitle').textContent = lot.name;
+  $('#ownerLotBody').innerHTML = `
+    <p class="lead">${esc(lot.area)} · ${lot.capacity} spaces</p>
+    <div class="card"><div class="lot-occ lot-now"><span class="top"><b>Right now</b>${statusChip(s)}</span>${occBar(s, lot)}
+      <span class="top"><span class="caption">${s.parked} parked + ${s.reserved} reserved of ${lot.capacity}</span><span class="caption">${s.left} left</span></span></div>
+      ${OCC_LEGEND}</div>
+    <div class="stat-grid">
+      <div class="stat"><small>Entries today</small><b>${t.entries}</b>${delta(t.entries, then.entries, vsLastWeek)}</div>
+      <div class="stat"><small>Revenue today</small><b>${peso(t.revenue)}</b>${delta(t.revenue, then.revenue, vsLastWeek)}</div>
+      <div class="stat"><small>Average stay</small><b>${fmtStay(t.avgStay)}</b><div class="delta">7-day avg ${fmtStay(Math.round(sumOf(past, 'avgStay') / 7))}</div></div>
+      <div class="stat"><small>No-shows</small><b>${t.noShows}</b><div class="delta">of ${t.reservations} reservations</div></div>
+    </div>
+    <div class="card"><h3>Hourly occupancy</h3><p class="caption" style="margin:0">Today</p>
+      ${hourChart('lotHour', 'Hourly occupancy today', hourBars(lot), lot.capacity, s)}</div>
+    <div class="card" id="lotWeek">${weekCard(lot)}</div>
+    <div class="card"><h3>Last 7 days</h3>
+      <div class="kv"><span>Turnover</span><span>${(sumOf(past, 'entries') / 7 / lot.capacity).toFixed(1)} cars per space a day</span></div>
+      <div class="kv"><span>Reservations kept</span><span>${pctText(kept)}</span></div>
+      <div class="kv"><span>Revenue per space</span><span>${peso(Math.round(sumOf(past, 'revenue') / lot.capacity))}</span></div>
+      <div class="kv"><span>Usually full on ${DAYS[new Date().getDay()]}</span><span>${fullText}</span></div>
+      <p class="caption" style="margin:6px 0 0">No-shows are released to other drivers after ${GRACE_TEXT}.</p></div>
+    <p class="caption center">Updated ${fmtTime(Date.now())}</p>`;
+}
+const METRICS = { entries: 'Entries', revenue: 'Revenue', peak: 'Peak' };
+function weekCard(lot) {
+  const m = ui.lotMetric, days = [6, 5, 4, 3, 2, 1, 0].map((ago) => ({ ago, d: dayStats(lot, ago), peak: peakOf(lot, ago) }));
+  const whole = withMoney(lotDay(lot, 0));   // today, if it goes the usual way
+  const val = ({ d, peak }) => (m === 'peak' ? peak?.pct ?? 0 : d[m]);
+  const expect = m === 'peak' ? Math.max(...hourBars(lot).map((b) => b.v ?? b.e)) : whole[m];
+  const top = m === 'peak' ? 1 : Math.max(expect, ...days.map(val));
+  const fmt = (x) => (m === 'revenue' ? peso(x) : m === 'peak' ? `${pctText(x)} full` : `${x} entries`);
+  const name = (ago, d) => (ago ? d.date.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Today so far');
+  const read = (i) => {
+    const { ago, d, peak } = days[i];
+    return `<b>${name(ago, d)}</b> · ${peak ? `peak ${pctText(peak.pct)} at ${hourLabel(peak.i)}` : 'no cars yet'}<br>${d.entries} entries · ${peso(d.revenue)} · ${d.noShows} no-show${d.noShows === 1 ? '' : 's'}`;
+  };
+  return `<h3>Recent days</h3>
+    <div class="segmented compact" role="group" aria-label="Show">${Object.entries(METRICS).map(([k, label]) => `<button class="seg${k === m ? ' active' : ''}" data-action="lotMetric" data-metric="${k}" aria-pressed="${k === m}">${label}</button>`).join('')}</div>
+    ${chart({ id: 'lotWeek', title: `${METRICS[m]}, last 7 days`, read, sel: 6,
+      bars: days.map((x, i) => ({ kind: x.ago ? 'past' : 'now', v: val(x) / top, e: x.ago ? null : expect / top, label: `${name(x.ago, x.d)}, ${fmt(val(x))}` })),
+      axis: `<div class="chart-axis">${days.map(({ ago, d }) => `<span>${ago ? weekday(d.date) : 'Today'}</span>`).join('')}</div>` })}
+    <div class="chart-legend"><span><i></i>Earlier days</span><span><i class="now"></i>Today so far</span><span><i class="exp"></i>Expected</span></div>`;
 }
 
 // ---------- theme / offline / toast ----------
@@ -1640,7 +1839,7 @@ const DEMO_FLOWS = {
   walkin() { state.session = null; ui.walkinLot = 'open-b'; ui.walkinQr = false; save(); goFrom('scan', 'walkin'); },
   exit() { ensureSession(); goFrom('scan', 'session'); },
   find() { ensureSession(); goFrom('explore', 'locator'); },
-  owner() { ui.ownerTab = 'stats'; goFrom('map', 'owner'); },
+  owner() { ui.ownerTab = 'stats'; delete ui.chartSel.all; goFrom('map', 'owner'); },
   full() { tab('map'); openLot('annex'); },
 };
 
@@ -1772,6 +1971,9 @@ const ACTIONS = {
   payVendor: () => { state.session.payMethod = 'vendor'; save(); ui.exitDone = false; go('exit'); },
   exitScan,
   ownerTab: (d) => { ui.ownerTab = d.tabId; renderOwner(); },
+  ownerLot: (d) => { ui.ownerLot = d.id; delete ui.chartSel.lotHour; delete ui.chartSel.lotWeek; go('ownerlot'); },
+  lotMetric: (d) => { ui.lotMetric = d.metric; $('#lotWeek').innerHTML = weekCard(lotById(ui.ownerLot)); },
+  chartPick: (d) => pickBar(d.chart, Number(d.i)),
   toggleTheme: () => {
     state.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     save(); applyTheme();
@@ -1819,6 +2021,7 @@ const RENDER = {
   explore: renderExplore,
   profile: () => { ui.confirmDelete = false; renderProfile(); },
   owner: renderOwner,
+  ownerlot: renderOwnerLot,
   settings: renderSettings,
   otp: renderIdentity,
 };
@@ -1841,6 +2044,28 @@ const endPointer = (e) => {
 };
 document.addEventListener('pointerup', endPointer);
 document.addEventListener('pointercancel', endPointer);
+
+// press and slide across a chart to read each bar; a finger starts after a sideways move, so scrolling past doesn't
+let scrub = null;
+function scrubTo(x) {
+  const r = scrub.bars.getBoundingClientRect(), id = scrub.bars.dataset.chart;
+  pickBar(id, Math.floor(((x - r.left) / r.width) * CHARTS[id].n));
+}
+document.addEventListener('pointerdown', (e) => {
+  const bars = e.target.closest?.('.chart-bars');
+  if (!bars || e.button) return;
+  scrub = { bars, pointer: e.pointerId, x0: e.clientX, live: e.pointerType !== 'touch' };
+  if (scrub.live) scrubTo(e.clientX);
+});
+document.addEventListener('pointermove', (e) => {
+  if (scrub?.pointer !== e.pointerId) return;
+  if (!scrub.live && Math.abs(e.clientX - scrub.x0) < 6) return;
+  scrub.live = true;
+  scrubTo(e.clientX);
+});
+const endScrub = (e) => { if (scrub?.pointer === e.pointerId) scrub = null; };
+document.addEventListener('pointerup', endScrub);
+document.addEventListener('pointercancel', endScrub);
 
 // a sheet's content drags the sheet when it has nothing left to scroll that way; this listener also turns on :active in iOS Safari
 const dragFinger = (e) => Array.from(e.touches).find((t) => t.identifier === touch?.id);   // a drag follows the finger that started it
@@ -1925,6 +2150,12 @@ searchInput.addEventListener('keydown', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.id === 'newPlate') ACTIONS.addPlate();
+  const bar = e.target.closest?.('.cbar'), step = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity }[e.key];
+  if (bar && step) {   // arrow keys move along a chart's bars
+    e.preventDefault();
+    pickBar(bar.dataset.chart, Math.max(-1, Math.min(99, Number(bar.dataset.i) + step)));
+    $(`#chart-${bar.dataset.chart} .cbar.sel`).focus();
+  }
   if (e.key === 'Enter' && e.target.id === 'saveName' && ui.saveDraft) ACTIONS.savePlace();
   if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else if (current === 'map') closeSheet(); closeDemo(); }
 });

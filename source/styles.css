@@ -577,9 +577,32 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 .stat small { display: block; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
 .stat b { font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
 .stat .delta { font-size: 0.75rem; font-weight: 700; color: var(--accent-text); }
-.mini-bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; margin: 8px 0 4px; background: repeating-linear-gradient(to top, transparent 0 22px, var(--border) 22px 23px); }
-.mini-bars i { flex: 1; background: var(--bar); }
-.mini-bars i.peak { background: var(--accent-500); }
+.stat .delta.down { color: var(--status-full); }
+
+/* owner charts: the selected bar's column is tinted and the readout above says what it holds */
+.chart-readout { min-height: 2.25rem; margin: 8px 0 6px; font-size: 0.8125rem; line-height: 1.125rem; color: var(--text-secondary); }
+.chart-readout b { color: var(--text-primary); font-weight: 600; }
+.chart-bars {
+  display: flex; gap: 4px; height: 96px; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  background: repeating-linear-gradient(to top, var(--border) 0 1px, transparent 1px 24px);
+}
+.cbar { flex: 1; min-width: 0; position: relative; border: 0; padding: 0; background: none; border-radius: 4px 4px 0 0; cursor: pointer; }
+.cbar i { position: absolute; left: 0; right: 0; bottom: 0; min-height: 3px; border-radius: 3px 3px 0 0; }
+.cbar .val { background: var(--bar); }
+.cbar .exp { border: 1.5px dashed var(--bar); border-bottom: 0; }
+.cbar.sel { background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.cbar.sel .val { background: var(--bar-sel); }
+.cbar.sel .exp { border-color: var(--bar-sel); }
+.cbar.now .val { background: var(--accent-500); }
+.cbar:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 1px; }
+.chart-axis { display: flex; gap: 4px; padding-top: 4px; font-size: 0.6875rem; color: var(--text-secondary); }
+.chart-axis span { flex: 1; text-align: center; min-width: 0; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary); }
+.chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; background: var(--bar); }
+.chart-legend .now { background: var(--accent-500); }
+.chart-legend .exp { background: none; border: 1.5px dashed var(--bar-sel); }
+.segmented.compact { margin: 8px 0 0; }
+.segmented.compact .seg { font-size: 0.8125rem; }
 .occ-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); margin: 6px 0 4px; }
 .occ-bar .parked { background: var(--accent-500); }
 .occ-bar .reserved { background: repeating-linear-gradient(45deg, var(--accent-300), var(--accent-300) 3px, var(--accent-100) 3px, var(--accent-100) 6px); }
@@ -589,7 +612,15 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 .occ-legend .reserved { background: var(--accent-300); }
 .lot-occ { padding: 10px 0; border-bottom: 1px solid var(--border); }
 .lot-occ:last-of-type { border-bottom: 0; }
-.lot-occ .top { display: flex; justify-content: space-between; font-size: 0.875rem; }
+.lot-occ .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.875rem; }
+.lot-occ .top .ic { color: var(--icon); margin: -2px -4px -2px 2px; vertical-align: -4px; }
+/* in the dashboard's By lot list each lot opens its own page; the tint runs to the card's edges */
+button.lot-occ {
+  display: block; width: calc(100% + 32px); margin: 0 -16px; padding: 10px 16px; min-height: 44px;
+  border: 0; border-bottom: 1px solid var(--border); background: none; color: inherit; font: inherit; text-align: left;
+}
+@media (hover: hover) { button.lot-occ:hover { background: var(--surface-2); } }
+.lot-occ.lot-now { padding: 2px 0 6px; border-bottom: 0; }
 .txn { display: flex; justify-content: space-between; font-size: 0.875rem; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .txn:last-child { border-bottom: 0; }
 .txn small { display: block; color: var(--text-secondary); font-size: 0.75rem; }
@@ -733,10 +764,10 @@ img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
 /* ---------- press feedback: instant on press, eases back on release ---------- */
 button, .lot-card { -webkit-tap-highlight-color: transparent; }
 .fab, .fav-btn, .search-mic, .icon-btn, .lot-card, .choice, .banner, .qr-tap, .tabbar button { transition: transform .18s ease-out; }
-button.row, .drawer-nav button, .drawer-user { transition: background .18s ease-out; }
+button.row, button.lot-occ, .drawer-nav button, .drawer-user { transition: background .18s ease-out; }
 .fab:active, .fav-btn:active, .search-mic:active, .icon-btn:active, .tabbar button:active { transform: scale(.9); transition-duration: 0s; }
 .lot-card:active, .choice:active, .banner:active, .qr-tap:active { transform: scale(.98); transition-duration: 0s; }
-button.row:active, .drawer-nav button:active, .drawer-user:active { background: var(--border); transition-duration: 0s; }
+button.row:active, button.lot-occ:active, .drawer-nav button:active, .drawer-user:active { background: var(--border); transition-duration: 0s; }
 .attr.rate { position: relative; }
 .attr.rate::after { content: ""; position: absolute; inset: -8px 0; }   /* 44px tall to the finger */
 .attr.rate:active, .segmented button:active, .demo-fab:active { opacity: .7; }

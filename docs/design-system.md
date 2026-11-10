@@ -206,6 +206,7 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Automatic assignment card | waiting for entry scan / assigning / assigned / unavailable; assigned floor and slot shown after scan |
 | Occupancy bar | total taken plus parked vs. reserved split |
 | Trend chart | static bars; selected time; day selector; live availability label |
+| Owner chart | bars you tap, slide a finger across, or step through with arrow keys; the selected column is tinted and a readout above it explains the bar; earlier = gray, now = teal, usual/expected = dashed outline |
 | QR sheet | placeholder QR, lot/reservation summary, unassigned state, countdown timer, expired variant |
 | Countdown timer | running / < 2 min (warning) / expired |
 | Reservation fee summary | ₱50 paid; ₱35 deductible at exit |
