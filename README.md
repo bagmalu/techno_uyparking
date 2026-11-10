@@ -25,6 +25,16 @@ python -m http.server 8777
 Then open <http://localhost:8777>. On a phone, use your computer's local IP address,
 for example `http://192.168.1.20:8777`.
 
+**Install it as an app.** Served over http (Option B, or a hosted copy such as GitHub
+Pages), the prototype is an installable web app: in Chrome or Edge use the install icon in
+the address bar or **Settings → Install Uy Parking!**; on Android, the browser menu's
+**Install app**; on iPhone or iPad, Safari's **Share → Add to Home Screen**. Installed, it
+opens full screen with its own icon and keeps working offline: the app, all lot photos, and
+the map tiles you have already looked at come from the phone. Opening the file directly
+(Option A) runs it as a plain page with none of that. Phones only install from `https://`
+or `localhost`, so over Wi-Fi from your computer (`http://192.168.…`) it runs but can't
+be installed. Use a hosted copy for that.
+
 On a desktop the app appears inside a phone frame, with a **Presentation controls** panel
 beside it. On a phone-sized screen it fills the screen and the controls are hidden; turn on
 **Settings → Presentation mode** to open them from a small tab on the right edge.
@@ -105,8 +115,9 @@ scans and lot counts. Tapping a gate QR code stands in for the gate's scanner re
 - **The map is real OpenStreetMap, the parking is not.** Map tiles load from
   `tile.openstreetmap.org` when served over http (Option B), or from the OSM community
   server `tile.openstreetmap.de` when you open the file directly, because openstreetmap.org
-  blocks pages opened from disk. Either way you need an internet connection; without one, the lots still
-  appear on a blank background. The 20 lots are real places, drawn on their OpenStreetMap
+  blocks pages opened from disk. Tiles need an internet connection the first time; served
+  over http, the ones you have seen are kept for up to a week, and anything not yet seen
+  shows as a blank background with the lots still drawn on it. The 20 lots are real places, drawn on their OpenStreetMap
   outlines with their street addresses:
   - **Ortigas Center:** SM Megamall Buildings A and C and its open lot, The Podium,
     Shangri-La Plaza and Robinsons Galleria.
@@ -147,7 +158,10 @@ source/
   index.html           ← all screens
   styles.css           ← design tokens and components
   app.js               ← screen router, reservation countdown, mock data and flows
+  manifest.webmanifest ← app name, icons and colours for installing
+  sw.js                ← service worker: works offline, keeps map tiles and photos
   img/                 ← lot photos from Wikimedia Commons (see Photo credits)
+  img/icons/           ← app icons, made from the "UY" mark in img/logo.png
   vendor/leaflet/      ← Leaflet 1.9.4 map library (BSD-2), bundled so no CDN is needed
 ```
 

@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Uy Parking!",
+  "short_name": "Uy Parking!",
+  "description": "Is there a parking space? Live lot availability, reservations, scan-in and pay on exit. Prototype with mock data.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f7f7",
+  "theme_color": "#009f8b",
+  "categories": ["navigation", "travel"],
+  "icons": [
+    { "src": "img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

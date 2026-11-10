@@ -475,11 +475,13 @@ function initMap() {
   map = L.map('map', { zoomControl: false, zoomSnap: .25, minZoom: 11, maxZoom: 19 })
     .setView(HOME_VIEW.center, HOME_VIEW.zoom);
   map.attributionControl.setPrefix(false);
-  tiles = L.tileLayer(TILES.url, { maxZoom: 19, className: 'osm-tiles', attribution: TILES.attribution });
-  // demo offline mode: tiles already on screen stay (like a cache), new ones are left blank
+  // CORS tiles (served over http/https), so the service worker can keep them compactly (sw.js)
+  tiles = L.tileLayer(TILES.url, { maxZoom: 19, className: 'osm-tiles', attribution: TILES.attribution, crossOrigin: location.protocol !== 'file:' });
+  // demo offline mode: tiles already on screen stay (like a cache), new ones are left blank.
+  // Really offline, tiles are still requested: the service worker answers with the ones seen before.
   const createTile = tiles.createTile;
   tiles.createTile = function (coords, done) {
-    if (!state.offline) return createTile.call(this, coords, done);
+    if (!state.offline || !navigator.onLine) return createTile.call(this, coords, done);
     const blank = document.createElement('div');
     setTimeout(() => done(null, blank));
     return blank;
@@ -1569,7 +1571,22 @@ function renderSettings() {
   $$('[data-pref]').forEach((el) => { el.checked = !!state.prefs[el.dataset.pref]; });
   $('#receiptsSub').textContent = a?.email ? `In the app and to ${a.email}` : 'In the app';
   $('#smsSub').textContent = a?.phone ? `To ${a.phone}` : 'Needs a verified mobile number';
+  renderInstall();
 }
+
+// ---------- installable app (manifest.webmanifest, sw.js) ----------
+// Chrome, Edge and Android hand over their install prompt for the Settings row; iPhone and iPad install
+// from Safari's Share menu, so there the row says how. Hidden once installed, and when opened as a file.
+let installPrompt = null;
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const installed = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function renderInstall() {
+  const can = !installed() && location.protocol !== 'file:' && (installPrompt || IOS);
+  $('#installSection').hidden = !can;
+  $('#installSub').textContent = installPrompt ? 'Opens full screen and works offline' : 'Tap Share, then Add to Home Screen';
+}
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; renderInstall(); });
+addEventListener('appinstalled', () => { installPrompt = null; renderInstall(); toast('Uy Parking! is installed.'); });
 function openDrawer() { renderDrawer(); $('#app').classList.add('drawer-open'); }
 function closeDrawer() { $('#app').classList.remove('drawer-open'); }
 
@@ -2020,6 +2037,14 @@ const ACTIONS = {
   togglePresent: () => { state.present = !$('.stage').classList.contains('presenting'); save(); applyPresent(); },
   openDemo: () => $('.stage').classList.add('demo-open'),
   closeDemo,
+  installApp: async () => {
+    if (!installPrompt) { toast('In Safari, tap Share, then Add to Home Screen.'); return; }
+    const prompt = installPrompt;
+    installPrompt = null;   // each prompt can be shown once
+    prompt.prompt();
+    await prompt.userChoice;
+    renderInstall();
+  },
   toggleOffline: () => { state.offline = !state.offline; save(); applyOffline(); RENDER[current]?.(); },
   resetDemo: () => {
     closeSheet();
@@ -2220,7 +2245,9 @@ if (navigator.maxTouchPoints > 0 && CSS.supports('font', '-apple-system-body')) 
   root.style.font = '';
   root.style.setProperty('--system-text', `${(size / 17) * 100}%`);
 }
-addEventListener('offline', () => { state.offline = true; save(); applyOffline(); RENDER[current]?.(); });
+// state.offline: true when turned on in the demo, 'network' when the connection really dropped
+if (navigator.onLine === (state.offline === 'network')) { state.offline = navigator.onLine ? false : 'network'; save(); }   // it changed while the app was closed
+addEventListener('offline', () => { state.offline = 'network'; save(); applyOffline(); RENDER[current]?.(); });
 addEventListener('online', () => { state.offline = false; save(); applyOffline(); RENDER[current]?.(); });
 initMap();
 applyTheme();
@@ -2230,6 +2257,21 @@ applyOffline();
 renderDrawer();
 if (state.reservation && state.reservation.expiresAt <= Date.now()) expireReservation();
 tab('map');
+// service workers need http(s); a page opened as a file runs without one
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // keep every lot photo for offline use (sw.js serves them); only the ones not kept yet are fetched
+  setTimeout(async () => {
+    if (!navigator.onLine) return;
+    try {
+      const photos = await caches.open('uyparking-photos');
+      for (const lot of LOTS) {
+        const url = `img/${lot.id}.jpg`;
+        if (!(await photos.match(url))) await photos.add(url).catch(() => {});
+      }
+    } catch { /* storage unavailable (private mode): photos load online as usual */ }
+  }, 4000);
+}
 setInterval(tick, 1000);
 setInterval(refreshLive, 20000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshLive(); });

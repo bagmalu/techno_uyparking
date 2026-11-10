@@ -15,5 +15,11 @@ Open `index.html` directly, or run `python -m http.server 8777` in this folder a
 - `vendor/leaflet/` — Leaflet 1.9.4. Tiles come from `tile.openstreetmap.org`, or from
   `tile.openstreetmap.de` when the page is opened as `file://` (openstreetmap.org rejects
   requests without a Referer). The base map needs an internet connection.
+- `manifest.webmanifest`, `sw.js`, `img/icons/` — the installable app. The service worker
+  (registered only over http/https) serves app files network-first with a cached fallback,
+  keeps OpenStreetMap tiles as their cache headers allow (at most 600, up to a week stale
+  when offline), and serves the lot photos that `app.js` stores in `uyparking-photos`. Bump
+  `VERSION` in `sw.js` when its `APP_FILES` list changes. Real loss of connection turns on
+  the same offline banner as the demo toggle (`state.offline === 'network'`).
 
 See the root [README](../README.md) for a walkthrough of each flow.

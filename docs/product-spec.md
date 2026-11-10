@@ -67,7 +67,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 |---|---|
 | Sidebar | Guest: Create account / Sign in; signed in: name and default plate, opens Account |
 | Account | Guest: perks + Create account / Sign in. Signed in: name, email for receipts, verified phone, saved plates with a default, default payment method, recent activity, sign out, delete account |
-| Settings | Account shortcut, theme, Presentation mode (shows or hides the demo controls; on by default on desktop, off on phones, kept by a data reset), notification toggles (saved locally; SMS alerts need a verified phone) |
+| Settings | Account shortcut, theme, Install Uy Parking! (when the browser can install it; on iPhone it says how), Presentation mode (shows or hides the demo controls; on by default on desktop, off on phones, kept by a data reset), notification toggles (saved locally; SMS alerts need a verified phone) |
 | OTP / identity | At reserve/pay for guests (plate number or phone OTP); also create account (plate or phone), sign in (phone only), add/change phone |
 | Owner statistics | Mock occupancy, peak-time, entries and no-show cards; hourly occupancy for today (tap or slide across the bars: earlier hours, now, and the usual for later hours); By lot list with the parked/reserved split, each lot opening its own page |
 | Owner lot performance | One lot: live parked/reserved split, today's entries, revenue, average stay and no-shows against the same day last week, its hourly chart, a 7-day chart (entries, revenue or peak), turnover, reservations kept, revenue per space, and when it is usually full |

@@ -5,9 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Uy Parking!</title>
   <meta name="theme-color" content="#009f8b">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- installable app: see manifest.webmanifest and sw.js -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Uy Parking!">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" crossorigin>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -277,6 +285,12 @@
               <label class="row toggle-row"><span>Saved place is filling up<small>When fewer than 20 spaces are left</small></span><input type="checkbox" role="switch" data-pref="filling"></label>
               <label class="row toggle-row"><span>Payment receipts<small id="receiptsSub">In the app</small></span><input type="checkbox" role="switch" data-pref="receipts"></label>
               <label class="row toggle-row"><span>SMS alerts<small id="smsSub">Needs a verified mobile number</small></span><input type="checkbox" role="switch" data-pref="sms"></label>
+            </div>
+            <div id="installSection" hidden>
+              <h3 class="section-title">App</h3>
+              <div class="list">
+                <button class="row" data-action="installApp"><svg class="ic"><use href="#i-phone"/></svg><span>Install Uy Parking!<small id="installSub">Opens full screen and works offline</small></span></button>
+              </div>
             </div>
             <h3 class="section-title">Data</h3>
             <div class="list">
