@@ -369,8 +369,18 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .search input::placeholder { color: var(--material-text); opacity: 1; }
 .search input::-webkit-search-cancel-button { display: none; }
 .search-mic { border: 0; background: none; color: var(--icon); width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; }
+.search-filter { position: relative; border: 0; background: none; color: var(--icon); width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; margin-right: -12px; }
+.search-filter.on { color: var(--accent-text); }
+.search-filter .badge {
+  position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--accent-500); color: #fff; font-size: 0.6875rem; font-weight: 700; line-height: 18px; text-align: center;
+}
 
-.map-banners { position: absolute; top: calc(136px + var(--safe-top)); left: 16px; right: 16px; z-index: 5; display: flex; flex-direction: column; gap: 8px; }
+/* active filters, then the banners, stacked under the search bar so neither covers the other */
+.map-stack { position: absolute; top: calc(82px + var(--safe-top)); left: 16px; right: 16px; z-index: 5; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.map-stack button { pointer-events: auto; }
+.map-banners { display: flex; flex-direction: column; gap: 8px; }
+.map-banners:empty { display: none; }
 .app:not([data-screen="map"]) .map-banners, .sheet-open .map-banners { display: none; }
 .banner {
   display: flex; align-items: center; justify-content: center; gap: 12px;
@@ -383,13 +393,8 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .banner.warn { background: var(--status-filling); color: #2b1a00; }
 .banner.parked { background: var(--accent-700); }
 
-/* filter chips under the search bar: they scroll sideways, and the map stays draggable between them */
-.filter-bar {
-  position: absolute; top: calc(82px + var(--safe-top)); left: 0; right: 0; z-index: 8;
-  display: flex; gap: 8px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; pointer-events: none;
-}
-.filter-bar::-webkit-scrollbar { display: none; }
-.filter-bar > * { pointer-events: auto; }
+/* active filters under the search bar: each removes itself when tapped; they wrap rather than run off the edge */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; }
 .app:not([data-screen="map"]) .filter-bar, .sheet-open .filter-bar { display: none; }
 .searching .filter-bar { visibility: hidden; }
 .fchip {
@@ -400,6 +405,7 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
   box-shadow: var(--shadow-fab), inset 0 0 0 .5px var(--material-edge);
 }
 .fchip.on { background: var(--accent-500); color: #fff; }
+.fchip .x { width: 15px; height: 15px; margin: 0 -4px 0 2px; opacity: .85; }
 .fchip:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 2px; }
 .fchip .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent-500); color: #fff; font-size: 0.75rem; line-height: 20px; text-align: center; }
 /* on a sheet the chips sit on the surface, not the map */

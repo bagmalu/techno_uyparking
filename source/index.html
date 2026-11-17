@@ -85,13 +85,16 @@
           <label class="search">
             <svg class="ic"><use href="#i-search"/></svg>
             <input id="searchInput" type="search" placeholder="Where to?" autocomplete="off" aria-label="Search parking">
+            <button class="search-filter" id="searchFilterBtn" data-action="openFilters" aria-label="Filters"><svg class="ic"><use href="#i-sliders"/></svg><span class="badge" id="filterBadge" hidden></span></button>
             <button class="search-mic" data-action="voice" aria-label="Voice search"><svg class="ic"><use href="#i-mic"/></svg></button>
           </label>
         </div>
 
-        <div class="filter-bar" id="filterBar" role="toolbar" aria-label="Filter parking lots"></div>
-
-        <div class="map-banners" id="mapBanners"></div>
+        <!-- under the search bar: active filters, then the reservation / parked banners -->
+        <div class="map-stack">
+          <div class="filter-bar" id="filterBar" role="toolbar" aria-label="Active filters" hidden></div>
+          <div class="map-banners" id="mapBanners"></div>
+        </div>
 
         <div class="search-panel" id="searchPanel" hidden>
           <div id="searchResults"></div>

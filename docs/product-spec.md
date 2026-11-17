@@ -21,8 +21,10 @@ decisions.
 The primary consumer shell is a map-first mobile layout:
 
 - **Top:** hamburger menu and a pill-shaped search field with search and voice affordances.
-  Under it, a sideways-scrolling row of filter chips: Filters (all options, with a count of
-  those on), then Open now, EV charging, Accessible, Covered and Has slots left.
+  A filter button (sliders, with a count of the filters on) sits in the search pill and opens
+  Filters. Under the search bar, only the filters that are on show, as chips that remove
+  themselves when tapped (more than three: "+N more"; two or more: Clear all). With no
+  filters on, there is no chip row.
 - **Center:** a pale static map with teal parking markers; zoomed views show numeric
   availability directly on each marker.
 - **Bottom:** three-tab navigation — Map, Scan, and Explore — plus a locate-me control.

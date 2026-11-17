@@ -196,7 +196,8 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 |---|---|
 | Map shell | default; zoomed; selected lot; reservation banner |
 | Top controls | hamburger; search idle/focused; voice affordance; locate-me |
-| Filter chip | glass pill over the map, surface pill with a hairline on sheets; off / on (accent-500, white text); Filters button with a count badge; 44px tall; the map row scrolls sideways and hides while search results or a lot sheet are open |
+| Filter chip | on sheets: surface pill with a hairline, off / on (accent-500, white text). On the map: only active filters, accent pills with a ×, wrapping under the search bar (max three, then "+N more"; Clear all from two); hidden while search results or a lot sheet are open. 44px tall |
+| Search filter button | sliders icon in the search pill before the mic; accent when filters are on, with a count badge |
 | Filtered-out lot | outline and label fade (fill 22%, label 35%) but stay tappable; its sheet shows a "Doesn't match your filters" note |
 | Bottom nav | 3 tabs — Map, Scan, Explore; active / inactive |
 | Map pin | single / cluster; numeric label; heat-band colored; selected |

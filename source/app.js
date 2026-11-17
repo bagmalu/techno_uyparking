@@ -282,7 +282,6 @@ const FILTERS = {
   tall: { label: 'Fits tall vehicles', icon: 'i-height', test: (l) => !l.clearance || l.clearance >= TALL_M, miss: (l) => `${l.clearance.toFixed(1)} m clearance` },
   flat: { label: 'Weekend flat rate', icon: 'i-wallet', test: (l) => !!l.rate.flat, miss: () => 'no weekend flat rate' },
 };
-const QUICK_FILTERS = ['openNow', 'ev', 'pwd', 'covered', 'slots'];   // the chips under the search bar
 const PRICES = [0, 40, 50, 60];          // most a weekday stay may cost; 0 = any
 const RADII = [0, 1000, 3000, 10000];    // metres from you; 0 = any distance
 const SORTS = { near: 'Nearest', slots: 'Most slots', cheap: 'Cheapest' };
@@ -301,8 +300,14 @@ function misses(lot, f = state.filters) {
 }
 const matches = (lot) => !misses(lot).length;
 const filterCount = (f = state.filters) => Object.keys(FILTERS).filter((k) => f[k]).length + !!f.price + !!f.within;
-const filterLabels = (f = state.filters) => [...Object.keys(FILTERS).filter((k) => f[k]).map((k) => FILTERS[k].label),
-  ...(f.price ? [`${PRICE_STAY} hrs ≤ ${peso(f.price)}`] : []), ...(f.within ? [`Within ${f.within / 1000} km`] : [])];
+// the filters that are on, as chips: what each says, and the key that turns it off
+function activeFilters(f = state.filters) {
+  const on = Object.keys(FILTERS).filter((k) => f[k]).map((k) => ({ key: k, label: FILTERS[k].label, icon: FILTERS[k].icon }));
+  if (f.price) on.push({ key: 'price', label: `${PRICE_STAY} hrs ≤ ${peso(f.price)}`, icon: 'i-wallet' });
+  if (f.within) on.push({ key: 'within', label: `Within ${f.within / 1000} km`, icon: 'i-pin' });
+  return on;
+}
+const filterLabels = (f = state.filters) => activeFilters(f).map((a) => a.label);
 const shownLots = (lots = LOTS) => lots.filter(matches).sort(SORT_BY[state.filters.sort]);
 const listTitle = () => ({ near: 'Parking near you', slots: 'Most slots left', cheap: 'Cheapest parking' }[state.filters.sort]);
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -727,7 +732,7 @@ function renderMap() {
   renderBanners();
 }
 
-// chips under the search bar: all filters, then the quick ones
+// a filter as an on / off chip (Filters screen)
 const filterChip = (k) => `<button class="fchip ${state.filters[k] ? 'on' : ''}" data-action="toggleFilter" data-key="${k}" aria-pressed="${!!state.filters[k]}">
   ${icon(FILTERS[k].icon, 'sm')}${FILTERS[k].label}</button>`;
 function filtersButton() {
@@ -735,10 +740,23 @@ function filtersButton() {
   return `<button class="fchip all" data-action="openFilters" aria-label="All filters${n ? `, ${n} on` : ''}">
     ${icon('i-sliders', 'sm')}Filters${n ? `<span class="badge">${n}</span>` : ''}</button>`;
 }
+// Under the search bar: only the filters that are on, each removable, so the row is empty (and gone) by default.
+// Past MAX_CHIPS the last one becomes "+N more", which opens Filters.
+const MAX_CHIPS = 3;
 function renderFilterBar() {
-  const bar = $('#filterBar'), x = bar.scrollLeft;
-  bar.innerHTML = filtersButton() + QUICK_FILTERS.map(filterChip).join('');
-  bar.scrollLeft = x;   // keep the chip just tapped where it was
+  const on = activeFilters(), n = on.length, shown = n > MAX_CHIPS ? on.slice(0, MAX_CHIPS - 1) : on;
+  const bar = $('#filterBar');
+  bar.hidden = !n;
+  bar.innerHTML = shown.map((a) => `<button class="fchip on" data-action="removeFilter" data-key="${a.key}" aria-label="Remove filter: ${esc(a.label)}">
+      ${icon(a.icon, 'sm')}${esc(a.label)}${icon('i-close', 'sm x')}</button>`).join('')
+    + (n > shown.length ? `<button class="fchip" data-action="openFilters">+${n - shown.length} more</button>` : '')
+    + (n > 1 ? `<button class="fchip" data-action="clearFilters">Clear all</button>` : '');
+  // the filter button in the search bar carries the count
+  const btn = $('#searchFilterBtn');
+  btn.classList.toggle('on', n > 0);
+  btn.setAttribute('aria-label', n ? `Filters, ${n} on` : 'Filters');
+  $('#filterBadge').hidden = !n;
+  $('#filterBadge').textContent = n;
 }
 // after "Show N lots": bring you and the nearest matching lots into view
 function fitShown() {
@@ -1583,7 +1601,7 @@ function renderFilters() {
 }
 // apply a filter change everywhere it shows, keeping focus on the control that made it
 function setFilters(patch) {
-  const a = document.activeElement, box = a?.closest?.('#filterBar, #filtersBody, #exploreBody, #searchResults');
+  const a = document.activeElement, box = a?.closest?.('#filterBar, #filtersBody, #exploreBody, #searchResults');   // where the change came from
   const sel = box && a.dataset.action ? `[data-action="${a.dataset.action}"]${a.dataset.key ? `[data-key="${a.dataset.key}"]` : ''}${a.dataset.v ? `[data-v="${a.dataset.v}"]` : ''}` : null;
   Object.assign(state.filters, patch);
   save();
@@ -1598,6 +1616,7 @@ function setFilters(patch) {
   const opts = { preventScroll: true };
   if (same && !same.disabled) same.focus(opts);
   else if (box.id === 'searchResults') $('#searchInput').focus(opts);
+  else if (box.id === 'filterBar') ($('#filterBar [data-action="removeFilter"]') || $('#searchFilterBtn')).focus(opts);   // the chip just removed is gone
   else box.querySelector('[data-action="showFiltered"]:not(:disabled), [data-action="openFilters"]')?.focus(opts);
 }
 
@@ -2094,6 +2113,7 @@ const ACTIONS = {
   voice: () => toast("Voice search isn't available yet."),
   openFilters: () => { $('#searchInput').blur(); fromRoot('filters'); },
   toggleFilter: (d) => setFilters({ [d.key]: !state.filters[d.key] }),
+  removeFilter: (d) => setFilters({ [d.key]: d.key === 'price' || d.key === 'within' ? 0 : false }),
   setFilter: (d) => setFilters({ [d.key]: d.key === 'sort' ? d.v : Number(d.v) }),
   clearFilters: () => { setFilters(noFilters()); toast('Filters cleared.'); },
   showFiltered: () => { back(); if (current === 'map') fitShown(); },
