@@ -88,12 +88,14 @@ Open the **☰ menu** → **Parking owner view**, then switch between **Statisti
 | Countdown warning (under 2 min) | Presentation controls → **Skip to last 2 min** |
 | Zoomed-in map (`zoomed in.png`) | Scroll, double-click or pinch the map, or Presentation controls → **Toggle zoomed-in map** |
 | Lot full | Tap the grey **FULL** marker, or Presentation controls → **Lot full state** |
+| Lot closed | Open a lot outside its hours (most open 6–8 AM and close 10 PM–1 AM; Eastwood, Greenbelt 5, Uptown and Megamall Building C never close). Its marker turns grey and reads **Closed**, as do its chip and count in search and Explore. **Reserve** and **Walk in now** are disabled and the sheet suggests the nearest open lot; the walk-in screen says when it opens, and the gate won't scan you in. Within 1 hour 15 minutes of closing, **Reserve** is disabled but walking in still works. The demo shortcuts switch to an open lot when theirs is closed. |
 | Offline / underground | Presentation controls → **Toggle offline**, or actually disconnect. A stale-data notice appears, QR codes still show and the map stops loading new tiles. |
 | Dark mode | Settings → **Dark mode**. It follows your system setting by default. |
 | Create an account / sign in | Open the menu (☰) as a guest → **Create account** (plate or phone OTP) or **Sign in** (phone OTP). Any 6 digits work as the code. |
 | Account settings | Menu → **Account**: name, email for receipts, mobile number, saved plates and default, default payment method, sign out, delete account |
 | Search, saved places, recents | Tap **Where to?** on the map |
 | Parking near a business or landmark | Search for something that isn't a lot, e.g. **Jollibee**, **mcdo**, **Starbucks** or **St. Luke's**. The results list lots within 700 m, with a note that the business isn't listed as a parking lot in Uy Parking! Opening one pins the business on the map. |
+| Filter lots | Tap a chip under **Where to?** (**Open now**, **EV charging**, **Accessible**, **Covered**, **Has slots left**), or **Filters** for everything: tall-vehicle clearance, open 24 hours, price for a 3-hour stay, weekend flat rate, distance, and sort (nearest, most slots, cheapest). Lots that don't match fade on the map and drop out of search and Explore; a faded lot's sheet says why it doesn't match. **Show N lots** brings you and the nearest matches into view. |
 | Saved places | Tap the heart on a lot's details sheet and save it as **Home**, **Work** or your own name (one Home, one Work). Saved places appear first in search, in Explore and in Account, where you can rename or remove them. |
 
 ## Presentation controls

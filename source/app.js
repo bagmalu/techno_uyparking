@@ -16,41 +16,43 @@ const DEMO_MINUTES = 135;          // simulated parking duration at scan-out
 // a full hour); `flat` is the weekend & holiday flat rate. Figures come from published guides (Philkotse, Top Gear,
 // MoneyMax, ParkinganPH, Philtoyota; 2019–2026). gateway, powerplant, greenhills, market and atc had no
 // published rate, so they follow their operator's usual rate.
+// `hours` (mock): [opens, closes] in 24-hour clock hours; a close past 24 runs past midnight, [0, 24] is open 24 hours.
+// `clearance` (mock): height limit in metres; null for open-air lots, which have none.
 const LOTS = [
   { id: 'sm-b1', name: 'SM Megamall Basement 1', area: 'Megamall · Bldg A',
     address: 'EDSA cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 120, parked: 82, reserved: 15, rate: { hrs: 3, base: 50, next: 20, flat: 50 },
-    accessible: true, ev: false, covered: true, busy: 1.0, tone: '#cfd3d6', sign: 'SM', floors: ['B1', 'B2'],
+    accessible: true, ev: false, covered: true, hours: [7, 23], clearance: 2.0, busy: 1.0, tone: '#cfd3d6', sign: 'SM', floors: ['B1', 'B2'],
     landmarks: ['near Elevator B', 'beside Entrance 2', 'by the ramp to B2'],
     shape: [[14.584589, 121.056611], [14.584578, 121.057686], [14.584701, 121.057687], [14.584727, 121.056956], [14.585667, 121.056967],
       [14.585658, 121.057699], [14.586828, 121.057712], [14.586838, 121.056795], [14.586408, 121.056790], [14.586408, 121.056638],
       [14.585812, 121.056631], [14.585815, 121.056374], [14.585656, 121.056372], [14.585654, 121.056623]] },
   { id: 'open-b', name: 'SM Megamall Open Parking', area: 'Megamall · Open lot',
     address: 'Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 60, parked: 18, reserved: 4, rate: { hrs: 3, base: 50, next: 20, flat: 50 },
-    accessible: true, ev: false, covered: false, busy: .6, tone: '#d9cdb8', sign: 'OPEN', floors: ['G'],
+    accessible: true, ev: false, covered: false, hours: [7, 23], clearance: null, busy: .6, tone: '#d9cdb8', sign: 'OPEN', floors: ['G'],
     landmarks: ['near the mall side door', 'by the guard house'],
     shape: [[14.585863, 121.058042], [14.585606, 121.058038], [14.585603, 121.058654], [14.585855, 121.058655]] },
   { id: 'north', name: 'The Podium Parking', area: 'The Podium · P2',
     address: 'ADB Ave. cor. Doña Julia Vargas Ave., Ortigas Center, Mandaluyong', capacity: 80, parked: 40, reserved: 8, rate: { hrs: 3, base: 50, next: 15, flat: 50 },
-    accessible: true, ev: true, covered: true, busy: .8, tone: '#b9c4cc', sign: 'PODIUM', floors: ['P2', 'P3'],
+    accessible: true, ev: true, covered: true, hours: [6, 24], clearance: 2.1, busy: .8, tone: '#b9c4cc', sign: 'PODIUM', floors: ['P2', 'P3'],
     landmarks: ['next to the EV chargers', 'near Lift Lobby A'],
     shape: [[14.584609, 121.059143], [14.584645, 121.059344], [14.584815, 121.059525], [14.584906, 121.059613], [14.585031, 121.059620],
       [14.585118, 121.059586], [14.585593, 121.059589], [14.585603, 121.058676], [14.584605, 121.058673]] },
   { id: 'annex', name: 'Megamall Building C Carpark', area: 'Megamall · Bldg C',
     address: 'EDSA, Ortigas Center, Mandaluyong', capacity: 30, parked: 27, reserved: 3, rate: { hrs: 3, base: 50, next: 20, flat: 50 },
-    accessible: false, ev: false, covered: true, busy: 1.15, tone: '#d1c2c2', sign: 'BLDG C', floors: ['1'],
+    accessible: false, ev: false, covered: true, hours: [0, 24], clearance: 1.9, busy: 1.15, tone: '#d1c2c2', sign: 'BLDG C', floors: ['1'],
     landmarks: ['by the stairwell'],
     shape: [[14.585159, 121.056492], [14.584692, 121.056483], [14.584701, 121.055984], [14.585384, 121.056222], [14.585647, 121.056314],
       [14.585648, 121.056502]] },
   { id: 'riverside', name: 'Shangri-La Plaza Parking', area: 'Shangri-La · Basement',
     address: 'EDSA cor. Shaw Blvd., Mandaluyong', capacity: 50, parked: 30, reserved: 2, rate: { hrs: 3, base: 70, next: 20 },
-    accessible: true, ev: true, covered: true, busy: .75, tone: '#c8d4c4', sign: 'SHANGRI-LA', floors: ['B1', 'B2'],
+    accessible: true, ev: true, covered: true, hours: [7, 24], clearance: 2.0, busy: .75, tone: '#c8d4c4', sign: 'SHANGRI-LA', floors: ['B1', 'B2'],
     landmarks: ['near the East Wing entrance'],
     shape: [[14.581316, 121.054049], [14.581446, 121.054115], [14.581604, 121.054264], [14.581977, 121.054517], [14.581673, 121.054830],
       [14.581732, 121.054879], [14.581395, 121.055268], [14.581361, 121.055236], [14.580847, 121.055835], [14.580540, 121.056236],
       [14.579976, 121.055713], [14.580223, 121.055427], [14.580096, 121.055310], [14.581182, 121.054035]] },
   { id: 'plaza', name: 'Robinsons Galleria Parking', area: 'Galleria · Deck',
     address: 'EDSA cor. Ortigas Ave., Ortigas Center, Quezon City', capacity: 100, parked: 85, reserved: 8, rate: { hrs: 3, base: 50, next: 15 },
-    accessible: true, ev: true, covered: true, busy: 1.1, tone: '#c9c6d6', sign: 'GALLERIA', floors: ['L2', 'L3', 'L4'],
+    accessible: true, ev: true, covered: true, hours: [7, 23], clearance: 2.2, busy: 1.1, tone: '#c9c6d6', sign: 'GALLERIA', floors: ['L2', 'L3', 'L4'],
     landmarks: ['near Elevator 3', 'beside the food court bridge'],
     shape: [[14.592243, 121.059302], [14.592157, 121.059058], [14.592064, 121.058958], [14.591981, 121.059055], [14.591734, 121.059256],
       [14.591677, 121.059208], [14.591952, 121.058883], [14.591942, 121.058701], [14.591783, 121.058545], [14.591624, 121.058481],
@@ -60,7 +62,7 @@ const LOTS = [
   // elsewhere in Metro Manila
   { id: 'moa', name: 'SM Mall of Asia Parking', area: 'MOA · North Parking',
     address: 'Seaside Blvd., Mall of Asia Complex, Pasay', capacity: 300, parked: 210, reserved: 30, rate: { hrs: 3, base: 50, next: 10 },
-    accessible: true, ev: true, covered: true, busy: 1.05, tone: '#cfd3d6', sign: 'MOA', floors: ['B1', 'B2', 'P3'],
+    accessible: true, ev: true, covered: true, hours: [6, 25], clearance: 2.1, busy: 1.05, tone: '#cfd3d6', sign: 'MOA', floors: ['B1', 'B2', 'P3'],
     landmarks: ['near the North Entrance', 'by Elevator 4'],
     shape: [[14.533093, 120.979943], [14.533408, 120.979889], [14.537087, 120.979749], [14.537115, 120.979767], [14.537133, 120.979799],
       [14.537278, 120.983803], [14.537259, 120.983840], [14.537231, 120.983861], [14.536034, 120.983964], [14.535985, 120.983918],
@@ -69,7 +71,7 @@ const LOTS = [
       [14.533244, 120.984200], [14.533222, 120.984176], [14.533044, 120.979964]] },
   { id: 'sm-north', name: 'SM North EDSA Parking', area: 'SM North EDSA · The Block',
     address: 'North Ave. cor. EDSA, Quezon City', capacity: 250, parked: 220, reserved: 18, rate: { hrs: 4, base: 50, next: 10, flat: 50 },
-    accessible: true, ev: false, covered: true, busy: 1.1, tone: '#d1c2c2', sign: 'SM NORTH', floors: ['B1', 'B2', 'P1'],
+    accessible: true, ev: false, covered: true, hours: [7, 23], clearance: 2.0, busy: 1.1, tone: '#d1c2c2', sign: 'SM NORTH', floors: ['B1', 'B2', 'P1'],
     landmarks: ['near The Block entrance', 'by the cinema escalators'],
     shape: [[14.657342, 121.026544], [14.656682, 121.026385], [14.656477, 121.027308], [14.656659, 121.027354], [14.656577, 121.027724],
       [14.656384, 121.027679], [14.655960, 121.029608], [14.655894, 121.029662], [14.655888, 121.030284], [14.655829, 121.030395],
@@ -78,7 +80,7 @@ const LOTS = [
       [14.658310, 121.029135], [14.656843, 121.028782]] },
   { id: 'trinoma', name: 'TriNoma Parking', area: 'TriNoma · Basement',
     address: 'EDSA cor. North Ave., Quezon City', capacity: 180, parked: 120, reserved: 15, rate: { hrs: 3, base: 60, next: 20 },
-    accessible: true, ev: true, covered: true, busy: 0.9, tone: '#c8d4c4', sign: 'TRINOMA', floors: ['B1', 'B2'],
+    accessible: true, ev: true, covered: true, hours: [7, 24], clearance: 2.1, busy: 0.9, tone: '#c8d4c4', sign: 'TRINOMA', floors: ['B1', 'B2'],
     landmarks: ['near the MRT link bridge', 'by Elevator 2'],
     shape: [[14.654065, 121.031494], [14.654568, 121.032304], [14.654250, 121.033756], [14.654520, 121.033819], [14.654380, 121.034480],
       [14.654320, 121.034596], [14.654229, 121.034700], [14.654015, 121.034811], [14.653177, 121.034627], [14.652950, 121.034620],
@@ -86,7 +88,7 @@ const LOTS = [
       [14.650824, 121.033651]] },
   { id: 'gateway', name: 'Gateway Mall Parking', area: 'Araneta City · Gateway',
     address: 'Gen. Aguinaldo Ave., Araneta City, Cubao, Quezon City', capacity: 150, parked: 138, reserved: 7, rate: { hrs: 3, base: 50, next: 20 },
-    accessible: true, ev: false, covered: true, busy: 1.1, tone: '#c9c6d6', sign: 'GATEWAY', floors: ['B1', 'B2'],
+    accessible: true, ev: false, covered: true, hours: [7, 24], clearance: 2.0, busy: 1.1, tone: '#c9c6d6', sign: 'GATEWAY', floors: ['B1', 'B2'],
     landmarks: ['near the Cubao MRT walkway', 'by Lift Lobby C'],
     shape: [[14.621182, 121.052975], [14.622021, 121.052547], [14.622395, 121.053321], [14.621823, 121.053609], [14.621744, 121.053440],
       [14.621350, 121.053642], [14.621332, 121.053610], [14.621309, 121.053678], [14.621243, 121.053701], [14.621192, 121.053670],
@@ -94,7 +96,7 @@ const LOTS = [
       [14.621254, 121.053290], [14.621205, 121.053326], [14.621165, 121.053151], [14.621087, 121.053024]] },
   { id: 'eastwood', name: 'Eastwood Mall Parking', area: 'Eastwood City · Mall',
     address: 'Orchard Rd., Eastwood City, Libis, Quezon City', capacity: 120, parked: 80, reserved: 10, rate: { hrs: 3, base: 60, next: 20, flat: 60 },
-    accessible: true, ev: true, covered: true, busy: 0.8, tone: '#b9c4cc', sign: 'EASTWOOD', floors: ['B1', 'B2'],
+    accessible: true, ev: true, covered: true, hours: [0, 24], clearance: 2.1, busy: 0.8, tone: '#b9c4cc', sign: 'EASTWOOD', floors: ['B1', 'B2'],
     landmarks: ['near the Open Park doors', 'by the EV chargers'],
     shape: [[14.609690, 121.080318], [14.609838, 121.080461], [14.609992, 121.080531], [14.610183, 121.080568], [14.610393, 121.080552],
       [14.610515, 121.080505], [14.610586, 121.080525], [14.610603, 121.080461], [14.610625, 121.080445], [14.610643, 121.080466],
@@ -106,7 +108,7 @@ const LOTS = [
       [14.609715, 121.080201], [14.609752, 121.080246]] },
   { id: 'greenbelt', name: 'Greenbelt 5 Parking', area: 'Ayala Center · Greenbelt 5',
     address: 'Legazpi St., Ayala Center, Makati', capacity: 140, parked: 125, reserved: 9, rate: { hrs: 4, base: 45, next: 10, flat: 45, note: '₱50/hr for succeeding hours between 6 and 11 AM' },
-    accessible: true, ev: true, covered: true, busy: 1.1, tone: '#d9cdb8', sign: 'GREENBELT', floors: ['B1', 'B2', 'B3'],
+    accessible: true, ev: true, covered: true, hours: [0, 24], clearance: 2.0, busy: 1.1, tone: '#d9cdb8', sign: 'GREENBELT', floors: ['B1', 'B2', 'B3'],
     landmarks: ['near the garden-side lifts', 'by the EV chargers'],
     shape: [[14.552651, 121.020247], [14.552504, 121.020428], [14.552449, 121.020580], [14.552433, 121.020693], [14.552464, 121.020761],
       [14.552617, 121.020766], [14.552624, 121.020828], [14.552452, 121.020902], [14.552531, 121.021085], [14.552652, 121.021233],
@@ -118,7 +120,7 @@ const LOTS = [
       [14.552752, 121.020277]] },
   { id: 'glorietta', name: 'Glorietta Parking', area: 'Ayala Center · Glorietta',
     address: 'Palm Dr., Ayala Center, Makati', capacity: 200, parked: 160, reserved: 22, rate: { hrs: 4, base: 40, next: 10, flat: 45, note: '₱30/hr for succeeding hours between 4 and 10 AM' },
-    accessible: true, ev: false, covered: true, busy: 1.0, tone: '#cfd3d6', sign: 'GLORIETTA', floors: ['P1', 'P2', 'P3'],
+    accessible: true, ev: false, covered: true, hours: [7, 24], clearance: 2.2, busy: 1.0, tone: '#cfd3d6', sign: 'GLORIETTA', floors: ['P1', 'P2', 'P3'],
     landmarks: ['near the Activity Center lifts', 'beside Entrance 3'],
     shape: [[14.551733, 121.024215], [14.552286, 121.024493], [14.552226, 121.024628], [14.552200, 121.024749], [14.552179, 121.024996],
       [14.552189, 121.025130], [14.552164, 121.025134], [14.552210, 121.025234], [14.552182, 121.025240], [14.552193, 121.025283],
@@ -132,14 +134,14 @@ const LOTS = [
       [14.550715, 121.024636], [14.550899, 121.024481], [14.551173, 121.024320], [14.551331, 121.024009]] },
   { id: 'powerplant', name: 'Power Plant Mall Parking', area: 'Rockwell Center · Basement',
     address: 'Hidalgo Dr., Rockwell Center, Makati', capacity: 160, parked: 100, reserved: 12, rate: { hrs: 3, base: 60, next: 30 },
-    accessible: true, ev: true, covered: true, busy: 0.75, tone: '#c9c6d6', sign: 'ROCKWELL', floors: ['B1', 'B2', 'B3'],
+    accessible: true, ev: true, covered: true, hours: [7, 24], clearance: 2.0, busy: 0.75, tone: '#c9c6d6', sign: 'ROCKWELL', floors: ['B1', 'B2', 'B3'],
     landmarks: ['near the cinema lifts', 'by the EV chargers'],
     shape: [[14.564378, 121.037029], [14.565682, 121.037056], [14.565693, 121.036654], [14.565774, 121.036654], [14.565778, 121.035989],
       [14.564040, 121.035981], [14.564042, 121.036066], [14.563931, 121.036067], [14.563932, 121.036102], [14.563859, 121.036103],
       [14.563864, 121.036486], [14.563892, 121.036485], [14.563891, 121.036509], [14.564176, 121.036512], [14.564379, 121.036747]] },
   { id: 'sm-aura', name: 'SM Aura Parking', area: 'BGC · SM Aura',
     address: 'C.P. Garcia Ave. cor. McKinley Pkwy., Bonifacio Global City, Taguig', capacity: 220, parked: 150, reserved: 20, rate: { hrs: 4, base: 50, next: 10, flat: 50 },
-    accessible: true, ev: true, covered: true, busy: 0.85, tone: '#b9c4cc', sign: 'SM AURA', floors: ['B1', 'B2', 'B3'],
+    accessible: true, ev: true, covered: true, hours: [7, 24], clearance: 2.2, busy: 0.85, tone: '#b9c4cc', sign: 'SM AURA', floors: ['B1', 'B2', 'B3'],
     landmarks: ['near the Sky Park lifts', 'by Entrance 1'],
     shape: [[14.545408, 121.052219], [14.543963, 121.052881], [14.543911, 121.053048], [14.544449, 121.053165], [14.544746, 121.053296],
       [14.545083, 121.053481], [14.545348, 121.053680], [14.545592, 121.053900], [14.545798, 121.054126], [14.546569, 121.055314],
@@ -148,14 +150,14 @@ const LOTS = [
       [14.545686, 121.052979]] },
   { id: 'market', name: 'Market! Market! Car Park', area: 'BGC · Market! Market!',
     address: 'McKinley Pkwy., Bonifacio Global City, Taguig', capacity: 180, parked: 172, reserved: 8, rate: { hrs: 4, base: 40, next: 10, flat: 45 },
-    accessible: true, ev: false, covered: true, busy: 1.15, tone: '#d1c2c2', sign: 'MARKET!', floors: ['P1', 'P2', 'P3'],
+    accessible: true, ev: false, covered: true, hours: [7, 23], clearance: 2.1, busy: 1.15, tone: '#d1c2c2', sign: 'MARKET!', floors: ['P1', 'P2', 'P3'],
     landmarks: ['near the bridge to the mall', 'by the stairwell'],
     shape: [[14.550140, 121.056986], [14.550071, 121.057047], [14.550028, 121.057197], [14.550130, 121.057260], [14.550402, 121.057814],
       [14.550451, 121.057825], [14.550450, 121.057904], [14.550489, 121.057974], [14.550614, 121.058011], [14.550688, 121.057965],
       [14.550903, 121.058032], [14.551047, 121.057927], [14.551111, 121.057736], [14.551154, 121.057750], [14.551284, 121.057362]] },
   { id: 'uptown', name: 'Uptown Mall Parking', area: 'BGC · Uptown Bonifacio',
     address: '9th Ave. cor. 36th St., Uptown Bonifacio, Taguig', capacity: 130, parked: 90, reserved: 12, rate: { hrs: 3, base: 50, next: 10, flat: 50 },
-    accessible: true, ev: true, covered: true, busy: 0.8, tone: '#c8d4c4', sign: 'UPTOWN', floors: ['B1', 'B2'],
+    accessible: true, ev: true, covered: true, hours: [0, 24], clearance: 2.3, busy: 0.8, tone: '#c8d4c4', sign: 'UPTOWN', floors: ['B1', 'B2'],
     landmarks: ['near the Sky Park lifts', 'by the underground link'],
     shape: [[14.556514, 121.055196], [14.555790, 121.054965], [14.555757, 121.055005], [14.555647, 121.054908], [14.555392, 121.054822],
       [14.556465, 121.053496], [14.556769, 121.053760], [14.556738, 121.053848], [14.556784, 121.053956], [14.556926, 121.054063],
@@ -163,13 +165,13 @@ const LOTS = [
       [14.556597, 121.055222]] },
   { id: 'greenhills', name: 'Greenhills Mall Parking', area: 'Greenhills · Shopping Center',
     address: 'Ortigas Ave., Greenhills, San Juan', capacity: 160, parked: 140, reserved: 6, rate: { hrs: 3, base: 50, next: 20 },
-    accessible: true, ev: false, covered: false, busy: 1.05, tone: '#d9cdb8', sign: 'GREENHILLS', floors: ['G'],
+    accessible: true, ev: false, covered: false, hours: [8, 22], clearance: null, busy: 1.05, tone: '#d9cdb8', sign: 'GREENHILLS', floors: ['G'],
     landmarks: ['near the Theatre Mall side', 'by the guard house'],
     shape: [[14.601536, 121.048625], [14.601342, 121.048878], [14.601832, 121.049279], [14.602150, 121.048864], [14.602765, 121.049365],
       [14.603151, 121.048859], [14.601939, 121.047868], [14.601579, 121.048376]] },
   { id: 'rob-manila', name: 'Robinsons Place Manila Parking', area: 'Ermita · Robinsons Place',
     address: 'Pedro Gil St. cor. M. Adriatico St., Ermita, Manila', capacity: 200, parked: 130, reserved: 14, rate: { hrs: 3, base: 50, next: 15 },
-    accessible: true, ev: false, covered: true, busy: 0.85, tone: '#cfd3d6', sign: 'ROBINSONS', floors: ['B1', 'P2', 'P3'],
+    accessible: true, ev: false, covered: true, hours: [7, 23], clearance: 2.0, busy: 0.85, tone: '#cfd3d6', sign: 'ROBINSONS', floors: ['B1', 'P2', 'P3'],
     landmarks: ['near the Padre Faura wing', 'by Elevator 5'],
     shape: [[14.574310, 120.983881], [14.574314, 120.983963], [14.574403, 120.984191], [14.574914, 120.985320], [14.576203, 120.984601],
       [14.576366, 120.984895], [14.577635, 120.984337], [14.578660, 120.983796], [14.578256, 120.983009], [14.577210, 120.983570],
@@ -177,7 +179,7 @@ const LOTS = [
       [14.575750, 120.983130]] },
   { id: 'atc', name: 'Alabang Town Center Parking', area: 'Ayala Alabang · ATC',
     address: 'Alabang–Zapote Rd. cor. Madrigal Ave., Ayala Alabang, Muntinlupa', capacity: 150, parked: 135, reserved: 9, rate: { hrs: 4, base: 40, next: 10, flat: 45 },
-    accessible: true, ev: true, covered: true, busy: 1.0, tone: '#c8d4c4', sign: 'ATC', floors: ['P1', 'P2'],
+    accessible: true, ev: true, covered: true, hours: [7, 24], clearance: 2.1, busy: 1.0, tone: '#c8d4c4', sign: 'ATC', floors: ['P1', 'P2'],
     landmarks: ['near the Corporate Center bridge', 'by the EV chargers'],
     shape: [[14.424080, 121.031384], [14.424377, 121.031533], [14.424620, 121.031001], [14.424629, 121.030869], [14.424451, 121.030787],
       [14.424333, 121.030841]] },
@@ -240,6 +242,71 @@ const DAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Frid
 const DAY_FACTOR = [1.12, .9, .92, .95, 1, 1.06, 1.15];
 const usualTrend = (lot, day) => BASE_TREND.map((v, i) => Math.min(.98, v * lot.busy * DAY_FACTOR[day] + (seeded(lot.id + i)() - .5) * .06));
 
+// ---------- filters ----------
+// Kept in local cache with the rest of state (defaultState() uses noFilters, so this comes first). Lots that miss them are dimmed on the map and left out of lists.
+const TALL_M = 2.1;     // "fits tall vehicles": clearance for SUVs and vans (open-air lots always fit)
+const PRICE_STAY = 3;   // the price filter and "Cheapest" compare a weekday stay this many hours long
+const stayFee = (lot) => parkingFee(lot.rate, PRICE_STAY, false);
+const allDay = (lot) => lot.hours[1] - lot.hours[0] >= 24;
+function isOpen(lot, d = new Date()) {
+  if (allDay(lot)) return true;
+  const h = d.getHours() + d.getMinutes() / 60, [opens, closes] = lot.hours;
+  return (h >= opens && h < closes) || h + 24 < closes;   // a close past midnight covers the small hours too
+}
+function clock(h) {   // 7 → "7 AM", 24 → "midnight", 25 → "1 AM"
+  h %= 24;
+  return h === 0 ? 'midnight' : `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+}
+// hours until the lot closes: Infinity when open 24 hours, 0 when closed
+function closesIn(lot, d = new Date()) {
+  if (allDay(lot)) return Infinity;
+  if (!isOpen(lot, d)) return 0;
+  const h = d.getHours() + d.getMinutes() / 60, [opens, closes] = lot.hours;
+  return h >= opens ? closes - h : closes - (h + 24);
+}
+// a reservation must be able to run its whole grace period before the lot closes
+const canReserve = (lot) => closesIn(lot) >= GRACE_MS / 3600000;
+function hoursLine(lot) {
+  if (allDay(lot)) return '<b class="open">Open 24 hours</b>';
+  const [opens, closes] = lot.hours;
+  return isOpen(lot) ? `<b class="open">Open now</b> · ${clock(opens)}–${clock(closes)}` : `<b class="closed">Closed</b> · Opens ${clock(opens)}`;
+}
+// on / off filters: test(lot) passes, miss(lot) says why not
+const FILTERS = {
+  openNow: { label: 'Open now', icon: 'i-clock', test: (l) => isOpen(l), miss: () => 'closed right now' },
+  ev: { label: 'EV charging', icon: 'i-ev', test: (l) => l.ev, miss: () => 'no EV charging' },
+  pwd: { label: 'Accessible', icon: 'i-access', test: (l) => l.accessible, miss: () => 'no accessible parking' },
+  covered: { label: 'Covered', icon: 'i-covered', test: (l) => l.covered, miss: () => 'not covered' },
+  slots: { label: 'Has slots left', icon: 'i-car', test: (l) => stats(l).left > 0, miss: () => 'full right now' },
+  allDay: { label: 'Open 24 hours', icon: 'i-clock', test: allDay, miss: () => 'not open 24 hours' },
+  tall: { label: 'Fits tall vehicles', icon: 'i-height', test: (l) => !l.clearance || l.clearance >= TALL_M, miss: (l) => `${l.clearance.toFixed(1)} m clearance` },
+  flat: { label: 'Weekend flat rate', icon: 'i-wallet', test: (l) => !!l.rate.flat, miss: () => 'no weekend flat rate' },
+};
+const QUICK_FILTERS = ['openNow', 'ev', 'pwd', 'covered', 'slots'];   // the chips under the search bar
+const PRICES = [0, 40, 50, 60];          // most a weekday stay may cost; 0 = any
+const RADII = [0, 1000, 3000, 10000];    // metres from you; 0 = any distance
+const SORTS = { near: 'Nearest', slots: 'Most slots', cheap: 'Cheapest' };
+const SORT_BY = {
+  near: (a, b) => a.metres - b.metres,
+  slots: (a, b) => stats(b).left - stats(a).left || a.metres - b.metres,
+  cheap: (a, b) => stayFee(a) - stayFee(b) || a.metres - b.metres,
+};
+const noFilters = () => ({ ...Object.fromEntries(Object.keys(FILTERS).map((k) => [k, false])), price: 0, within: 0, sort: 'near' });
+// why a lot misses the filters that are on; empty when it matches
+function misses(lot, f = state.filters) {
+  const why = Object.keys(FILTERS).filter((k) => f[k] && !FILTERS[k].test(lot)).map((k) => FILTERS[k].miss(lot));
+  if (f.price && stayFee(lot) > f.price) why.push(`${peso(stayFee(lot))} for ${PRICE_STAY} hours`);
+  if (f.within && lot.metres > f.within) why.push(`${lot.distance} away`);
+  return why;
+}
+const matches = (lot) => !misses(lot).length;
+const filterCount = (f = state.filters) => Object.keys(FILTERS).filter((k) => f[k]).length + !!f.price + !!f.within;
+const filterLabels = (f = state.filters) => [...Object.keys(FILTERS).filter((k) => f[k]).map((k) => FILTERS[k].label),
+  ...(f.price ? [`${PRICE_STAY} hrs ≤ ${peso(f.price)}`] : []), ...(f.within ? [`Within ${f.within / 1000} km`] : [])];
+const shownLots = (lots = LOTS) => lots.filter(matches).sort(SORT_BY[state.filters.sort]);
+const listTitle = () => ({ near: 'Parking near you', slots: 'Most slots left', cheap: 'Cheapest parking' }[state.filters.sort]);
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
 // ---------- state (kept in local cache, like the real app would) ----------
 const STORE_KEY = 'uyparking-proto-v1';
 
@@ -260,6 +327,7 @@ function defaultState() {
     ],
     account: null,       // see newAccount(); keyed on a plate number or an OTP-verified phone
     prefs: { remind: true, filling: false, receipts: true, sms: false },
+    filters: noFilters(),   // lot filters and sort order (see FILTERS)
     theme: null,
     present: null,       // presentation mode: null until chosen, see applyPresent()
     offline: false,
@@ -282,6 +350,7 @@ function load() {
       if (lot && !s.places.some((p) => p.lotId === id)) s.places.push({ kind: 'custom', name: shortName(lot), lotId: id });
     });
     delete s.favorites;
+    s.filters = { ...noFilters(), ...s.filters };   // saved before a filter existed
     return s;
   } catch { return defaultState(); }
 }
@@ -323,7 +392,7 @@ function minutesText(min) {
 }
 const fmtTime = (ts) => new Date(ts).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
 const today = () => new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
-const hourLabel = (i) => { const h = 6 + i; return `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`; };
+const hourLabel = (i) => clock(6 + i);
 
 function seeded(str) {
   let h = 1779033703 ^ str.length;
@@ -363,9 +432,12 @@ function stats(lot) {
   const lvl = left === 0 ? 'full' : left >= 20 ? 'high' : left >= 10 ? 'mid' : 'low';
   // status chip follows the same count, so the chip and marker never disagree: only the solid band is "available"
   const status = lvl === 'full' ? 'full' : lvl === 'high' ? 'available' : 'filling';
+  // a closed lot shows like a full one (grey marker) with a Closed chip; the counts stay for the owner views
+  if (!isOpen(lot)) return { parked, reserved, taken, left, pct, lvl: 'full', status: 'closed', closed: true };
   return { parked, reserved, taken, left, pct, lvl, status };
 }
-const STATUS_LABEL = { available: 'Available', filling: 'Filling up', full: 'Full' };
+const STATUS_LABEL = { available: 'Available', filling: 'Filling up', full: 'Full', closed: 'Closed' };
+const countText = (s) => (s.closed ? 'Closed' : s.left || 'Full');   // marker and card count
 const statusChip = (s) => `<span class="chip ${s.status}">${STATUS_LABEL[s.status]}</span>`;
 
 // ---------- placeholder visuals ----------
@@ -640,17 +712,45 @@ function renderMap() {
     const s = stats(lot);
     const { poly, label } = lotLayers[lot.id];
     const selected = ui.selectedLot === lot.id || ui.focusLot === lot.id;
+    const dim = !selected && !matches(lot);
     for (const el of [poly.getElement(), label.getElement()]) {
       ['high', 'mid', 'low', 'full'].forEach((l) => el.classList.toggle(`lvl-${l}`, l === s.lvl));
       el.classList.toggle('selected', selected);
+      el.classList.toggle('dim', dim);
       el.classList.toggle('reserved', state.reservation?.lotId === lot.id);
     }
     if (selected) poly.bringToFront();
     const el = label.getElement();
-    el.firstChild.textContent = s.left || 'Full';
-    el.setAttribute('aria-label', `${lot.name}: ${s.left} spaces left, ${STATUS_LABEL[s.status]}`);
+    el.firstChild.textContent = countText(s);
+    el.setAttribute('aria-label', `${lot.name}: ${s.closed ? 'closed' : `${s.left} spaces left, ${STATUS_LABEL[s.status]}`}${dim ? ", doesn't match your filters" : ''}`);
   });
   renderBanners();
+}
+
+// chips under the search bar: all filters, then the quick ones
+const filterChip = (k) => `<button class="fchip ${state.filters[k] ? 'on' : ''}" data-action="toggleFilter" data-key="${k}" aria-pressed="${!!state.filters[k]}">
+  ${icon(FILTERS[k].icon, 'sm')}${FILTERS[k].label}</button>`;
+function filtersButton() {
+  const n = filterCount();
+  return `<button class="fchip all" data-action="openFilters" aria-label="All filters${n ? `, ${n} on` : ''}">
+    ${icon('i-sliders', 'sm')}Filters${n ? `<span class="badge">${n}</span>` : ''}</button>`;
+}
+function renderFilterBar() {
+  const bar = $('#filterBar'), x = bar.scrollLeft;
+  bar.innerHTML = filtersButton() + QUICK_FILTERS.map(filterChip).join('');
+  bar.scrollLeft = x;   // keep the chip just tapped where it was
+}
+// after "Show N lots": bring you and the nearest matching lots into view
+function fitShown() {
+  const near = shownLots().sort(SORT_BY.near).slice(0, 3);
+  if (!near.length) return;
+  const b = L.latLngBounds([ME, ...near.map((l) => l.center)]);
+  const opts = { paddingTopLeft: [24, 150], paddingBottomRight: [24, 110], maxZoom: 17 };
+  focused = false;
+  map.invalidateSize({ pan: false });
+  if (REDUCED_MOTION.matches) { map.fitBounds(b, { ...opts, animate: false }); return; }
+  flyingTo = Math.min(opts.maxZoom, map.getBoundsZoom(b));
+  map.flyToBounds(b, { ...opts, duration: .6 });
 }
 
 // w reserved.png: "<lot name> | #206" pill under the search bar
@@ -866,17 +966,21 @@ function renderSheet() {
   const saved = placeFor(lot.id);
   const mine = state.reservation?.lotId === lot.id;
   const near = ui.near?.lotId === lot.id ? ui.near : null;
-  const alternative = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0).sort((a, b) => a.metres - b.metres)[0];
+  const open = isOpen(lot);
+  const alternative = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0 && isOpen(l)).sort((a, b) => matches(b) - matches(a) || a.metres - b.metres)[0];
+  const tryAlt = alternative ? `<button class="btn text block" data-action="openLot" data-id="${alternative.id}">Try ${esc(alternative.name)} · ${stats(alternative).left} left</button>` : '';
+  const miss = misses(lot);
 
   let cta;
   if (mine) cta = `<button class="btn primary lg block" data-action="go" data-to="resqr">View reservation</button>`;
   else if (state.reservation) cta = `<button class="btn primary lg block" disabled>You already have a reservation</button>`;
-  else if (s.status === 'full') cta = `<button class="btn primary lg block" disabled>Full — no space to assign</button>
-      <button class="btn text block" data-action="openLot" data-id="${alternative.id}">Try ${esc(alternative.name)} · ${stats(alternative).left} left</button>`;
+  else if (!open) cta = `<button class="btn primary lg block" disabled>Closed — opens ${clock(lot.hours[0])}</button>${tryAlt}`;
+  else if (!canReserve(lot)) cta = `<button class="btn primary lg block" disabled>Closes at ${clock(lot.hours[1])} — too late to reserve</button>`;
+  else if (s.status === 'full') cta = `<button class="btn primary lg block" disabled>Full — no space to assign</button>${tryAlt}`;
   else cta = `<button class="btn primary lg block" data-action="reserve" data-id="${lot.id}">Reserve</button>`;
-  // already at the gate with no booking: skip reserving and go straight to a walk-in entry pass
-  const walkin = s.status !== 'full' && !state.reservation && !state.session
-    ? `<button class="btn secondary block" data-action="walkinAt" data-id="${lot.id}" data-from="map">${icon('i-car', 'sm')} Walk in now</button>` : '';
+  // already at the gate with no booking: skip reserving and go straight to a walk-in entry pass; a closed gate lets no one in
+  const walkin = s.status === 'full' || state.reservation || state.session ? ''
+    : `<button class="btn secondary block" ${open ? `data-action="walkinAt" data-id="${lot.id}" data-from="map"` : 'disabled'}>${icon('i-car', 'sm')} Walk in now</button>`;
 
   $('#sheetBody').innerHTML = `
     <div class="sheet-title">
@@ -884,8 +988,11 @@ function renderSheet() {
       <button class="fav-btn ${saved ? 'on' : ''}" data-action="editPlace" data-id="${lot.id}" aria-pressed="${!!saved}"
         aria-label="${saved ? `Saved as ${esc(saved.name)}. Edit` : 'Save this lot'}">${icon('i-heart')}</button>
     </div>
-    <p class="lot-sub"><b>${s.left ? `${s.left} slots left` : 'Full'}</b> · ${lot.capacity} total · <span style="white-space:nowrap">${lot.distance}</span></p>
+    <p class="lot-sub"><b>${s.closed ? 'Closed' : s.left ? `${s.left} slots left` : 'Full'}</b> · ${lot.capacity} total · <span style="white-space:nowrap">${lot.distance}</span></p>
     <p class="lot-addr" title="${esc(lot.address)}">${icon('i-pin')}<span>${esc(lot.address)}</span></p>
+    <p class="lot-hours"><span>${icon('i-clock')}<span>${hoursLine(lot)}</span></span>
+      <span>${icon('i-height')}<span>${lot.clearance ? `${lot.clearance.toFixed(1)} m clearance` : 'No height limit'}</span></span></p>
+    ${miss.length ? `<p class="filter-miss">${icon('i-sliders', 'sm')}<span>Doesn't match your filters: ${esc(miss.join(', '))}</span></p>` : ''}
     ${near ? `<p class="near-tag">${icon('i-store', 'sm')}<span><b>${fmtDist(metres(lot.center, near.pt))} from ${esc(near.name)}${near.branch ? ` ${esc(near.branch)}` : ''}</b>
       This lot is nearby. ${esc(near.name)} isn't listed as a parking lot in Uy Parking!</span></p>` : ''}
 
@@ -912,7 +1019,7 @@ function renderTrend(lot) {
   const sel = ui.trendSel ?? (live >= 0 ? live : 10);
   const s = stats(lot);
   const read = (i) => {
-    if (i === live) return `<b>Live ${hourLabel(i)}</b> • ${s.left} slots left`;
+    if (i === live) return `<b>Live ${hourLabel(i)}</b> • ${s.closed ? 'Closed' : `${s.left} slots left`}`;
     const left = Math.round(lot.capacity * (1 - vals[i]));
     return `${hourLabel(i)} • Usually has ${Math.max(0, left - 3)}-${left + 2} slots left`;
   };
@@ -941,13 +1048,20 @@ function renderSearch(q = '') {
       <span>${esc(title)}<small>${sub || `${esc(lot.area)} · ${lot.distance}`}</small></span>${statusChip(s)}</button>`;
   };
   let html;
+  const n = filterCount();
+  const filterRow = n ? `<button class="row filter-row" data-action="openFilters">${icon('i-sliders')}
+    <span>${plural(n, 'filter')} on<small>${esc(filterLabels().join(' · '))}</small></span><span class="edit">Edit</span></button>` : '';
   if (query) {
-    const hits = LOTS.filter((l) => `${l.name} ${l.area} ${l.address}`.toLowerCase().includes(query));
+    const named = LOTS.filter((l) => `${l.name} ${l.area} ${l.address}`.toLowerCase().includes(query));
+    const hits = shownLots(named);
     if (hits.length) html = `<h4>Parking near “${esc(q.trim())}”</h4>` + hits.map((l) => lotRow(l)).join('');
+    else if (named.length) html = `<h4>Parking near “${esc(q.trim())}” <small>not matching your filters</small></h4>`
+      + named.map((l) => lotRow(l, 'i-pin', `Doesn't match: ${esc(misses(l).join(', '))}`)).join('')
+      + `<button class="btn text block" data-action="clearFilters">Clear filters</button>`;
     else {
       // no lot by that name: try businesses and landmarks, and list the lots near them
       // name matches first, then the place whose nearby lots are closest to you
-      const groups = placeHits(q).map((h) => ({ ...h, near: lotsNear(h.p) })).filter((g) => g.near.length)
+      const groups = placeHits(q).map((h) => ({ ...h, near: lotsNear(h.p).filter((x) => matches(x.lot)) })).filter((g) => g.near.length)
         .map((g) => ({ ...g, from: Math.min(...g.near.map((n) => n.lot.metres)) }))
         .sort((a, b) => b.prefix - a.prefix || a.from - b.from).slice(0, 3);
       html = groups.length ? groups.map(({ p, i, near }) => {
@@ -961,7 +1075,7 @@ function renderSearch(q = '') {
               <span>${esc(lot.name)}<small>${fmtDist(m)} from ${esc(p.name + branch)} · ${lot.distance} from you</small></span>${statusChip(stats(lot))}</button>`;
           }).join('');
       }).join('')
-        : `<h4>Parking near “${esc(q.trim())}”</h4><p class="empty" style="padding:8px 16px">No lots found. Try “Megamall”, “Jollibee” or “EDSA”.</p>`;
+        : `<h4>Parking near “${esc(q.trim())}”</h4><p class="empty" style="padding:8px 16px">No lots found${n ? ' that match your filters' : ''}. Try “Megamall”, “Jollibee” or “EDSA”.</p>`;
     }
   } else {
     html = `<h4>Saved places</h4>` + (state.places.length ? state.places.map((p) => {
@@ -969,12 +1083,14 @@ function renderSearch(q = '') {
       return lotRow(lot, PLACE_KIND[p.kind].icon, `${esc(p.name === shortName(lot) ? lot.area : lot.name)} · ${lot.distance}`, p.name);
     }).join('') : `<p class="empty" style="padding:8px 16px">Tap ♡ on a lot to save it as Home, Work or a place of your own.</p>`)
       + `<h4>Recent searches</h4>` + (state.recents.length ? state.recents.map((id) => lotRow(lotById(id), 'i-history')).join('') : `<p class="empty" style="padding:8px 16px">Nothing yet.</p>`)
-      + `<h4>Nearby</h4>` + [...LOTS].sort((a, b) => a.metres - b.metres).slice(0, 3).map((l) => lotRow(l)).join('');
+      + `<h4>${state.filters.sort === 'near' ? 'Nearby' : listTitle()}</h4>` + (shownLots().slice(0, 3).map((l) => lotRow(l)).join('')
+        || `<p class="empty" style="padding:8px 16px">No lots match your filters.</p>`);
   }
-  $('#searchResults').innerHTML = html;
+  $('#searchResults').innerHTML = filterRow + html;
   $('#searchPanel').hidden = false;
+  $('#app').classList.add('searching');   // the results cover the filter chips
 }
-function hideSearch() { $('#searchPanel').hidden = true; }
+function hideSearch() { $('#searchPanel').hidden = true; $('#app').classList.remove('searching'); }
 function pickLot(id) {
   state.recents = [id, ...state.recents.filter((r) => r !== id)].slice(0, 4);
   save();
@@ -1244,13 +1360,15 @@ function renderWalkin() {
   const s = stats(lot);
   const options = LOTS.map((l) => `<option value="${l.id}" ${l.id === lot.id ? 'selected' : ''}>${esc(l.name)}</option>`).join('');
   let body;
-  if (s.status === 'full') {
-    const alts = LOTS.filter((l) => stats(l).left > 0).sort((a, b) => a.metres - b.metres).slice(0, 3);
+  const open = isOpen(lot);
+  if (!open || s.status === 'full') {
+    const alts = LOTS.filter((l) => l.id !== lot.id && stats(l).left > 0 && isOpen(l)).sort(SORT_BY.near).slice(0, 3);
     body = `<div class="center">
-        <div class="big-icon full">${icon('i-warn')}</div>
-        <h2 style="margin:0 0 8px">${esc(lot.name)} is full</h2>
-        <p class="lead">All ${lot.capacity} spaces are parked or reserved, so the gate can't assign you a slot right now.</p></div>
-      <h3 class="section-title">Nearby lots with space</h3>${alts.map((l) => lotCard(l)).join('')}`;
+        <div class="big-icon full">${icon(open ? 'i-warn' : 'i-clock')}</div>
+        <h2 style="margin:0 0 8px">${esc(lot.name)} is ${open ? 'full' : 'closed'}</h2>
+        <p class="lead">${open ? `All ${lot.capacity} spaces are parked or reserved, so the gate can't assign you a slot right now.`
+          : `It opens at ${clock(lot.hours[0])}. The gate can't let you in until then.`}</p></div>
+      <h3 class="section-title">Nearby lots ${open ? 'with space' : 'open now'}</h3>${alts.map((l) => lotCard(l)).join('') || '<p class="empty">None nearby right now.</p>'}`;
   } else if (!ui.walkinQr) {
     body = `<div class="card"><div class="kv"><span>Spaces left</span><span>${s.left} ${statusChip(s)}</span></div>
         <div class="kv"><span>Rate</span><span>${rateShort(lot.rate)} · pay on exit</span></div></div>
@@ -1274,6 +1392,7 @@ function entryScan(via) {
   if (via === 'reservation' && !state.reservation) { goFrom('map', 'expired'); return; }
   const lotId = via === 'reservation' ? state.reservation.lotId : ui.walkinLot;
   const lot = lotById(lotId);
+  if (!isOpen(lot)) { toast(`${lot.name} is closed. The gate opens at ${clock(lot.hours[0])}.`); return; }
   ui.assignLot = lotId;
   stack = ['map', 'assigning'];
   show('assigning');
@@ -1411,18 +1530,21 @@ function lotCard(lot, place) {
     ${lotPhoto(lot, 'lot-thumb')}
     <span class="info"><b>${esc(place ? place.name : lot.name)}</b>
       <small>${place && place.name !== shortName(lot) ? `${esc(lot.name)} · ` : ''}${lot.distance} · ${rateShort(lot.rate)}</small>${statusChip(s)}</span>
-    <span class="count lvl-${s.lvl}">${s.left || 'Full'}</span></button>`;
+    <span class="count lvl-${s.lvl}">${countText(s)}</span></button>`;
 }
 
 function renderExplore() {
-  const near = [...LOTS].sort((a, b) => a.metres - b.metres);
+  const shown = shownLots(), n = filterCount();
   let html = '';
   if (state.session) {
     const lot = lotById(state.session.lotId);
     html += `<button class="choice" data-action="go" data-to="locator"><span class="ic-wrap">${icon('i-car')}</span>
       <span><b>You're parked</b><small>${esc(lot.name)} · Floor ${esc(state.session.floor)} · Slot ${state.session.slot}</small></span>${icon('i-chevron')}</button>`;
   }
-  html += `<h3 class="section-title">Parking near you</h3>${near.slice(0, 4).map((l) => lotCard(l)).join('')}`;
+  html += `<div class="section-head"><h3 class="section-title">${listTitle()}</h3>${filtersButton()}</div>`
+    + (shown.length ? shown.slice(0, 4).map((l) => lotCard(l)).join('') : `<p class="empty">No lots match your filters.</p>`)
+    + (n ? `<p class="caption filter-sum"><span>${shown.length > 4 ? `4 of ${shown.length} lots` : plural(shown.length, 'lot')} matching ${esc(filterLabels().join(' · '))}.</span>
+      <button class="btn text" data-action="clearFilters">Clear filters</button></p>` : '');
   html += `<h3 class="section-title">Saved places</h3>` + (state.places.length ? state.places.map((p) => lotCard(lotById(p.lotId), p)).join('')
     : `<p class="empty">Tap the heart on a lot to save it as Home, Work or a place of your own.</p>`);
   html += `<h3 class="section-title">Recent reservations</h3>` + historyList();
@@ -1437,6 +1559,46 @@ function historyList() {
     return `<button class="row" data-action="pickLot" data-id="${lot.id}">${icon('i-history')}
       <span>${esc(lot.name)}<small>${h.ref} · ${h.date}</small></span><span class="chip ${cls}">${h.status}</span></button>`;
   }).join('')}</div><p class="caption">Stored on this device only.</p>`;
+}
+
+// ---------- filters screen ----------
+function renderFilters() {
+  const f = state.filters, n = shownLots().length;
+  const chips = (keys) => `<div class="fchips">${keys.map(filterChip).join('')}</div>`;
+  const seg = (key, opts, label) => `<div class="segmented compact" role="group" aria-label="${label}">${opts.map(([v, text]) =>
+    `<button class="seg ${f[key] === v ? 'active' : ''}" data-action="setFilter" data-key="${key}" data-v="${v}" aria-pressed="${f[key] === v}">${text}</button>`).join('')}</div>`;
+  $('#filtersBody').innerHTML = `
+    <h3 class="section-title">Features</h3>${chips(['ev', 'pwd', 'covered', 'tall'])}
+    <p class="caption">Tall vehicles: ${TALL_M} m clearance or more, or an open-air lot.</p>
+    <h3 class="section-title">Hours</h3>${chips(['openNow', 'allDay'])}
+    <h3 class="section-title">Availability</h3>${chips(['slots'])}
+    <h3 class="section-title">Price <small>${PRICE_STAY}-hour weekday stay</small></h3>
+    ${seg('price', PRICES.map((p) => [p, p ? `≤ ${peso(p)}` : 'Any']), 'Most a stay may cost')}${chips(['flat'])}
+    <h3 class="section-title">Distance from you</h3>${seg('within', RADII.map((m) => [m, m ? `${m / 1000} km` : 'Any']), 'Distance from you')}
+    <h3 class="section-title">Sort by</h3>${seg('sort', Object.entries(SORTS), 'Sort by')}
+    <div class="filter-foot">
+      <button class="btn secondary" data-action="clearFilters" ${filterCount() || f.sort !== 'near' ? '' : 'disabled'}>Clear all</button>
+      <button class="btn primary" data-action="showFiltered" ${n ? '' : 'disabled'}>${n ? `Show ${plural(n, 'lot')}` : 'No lots match'}</button>
+    </div>`;
+}
+// apply a filter change everywhere it shows, keeping focus on the control that made it
+function setFilters(patch) {
+  const a = document.activeElement, box = a?.closest?.('#filterBar, #filtersBody, #exploreBody, #searchResults');
+  const sel = box && a.dataset.action ? `[data-action="${a.dataset.action}"]${a.dataset.key ? `[data-key="${a.dataset.key}"]` : ''}${a.dataset.v ? `[data-v="${a.dataset.v}"]` : ''}` : null;
+  Object.assign(state.filters, patch);
+  save();
+  renderFilterBar();
+  renderMap();
+  if (current === 'filters') renderFilters();
+  if (current === 'explore') renderExplore();
+  if (!$('#searchPanel').hidden) renderSearch($('#searchInput').value);
+  if (!sel) return;   // the change didn't come from a focused filter control
+  const same = box.querySelector(sel);
+  // preventScroll: focusing would otherwise scroll .screens (overflow: hidden) and shift the whole app up
+  const opts = { preventScroll: true };
+  if (same && !same.disabled) same.focus(opts);
+  else if (box.id === 'searchResults') $('#searchInput').focus(opts);
+  else box.querySelector('[data-action="showFiltered"]:not(:disabled), [data-action="openFilters"]')?.focus(opts);
 }
 
 // ---------- account / drawer ----------
@@ -1832,7 +1994,7 @@ function weekCard(lot) {
 // ---------- live refresh ----------
 // When the live counts move on, the map and any open screen that shows them are redrawn. A screen in use
 // (a sheet dragged, a chart scrubbed, keyboard focus or a field inside it, the drawer or save dialog open) waits for the next check.
-const LIVE_SCREENS = ['map', 'explore', 'owner', 'ownerlot'];
+const LIVE_SCREENS = ['map', 'explore', 'filters', 'owner', 'ownerlot'];
 let lastLive = liveKey(), livePending = false;
 function refreshLive() {
   if (liveKey() !== lastLive) {
@@ -1891,9 +2053,11 @@ function ensureSession() {
   }
 }
 
+// the demo's usual lot, or the nearest open lot with space when it is closed (a late-night demo)
+const demoLot = (id) => (isOpen(lotById(id)) ? id : LOTS.filter((l) => isOpen(l) && stats(l).left > 0).sort(SORT_BY.near)[0]?.id ?? id);
 const DEMO_FLOWS = {
-  reserve() { state.session = null; state.reservation = null; save(); tab('map'); openLot('sm-b1'); },
-  walkin() { state.session = null; ui.walkinLot = 'open-b'; ui.walkinQr = false; save(); goFrom('scan', 'walkin'); },
+  reserve() { state.session = null; state.reservation = null; save(); tab('map'); openLot(demoLot('sm-b1')); },
+  walkin() { state.session = null; ui.walkinLot = demoLot('open-b'); ui.walkinQr = false; save(); goFrom('scan', 'walkin'); },
   exit() { ensureSession(); goFrom('scan', 'session'); },
   find() { ensureSession(); goFrom('explore', 'locator'); },
   owner() { ui.ownerTab = 'stats'; delete ui.chartSel.all; goFrom('map', 'owner'); },
@@ -1928,6 +2092,11 @@ const ACTIONS = {
     else flyHome([14.5852, 121.0575], 17.5);
   },
   voice: () => toast("Voice search isn't available yet."),
+  openFilters: () => { $('#searchInput').blur(); fromRoot('filters'); },
+  toggleFilter: (d) => setFilters({ [d.key]: !state.filters[d.key] }),
+  setFilter: (d) => setFilters({ [d.key]: d.key === 'sort' ? d.v : Number(d.v) }),
+  clearFilters: () => { setFilters(noFilters()); toast('Filters cleared.'); },
+  showFiltered: () => { back(); if (current === 'map') fitShown(); },
   editPlace: (d) => openSave(d.id),
   removePlace: (d) => removePlace(d.id),
   closeSave,
@@ -1949,7 +2118,11 @@ const ACTIONS = {
   unsavePlace: () => { const id = ui.saveDraft.lotId; closeSave(); removePlace(id); },
   reserve: (d) => { ui.pendingLot = d.id; go('reserve'); },
   reserveAgain: (d) => { tab('map'); openLot(d.id); },
-  confirmReserve: () => { if (state.account) toPay(); else { ui.idCtx = 'reserve'; go('otp'); } },
+  confirmReserve: () => {
+    const lot = lotById(ui.pendingLot);
+    if (!canReserve(lot)) { toast(`${lot.name} closes at ${clock(lot.hours[1])}, too soon to reserve. You can still walk in.`); return; }
+    if (state.account) toPay(); else { ui.idCtx = 'reserve'; go('otp'); }
+  },
   startAccount: (d) => {
     ui.idCtx = d.mode;
     if ($('#app').classList.contains('drawer-open')) fromRoot('otp'); else go('otp');
@@ -2051,14 +2224,14 @@ const ACTIONS = {
     ui.undoState ??= state;   // a second reset must not replace the real data with the blank copy
     state = { ...defaultState(), present: state.present }; save();   // presentation mode survives a reset
     Object.assign(ui, { selectedLot: null, pendingLot: null, walkinQr: false, exitDone: false });
-    applyTheme(); applyOffline(); tab('map');
+    applyTheme(); applyOffline(); renderFilterBar(); tab('map');
     toast('Local data cleared.', 'undoReset');
   },
   undoReset: () => {
     if (!ui.undoState) return;
     state = { ...ui.undoState, present: state.present };
     ui.undoState = null;
-    save(); applyTheme(); applyOffline(); tab('map');
+    save(); applyTheme(); applyOffline(); renderFilterBar(); tab('map');
     toast('Local data restored.');
   },
   demoFlow: (d) => DEMO_FLOWS[d.flow](),
@@ -2087,6 +2260,7 @@ const RENDER = {
   owner: renderOwner,
   ownerlot: renderOwnerLot,
   settings: renderSettings,
+  filters: renderFilters,
   otp: renderIdentity,
 };
 
@@ -2249,12 +2423,15 @@ if (navigator.maxTouchPoints > 0 && CSS.supports('font', '-apple-system-body')) 
 if (navigator.onLine === (state.offline === 'network')) { state.offline = navigator.onLine ? false : 'network'; save(); }   // it changed while the app was closed
 addEventListener('offline', () => { state.offline = 'network'; save(); applyOffline(); RENDER[current]?.(); });
 addEventListener('online', () => { state.offline = false; save(); applyOffline(); RENDER[current]?.(); });
+// .screens clips its sheets (overflow: hidden), but focusing a control out of view still scrolls it and shifts the whole app
+$('.screens').addEventListener('scroll', (e) => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
 initMap();
 applyTheme();
 applyPresent();
 PHONE.addEventListener('change', applyPresent);
 applyOffline();
 renderDrawer();
+renderFilterBar();
 if (state.reservation && state.reservation.expiresAt <= Date.now()) expireReservation();
 tab('map');
 // service workers need http(s); a page opened as a file runs without one

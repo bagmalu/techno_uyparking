@@ -21,6 +21,8 @@ decisions.
 The primary consumer shell is a map-first mobile layout:
 
 - **Top:** hamburger menu and a pill-shaped search field with search and voice affordances.
+  Under it, a sideways-scrolling row of filter chips: Filters (all options, with a count of
+  those on), then Open now, EV charging, Accessible, Covered and Has slots left.
 - **Center:** a pale static map with teal parking markers; zoomed views show numeric
   availability directly on each marker.
 - **Bottom:** three-tab navigation — Map, Scan, and Explore — plus a locate-me control.
@@ -41,7 +43,8 @@ should preserve this shell where practical rather than introducing unrelated pag
 | Map home | OpenStreetMap view of Metro Manila (opening on Ortigas Center), teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
 | Search results | List and map pins for nearby lots ranked by proximity and availability. With no lot match, falls back to popular businesses and landmarks (OSM data) and lists lots within 700 m, labelled "<business> isn't listed as a parking lot in Uy Parking!"; the business is pinned on the map when a lot is opened |
-| Lot detail sheet | Lot photo, name, slots left / total, accessible/EV/covered attributes, tiered rate with breakdown, trends, Reserve and Walk in now |
+| Lot detail sheet | Lot photo, name, slots left / total, opening hours (open now / closed / 24 hours), height clearance, accessible/EV/covered attributes, tiered rate with breakdown, trends, Reserve and Walk in now. When the lot misses the active filters, a note says which |
+| Filters | Features (EV charging, accessible, covered, fits tall vehicles ≥ 2.1 m), hours (open now, open 24 hours), has slots left, price for a 3-hour weekday stay (any / ≤ ₱40 / ≤ ₱50 / ≤ ₱60) and weekend flat rate, distance (any / 1 / 3 / 10 km), sort (nearest / most slots / cheapest). Clear all and Show N lots stay at the bottom. Lots that miss fade on the map and drop out of search and Explore; saved places and recents are always listed |
 | Reservation confirmation | Selected lot, automatic-space-assignment notice, fee breakdown, grace-period reminder, and optional accessibility notice |
 | Assignment confirmation | System-assigned floor/slot after entry scan, photo or map reference, and directions to the assigned space |
 
@@ -59,7 +62,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 ### Explore
 | Screen | Purpose |
 |---|---|
-| Explore home | Parking near you, saved places, recent reservations (from cache) |
+| Explore home | Parking near you (filtered and sorted, with a Filters button), saved places, recent reservations (from cache) |
 | Save place dialog | From the heart on a lot sheet: save as Home, Work (one each; saving again replaces it) or a custom name; edit or remove. Saved places lead the search panel and are listed in Explore and Account |
 
 ### Sidebar and owner views
@@ -129,6 +132,17 @@ financial totals are sums of the lots. Today counts only up to the current time.
   so mornings are quieter than evenings. The map and any open screen showing counts redraw when
   they move on, unless that screen is in use at the moment. Lots that are full in the mock data (Megamall Building C,
   Market! Market! Car Park) stay full all day, so the lot-full state can always be demonstrated.
+- **Filters are about the lot, not the slot.** Opening hours and height clearance are mock
+  values (a few lots are open 24 hours; open-air lots have no height limit). "Open now" uses
+  the phone's clock. Filters never pick a floor or slot, and Accessible only says a lot has
+  accessible spaces, with no eligibility check. Filters are kept in local cache.
+- **Closed lots can't be entered.** Outside a lot's hours its marker is grey and reads
+  "Closed" (like a full lot), with a neutral Closed chip in lists. Reserve and Walk in now are
+  disabled ("Closed — opens 7 AM") and the sheet offers the nearest open lot with space; the
+  walk-in screen shows a closed state and the entry scan refuses a closed lot. Reserving
+  stops 1 h 15 min before closing, so a grace period never runs past it; walking in still
+  works until close. An existing reservation can still be viewed. Megamall Building C, which
+  is always full, is open 24 hours so the lot-full state can always be demonstrated.
 - **Reserved counts as taken.** Prevents phantom availability. Drivers see only slots
   left / total; the parked vs. reserved split is on the owner dashboard.
 - **Rates.** Each lot's car rate is tiered (first N hours, then per succeeding hour,

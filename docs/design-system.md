@@ -196,6 +196,8 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 |---|---|
 | Map shell | default; zoomed; selected lot; reservation banner |
 | Top controls | hamburger; search idle/focused; voice affordance; locate-me |
+| Filter chip | glass pill over the map, surface pill with a hairline on sheets; off / on (accent-500, white text); Filters button with a count badge; 44px tall; the map row scrolls sideways and hides while search results or a lot sheet are open |
+| Filtered-out lot | outline and label fade (fill 22%, label 35%) but stay tappable; its sheet shows a "Doesn't match your filters" note |
 | Bottom nav | 3 tabs — Map, Scan, Explore; active / inactive |
 | Map pin | single / cluster; numeric label; heat-band colored; selected |
 | Bottom sheet motion | drag from the handle (or content at scroll top); default and expanded stops; a flick carries to the next stop; rubber-bands at the ends; only the lot sheet drags away to close, and it has a Close details button that appears on keyboard focus |
@@ -218,7 +220,7 @@ On dark theme, lean on `surface` / `surface-raised` steps instead of heavy shado
 | Primary button | default / hover / pressed / disabled / loading |
 | Secondary button | default / disabled |
 | OTP input | empty / partial / error / verified |
-| Status chip | available / filling / full |
+| Status chip | available / filling / full / closed (neutral surface-2 pill; a closed lot's marker uses the full style and reads "Closed") |
 | Switch | off / on / pressed (knob widens); 51 × 31, accent-500 when on |
 | Search bar | idle / focused / with recent-searches dropdown |
 | Toast / notice | info (e.g. accessibility notice), stale-data warning, with Undo after clearing local data |

@@ -58,6 +58,8 @@
     <symbol id="i-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/><path d="M12 8v4l3 2"/></symbol>
     <symbol id="i-printer" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6"/></symbol>
     <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9l1.5-5h13L20 9M4 9h16v2a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 11zM5.5 13v7h13v-7"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="i-height" viewBox="0 0 24 24"><path d="M5 3.5h14M5 20.5h14M12 7.5v9M9 10l3-3 3 3M9 14l3 3 3-3"/></symbol>
     <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.6M14.5 10.6A10 10 0 0 1 19 13M2 9.5a15 15 0 0 1 4.5-2.8M11 5.6a15 15 0 0 1 11 3.9"/><circle cx="12" cy="20" r=".6"/></symbol>
   </defs>
 </svg>
@@ -86,6 +88,8 @@
             <button class="search-mic" data-action="voice" aria-label="Voice search"><svg class="ic"><use href="#i-mic"/></svg></button>
           </label>
         </div>
+
+        <div class="filter-bar" id="filterBar" role="toolbar" aria-label="Filter parking lots"></div>
 
         <div class="map-banners" id="mapBanners"></div>
 
@@ -264,6 +268,15 @@
           <div class="panel tall">
             <span class="sheet-handle"></span>
             <div id="profileBody"></div>
+          </div>
+        </section>
+
+        <!-- ---------- FILTERS (from the chip bar on the map, or Explore) ---------- -->
+        <section class="screen" id="screen-filters">
+          <div class="panel tall">
+            <span class="sheet-handle"></span>
+            <h1 class="panel-title">Filters</h1>
+            <div id="filtersBody"></div>
           </div>
         </section>
 

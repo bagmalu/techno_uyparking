@@ -221,7 +221,8 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 @media (hover: hover) { .btn.primary:hover { background: var(--accent-600); } }
 .btn.primary:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; transform: none; font-size: 1.0625rem; }
 .btn.secondary { background: var(--surface); border-color: var(--border); color: var(--text-primary); }
-@media (hover: hover) { .btn.secondary:hover { border-color: var(--accent-500); } }
+@media (hover: hover) { .btn.secondary:not(:disabled):hover { border-color: var(--accent-500); } }
+.btn.secondary:disabled { color: var(--text-tertiary); cursor: not-allowed; transform: none; }
 .btn.text { background: none; color: var(--accent-text); min-height: 44px; font-size: 0.9375rem; }
 .btn.text.danger-text { color: var(--status-full); }
 .btn-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; width: 100%; }
@@ -287,6 +288,7 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .chip.available { background: #e3ecfd; color: #1d4ed8; }
 .chip.filling { background: #fff1d6; color: #92400e; }
 .chip.full { background: #fde2e2; color: #b91c1c; }
+.chip.closed { background: var(--surface-2); color: var(--text-secondary); }   /* closed is not an availability level, so it stays neutral */
 :root[data-theme="dark"] .chip.available { background: #13254d; color: #93b4ff; }
 :root[data-theme="dark"] .chip.filling { background: #3a2a0c; color: #fcd34d; }
 :root[data-theme="dark"] .chip.full { background: #401414; color: #fca5a5; }
@@ -335,6 +337,9 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .map.far .lot-label.lvl-low::before { background: var(--lot-low); }
 .map.far .lot-label.lvl-full::before { background: var(--lot-full); }
 .map.far .lot-label b { opacity: 0; pointer-events: none; }
+/* lots that miss the active filters: still there and tappable, but they recede */
+.lot-shape.dim { fill-opacity: .22; stroke-opacity: .22; }
+.lot-label.dim { opacity: .35; }
 .lot-label.reserved::after {
   content: ""; position: absolute; left: 10px; top: -16px; width: 7px; height: 7px; border-radius: 50%;
   background: #fff; border: 1.5px solid var(--accent-700);
@@ -365,7 +370,7 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .search input::-webkit-search-cancel-button { display: none; }
 .search-mic { border: 0; background: none; color: var(--icon); width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; }
 
-.map-banners { position: absolute; top: calc(86px + var(--safe-top)); left: 16px; right: 16px; z-index: 5; display: flex; flex-direction: column; gap: 8px; }
+.map-banners { position: absolute; top: calc(136px + var(--safe-top)); left: 16px; right: 16px; z-index: 5; display: flex; flex-direction: column; gap: 8px; }
 .app:not([data-screen="map"]) .map-banners, .sheet-open .map-banners { display: none; }
 .banner {
   display: flex; align-items: center; justify-content: center; gap: 12px;
@@ -377,6 +382,45 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .banner .left { font-weight: 600; opacity: .9; }
 .banner.warn { background: var(--status-filling); color: #2b1a00; }
 .banner.parked { background: var(--accent-700); }
+
+/* filter chips under the search bar: they scroll sideways, and the map stays draggable between them */
+.filter-bar {
+  position: absolute; top: calc(82px + var(--safe-top)); left: 0; right: 0; z-index: 8;
+  display: flex; gap: 8px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; pointer-events: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-bar > * { pointer-events: auto; }
+.app:not([data-screen="map"]) .filter-bar, .sheet-open .filter-bar { display: none; }
+.searching .filter-bar { visibility: hidden; }
+.fchip {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px 0 12px;
+  border: 0; border-radius: 999px; font-size: 0.875rem; font-weight: 600; white-space: nowrap;
+  background: var(--material); color: var(--material-text);
+  -webkit-backdrop-filter: var(--material-blur); backdrop-filter: var(--material-blur);
+  box-shadow: var(--shadow-fab), inset 0 0 0 .5px var(--material-edge);
+}
+.fchip.on { background: var(--accent-500); color: #fff; }
+.fchip:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 2px; }
+.fchip .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent-500); color: #fff; font-size: 0.75rem; line-height: 20px; text-align: center; }
+/* on a sheet the chips sit on the surface, not the map */
+.panel .fchip { background: var(--surface); color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--border); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.panel .fchip.on { background: var(--accent-500); color: #fff; box-shadow: none; }
+.fchips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 10px; }
+.section-head .section-title { margin: 0; }
+.section-title small { margin-left: 6px; font-size: 0.8125rem; font-weight: 500; letter-spacing: 0; color: var(--text-secondary); }
+.filter-sum { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -2px 0 0; }
+.filter-sum .btn { flex: none; padding: 0 4px; }
+#filtersBody .segmented { margin: 0 0 10px; }
+/* the counts and actions stay in reach while the options scroll */
+.filter-foot {   /* covers the panel's bottom padding too, so nothing scrolls by underneath */
+  position: sticky; bottom: calc(-1 * var(--panel-pad)); display: flex; gap: 10px;
+  margin: 24px 0 calc(-1 * var(--panel-pad)); padding: 12px 0 var(--panel-pad); background: var(--surface);
+}
+.filter-foot .btn.primary { flex: 1; }
+.search-panel .filter-row { width: auto; margin: 0 10px 4px; padding: 10px 12px; border-radius: 12px; background: var(--tint); }
+.filter-row .ic { color: var(--accent-text); }
+.row > .edit { flex: none; color: var(--accent-text); font-weight: 600; font-size: 0.875rem; }
 
 .search-panel {
   position: absolute; top: calc(82px + var(--safe-top)); left: 16px; right: 16px; z-index: 9;
@@ -419,6 +463,13 @@ button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 2
 .lot-addr { display: flex; gap: 6px; align-items: center; margin: -6px 0 12px; font-size: 0.8125rem; line-height: 1.125rem; color: var(--text-secondary); }
 .lot-addr span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lot-addr .ic { width: 16px; height: 16px; flex: none; }
+.lot-hours { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: -6px 0 12px; font-size: 0.8125rem; line-height: 1.125rem; color: var(--text-secondary); }
+.lot-hours > span { display: inline-flex; align-items: center; gap: 6px; }
+.lot-hours .ic { width: 16px; height: 16px; }
+.lot-hours b.open { color: var(--accent-text); }
+.lot-hours b.closed { color: var(--status-full); }
+.filter-miss { display: flex; gap: 8px; align-items: flex-start; margin: -4px 0 12px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); color: var(--text-secondary); font-size: 0.78125rem; line-height: 1.0625rem; }
+.filter-miss .ic { margin-top: 0; }
 
 .photo { width: 100%; height: 140px; display: block; border-radius: 2px; margin-bottom: 10px; }
 img.photo, img.lot-thumb { object-fit: cover; background: var(--map-bg); }
