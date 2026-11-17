@@ -209,7 +209,7 @@
         <!-- ---------- ASSIGNING ---------- -->
         <section class="screen" id="screen-assigning" data-back="none">
           <div class="panel">
-            <span class="sheet-handle"></span>
+            <span class="sheet-handle static" aria-hidden="true"></span>
             <div class="center-col assigning">
               <div class="pulse"><svg class="ic xl"><use href="#i-nfc"/></svg></div>
               <h1 class="panel-title">Checking you in…</h1>
@@ -269,14 +269,14 @@
         <!-- ---------- PROFILE ---------- -->
         <section class="screen" id="screen-profile">
           <div class="panel tall">
-            <span class="sheet-handle"></span>
+            <button class="sheet-handle" data-action="back" aria-label="Close account"></button>
             <div id="profileBody"></div>
           </div>
         </section>
 
         <!-- ---------- FILTERS (from the chip bar on the map, or Explore) ---------- -->
         <section class="screen" id="screen-filters">
-          <div class="panel tall" data-dismiss>
+          <div class="panel tall">
             <button class="sheet-handle" data-action="back" aria-label="Close filters"></button>
             <h1 class="panel-title">Filters</h1>
             <div id="filtersBody"></div>
@@ -286,7 +286,7 @@
         <!-- ---------- SETTINGS ---------- -->
         <section class="screen" id="screen-settings">
           <div class="panel tall">
-            <span class="sheet-handle"></span>
+            <button class="sheet-handle" data-action="back" aria-label="Close settings"></button>
             <h1 class="panel-title">Settings</h1>
             <h3 class="section-title">Account</h3>
             <div class="list" id="settingsAccount"></div>
@@ -319,7 +319,7 @@
         <!-- ---------- OWNER DASHBOARD ---------- -->
         <section class="screen" id="screen-owner">
           <div class="panel tall">
-            <span class="sheet-handle"></span>
+            <button class="sheet-handle" data-action="back" aria-label="Close owner dashboard"></button>
             <h1 class="panel-title">Owner dashboard</h1>
             <div class="segmented">
               <button class="seg active" data-action="ownerTab" data-tab-id="stats">Statistics</button>
@@ -332,7 +332,7 @@
         <!-- ---------- OWNER: ONE LOT'S RECENT PERFORMANCE ---------- -->
         <section class="screen" id="screen-ownerlot">
           <div class="panel tall">
-            <span class="sheet-handle"></span>
+            <button class="sheet-handle" data-action="back" aria-label="Back to owner dashboard"></button>
             <h1 class="panel-title" id="ownerLotTitle">Lot</h1>
             <div id="ownerLotBody"></div>
           </div>

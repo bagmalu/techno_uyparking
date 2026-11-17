@@ -839,8 +839,9 @@ function grabSheet(panel) {
   const rest = panel.offsetTop;
   panel.classList.toggle('expanded', wasExpanded);
   const stops = rest > top ? [top, rest] : [top];   // a tall sheet has only one place to rest
-  // the lot sheet and sheets marked data-dismiss (Filters) can be pulled down off the screen to close them
-  const closeAt = panel.matches('.sheet, [data-dismiss]') ? parent.clientHeight + 24 : null;
+  // every sheet with a grabber can be pulled down off the screen to close it (the lot sheet closes; the others go
+  // back, as the Back button would), except on screens that can't be left, like check-in (data-back="none")
+  const closeAt = panel.closest('.screen')?.dataset.back === 'none' ? null : parent.clientHeight + 24;
   if (closeAt !== null) stops.push(closeAt);
   motion = { panel, stops, closeAt, y, v: 0, raf: 0, history: [] };
   panel.style.top = `${stops[0]}px`;
@@ -2432,7 +2433,12 @@ document.addEventListener('keydown', (e) => {
     bar.parentElement.querySelector('.sel')?.focus();
   }
   if (e.key === 'Enter' && e.target.id === 'saveName' && ui.saveDraft) ACTIONS.savePlace();
-  if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else if (current === 'map') closeSheet(); else if (current === 'filters') back(); closeDemo(); }
+  if (e.key === 'Escape') {   // closes the top sheet, like swiping it down; not while typing in a field
+    if (ui.saveDraft) closeSave();
+    else if (current === 'map') closeSheet();
+    else if (!e.target.closest?.('input, select, textarea') && $(`#screen-${current}`).dataset.back !== 'none') back();
+    closeDemo();
+  }
 });
 
 // OTP boxes: auto-advance and backspace

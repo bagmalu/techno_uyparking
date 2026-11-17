@@ -34,6 +34,9 @@ The primary consumer shell is a map-first mobile layout:
 - **Reservation banner:** after a reservation, a compact teal banner identifies the lot and
   assigned reservation reference while the user returns to the map.
 
+Every sheet with a grabber can be swiped down to close it, the same as Back (a sheet that can't be left, such as
+check-in, has no grabber).
+
 The map is the default landing state. Search, lot details, reservation, and scan flows
 should preserve this shell where practical rather than introducing unrelated page layouts.
 
@@ -46,7 +49,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
 | Search results | List and map pins for nearby lots ranked by proximity and availability. With no lot match, falls back to popular businesses and landmarks (OSM data) and lists lots within 700 m, labelled "<business> isn't listed as a parking lot in Uy Parking!"; the business is pinned on the map when a lot is opened |
 | Lot detail sheet | Lot photo, name, slots left / total, opening hours (open now / closed / 24 hours), height clearance, accessible/EV/covered attributes, tiered rate with breakdown, trends, Reserve and Walk in now. When the lot misses the active filters, a note says which |
-| Filters | Features (EV charging, accessible, covered, fits tall vehicles ≥ 2.1 m), hours (open now, open 24 hours), has slots left, price for a 3-hour weekday stay (any / ≤ ₱40 / ≤ ₱50 / ≤ ₱60) and weekend flat rate, distance (any / 1 / 3 / 10 km), sort (nearest / most slots / cheapest). Clear all and Show N lots stay at the bottom. Swipe it down (a third of the way, or a flick), tap its grabber or press Escape to close it, like the lot sheet. Lots that miss fade on the map and drop out of search and Explore; saved places and recents are always listed |
+| Filters | Features (EV charging, accessible, covered, fits tall vehicles ≥ 2.1 m), hours (open now, open 24 hours), has slots left, price for a 3-hour weekday stay (any / ≤ ₱40 / ≤ ₱50 / ≤ ₱60) and weekend flat rate, distance (any / 1 / 3 / 10 km), sort (nearest / most slots / cheapest). Clear all and Show N lots stay at the bottom. Swipe it down (a third of the way, or a flick), tap its grabber or press Escape to close it, like every other sheet. Lots that miss fade on the map and drop out of search and Explore; saved places and recents are always listed |
 | Reservation confirmation | Selected lot, automatic-space-assignment notice, fee breakdown, grace-period reminder, and optional accessibility notice |
 | Assignment confirmation | System-assigned floor/slot after entry scan, photo or map reference, and directions to the assigned space |
 

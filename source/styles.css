@@ -177,6 +177,7 @@ button.sheet-handle::before {
   border-radius: 3px; background: var(--lot-selected-ring);
 }
 button.sheet-handle::after { content: ""; position: absolute; top: 100%; left: 25%; right: 25%; height: 13px; }   /* 44px tall to the finger */
+.sheet-handle.static { visibility: hidden; }   /* keeps the spacing on a sheet that can't be swiped away (check-in), so it shows no grabber */
 /* while moving: overshoot must not show a gap under the sheet, and the scroll range must not change */
 .panel.moving {
   bottom: -120px; padding-bottom: calc(var(--panel-pad) + 120px + var(--sheet-grow, 0px));   /* --sheet-grow: how much taller than at rest */
