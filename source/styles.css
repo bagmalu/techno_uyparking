@@ -158,6 +158,7 @@ input, select { font: inherit; color: inherit; }
 @keyframes rise { from { transform: translateY(40%); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes fall { to { transform: translateY(40%); opacity: 0; } }
 @keyframes fade-in { from { opacity: 0; } }
+.screen.leaving .panel.dismissed { visibility: hidden; animation: none; }   /* already pulled off screen */
 @keyframes fade-out { to { opacity: 0; } }
 .panel.expanded, .panel.tall { top: calc(84px + var(--safe-top)); }
 .panel-title { font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; letter-spacing: -.02em; margin: 4px 0 14px; }

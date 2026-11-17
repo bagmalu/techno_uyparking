@@ -656,6 +656,7 @@ function clearLeaving() {
   $$('.screen.leaving').forEach((s) => {
     s.classList.remove('leaving', 'falling');
     s.querySelector('.panel').style.top = '';
+    s.querySelector('.panel').classList.remove('dismissed');
   });
 }
 function show(name, returning = false) {
@@ -818,7 +819,7 @@ function openLot(id) {
 // A sheet follows the finger, then settles on a spring from wherever it is, so it can be caught mid-flight.
 // While moving it is laid out at its tallest and placed with a transform; at rest its classes take over again.
 const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)');
-let motion = null;    // the sheet in motion: { panel, stops: [expanded, default, closed?], y, v, raf, history }
+let motion = null;    // the sheet in motion: { panel, stops: [expanded, default?, closed?], closeAt, y, v, raf, history }
 let gesture = null;   // the finger on it: { panel, y0, start, grabbed, caught, pointer }
 let touch = null;     // a touch on a sheet's content that may turn into a drag
 let skipClick = false;
@@ -833,14 +834,17 @@ function grabSheet(panel) {
   panel.classList.add('moving');
   const wasExpanded = panel.classList.contains('expanded');
   panel.classList.add('expanded');
-  const stops = [panel.offsetTop];
+  const top = panel.offsetTop;
   panel.classList.remove('expanded');
-  stops.push(panel.offsetTop);
+  const rest = panel.offsetTop;
   panel.classList.toggle('expanded', wasExpanded);
-  if (panel.classList.contains('sheet')) stops.push(parent.clientHeight + 24);   // only the lot sheet can be dismissed
-  motion = { panel, stops, y, v: 0, raf: 0, history: [] };
+  const stops = rest > top ? [top, rest] : [top];   // a tall sheet has only one place to rest
+  // the lot sheet and sheets marked data-dismiss (Filters) can be pulled down off the screen to close them
+  const closeAt = panel.matches('.sheet, [data-dismiss]') ? parent.clientHeight + 24 : null;
+  if (closeAt !== null) stops.push(closeAt);
+  motion = { panel, stops, closeAt, y, v: 0, raf: 0, history: [] };
   panel.style.top = `${stops[0]}px`;
-  panel.style.setProperty('--sheet-grow', `${wasExpanded ? 0 : stops[1] - stops[0]}px`);
+  panel.style.setProperty('--sheet-grow', `${wasExpanded ? 0 : rest - top}px`);
   panel.scrollTop = scrolled;   // measuring the stops may have clamped it
   placeSheet(y);
   return motion;
@@ -868,12 +872,19 @@ function releaseSheets() {   // the sheet under the finger has closed or changed
 }
 function setExpanded(panel, on) {
   panel.classList.toggle('expanded', on);
-  panel.querySelector(':scope > button.sheet-handle')?.setAttribute('aria-label', on ? 'Collapse sheet' : 'Expand sheet');
+  panel.querySelector(':scope > button.sheet-handle[data-action="expand"]')?.setAttribute('aria-label', on ? 'Collapse sheet' : 'Expand sheet');
 }
 function finishSheet(target) {
-  const { panel, stops } = motion;
+  const { panel, stops, closeAt } = motion;
   motion = null;
-  if (target === stops[2]) closeSheet();
+  if (target === closeAt && panel.id !== 'sheet') {
+    // a screen pulled off the bottom: go back without its exit animation, which would start from where it rested
+    unplaceSheet(panel);
+    back();
+    panel.classList.add('dismissed');   // cleared with the leaving screen (clearLeaving)
+    return;
+  }
+  if (target === closeAt) closeSheet();
   else setExpanded(panel, target === stops[0]);
   unplaceSheet(panel);
 }
@@ -939,7 +950,10 @@ function endGesture() {
   const v = span ? ((recent[recent.length - 1].y - recent[0].y) / span) * 1000 : 0;
   const landing = y + (v / 1000) * (0.998 / 0.002);   // where a flick would coast to
   const from = nearestStop(stops, y);
-  const to = Math.max(from - 1, Math.min(from + 1, nearestStop(stops, landing)));   // one stop at a time
+  let to = Math.max(from - 1, Math.min(from + 1, nearestStop(stops, landing)));   // one stop at a time
+  // like iOS sheets: pulled (or flicked) a third of the way down from where it rests, it goes; a flick up keeps it
+  const c = motion.closeAt === null ? -1 : stops.length - 1;
+  if (c > 0 && from >= c - 1 && to < c && v > -300 && landing - stops[c - 1] > (stops[c] - stops[c - 1]) / 3) to = c;
   settleSheet(stops[to], v);
   return true;
 }
@@ -2347,7 +2361,7 @@ document.addEventListener('touchmove', (e) => {
     const dy = y - touch.y;
     if (Math.abs(dy) < 4) return;
     const { panel } = touch;
-    if (panel.scrollTop > 0 || (dy < 0 && panel.classList.contains('expanded')) || !e.cancelable) { touch = null; return; }
+    if (panel.scrollTop > 0 || (dy < 0 && panel.matches('.expanded, .tall')) || !e.cancelable) { touch = null; return; }
     beginGesture(panel, y);
     touch.active = true;
   }
@@ -2418,7 +2432,7 @@ document.addEventListener('keydown', (e) => {
     bar.parentElement.querySelector('.sel')?.focus();
   }
   if (e.key === 'Enter' && e.target.id === 'saveName' && ui.saveDraft) ACTIONS.savePlace();
-  if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else if (current === 'map') closeSheet(); closeDemo(); }
+  if (e.key === 'Escape') { if (ui.saveDraft) closeSave(); else if (current === 'map') closeSheet(); else if (current === 'filters') back(); closeDemo(); }
 });
 
 // OTP boxes: auto-advance and backspace
