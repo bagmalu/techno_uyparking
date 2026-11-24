@@ -1,6 +1,6 @@
-# Uy Parking!
+# Uy! Parking
 
-A lo-fi, clickable HTML prototype of **Uy Parking!**, a mobile app that answers one
+A lo-fi, clickable HTML prototype of **Uy! Parking**, a mobile app that answers one
 question: *is there a parking space?* Drivers can see how full nearby car parks are,
 reserve a space, scan in to get a floor and slot assigned automatically, find their car
 later, and pay on the way out. Parking owners get a mock statistics and finance dashboard.
@@ -27,7 +27,7 @@ for example `http://192.168.1.20:8777`.
 
 **Install it as an app.** Served over http (Option B, or a hosted copy such as GitHub
 Pages), the prototype is an installable web app: in Chrome or Edge use the install icon in
-the address bar or **Settings → Install Uy Parking!**; on Android, the browser menu's
+the address bar or **Settings → Install Uy! Parking**; on Android, the browser menu's
 **Install app**; on iPhone or iPad, Safari's **Share → Add to Home Screen**. Installed, it
 opens full screen with its own icon and keeps working offline: the app, all lot photos, and
 the map tiles you have already looked at come from the phone. Opening the file directly
@@ -94,7 +94,7 @@ Open the **☰ menu** → **Parking owner view**, then switch between **Statisti
 | Create an account / sign in | Open the menu (☰) as a guest → **Create account** (plate or phone OTP) or **Sign in** (phone OTP). Any 6 digits work as the code. |
 | Account settings | Menu → **Account**: name, email for receipts, mobile number, saved plates and default, default payment method, sign out, delete account |
 | Search, saved places, recents | Tap **Where to?** on the map |
-| Parking near a business or landmark | Search for something that isn't a lot, e.g. **Jollibee**, **mcdo**, **Starbucks** or **St. Luke's**. The results list lots within 700 m, with a note that the business isn't listed as a parking lot in Uy Parking! Opening one pins the business on the map. |
+| Parking near a business or landmark | Search for something that isn't a lot, e.g. **Jollibee**, **mcdo**, **Starbucks** or **St. Luke's**. The results list lots within 700 m, with a note that the business isn't listed as a parking lot in Uy! Parking. Opening one pins the business on the map. |
 | Filter lots | Tap the filter button (sliders) in the **Where to?** bar: EV charging, accessible, covered, tall-vehicle clearance, open now, open 24 hours, price for a 3-hour stay, weekend flat rate, distance, and sort (nearest, most slots, cheapest). The filters that are on show as chips under the search bar; tap one to remove it. Lots that don't match fade on the map and drop out of search and Explore; a faded lot's sheet says why it doesn't match. **Show N lots** brings you and the nearest matches into view. |
 | Saved places | Tap the heart on a lot's details sheet and save it as **Home**, **Work** or your own name (one Home, one Work). Saved places appear first in search, in Explore and in Account, where you can rename or remove them. |
 
@@ -200,4 +200,4 @@ CC BY-SA photos are shared under the same licence as the original.
 
 ## Branding
 
-**Uy Parking!** · accent `#009f8b` · dark background `#021c1c` · light background `#f7f7f7`.
+**Uy! Parking** · accent `#009f8b` · dark background `#021c1c` · light background `#f7f7f7`.

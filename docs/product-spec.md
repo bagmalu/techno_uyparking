@@ -1,4 +1,4 @@
-# Uy Parking! — Prototype Spec
+# Uy! Parking — Prototype Spec
 
 A lo-fi prototype-only spec (Figma MVP + optional clickable HTML). Nothing here is built as
 a working system. The visual starting point is the map-first mockup in `mockup/`; the
@@ -47,7 +47,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 |---|---|
 | Map home | OpenStreetMap view of Metro Manila (opening on Ortigas Center), teal/heatmap lot outlines, search bar, locate-me control, saved/preset locations, and recent searches |
 | Zoomed map | Enlarged map region with numeric availability labels on parking markers |
-| Search results | List and map pins for nearby lots ranked by proximity and availability. With no lot match, falls back to popular businesses and landmarks (OSM data) and lists lots within 700 m, labelled "<business> isn't listed as a parking lot in Uy Parking!"; the business is pinned on the map when a lot is opened |
+| Search results | List and map pins for nearby lots ranked by proximity and availability. With no lot match, falls back to popular businesses and landmarks (OSM data) and lists lots within 700 m, labelled "<business> isn't listed as a parking lot in Uy! Parking"; the business is pinned on the map when a lot is opened |
 | Lot detail sheet | Lot photo, name, slots left / total, opening hours (open now / closed / 24 hours), height clearance, accessible/EV/covered attributes, tiered rate with breakdown, trends, Reserve and Walk in now. When the lot misses the active filters, a note says which |
 | Filters | Features (EV charging, accessible, covered, fits tall vehicles ≥ 2.1 m), hours (open now, open 24 hours), has slots left, price for a 3-hour weekday stay (any / ≤ ₱40 / ≤ ₱50 / ≤ ₱60) and weekend flat rate, distance (any / 1 / 3 / 10 km), sort (nearest / most slots / cheapest). Clear all and Show N lots stay at the bottom. Swipe it down (a third of the way, or a flick), tap its grabber or press Escape to close it, like every other sheet. Lots that miss fade on the map and drop out of search and Explore; saved places and recents are always listed |
 | Reservation confirmation | Selected lot, automatic-space-assignment notice, fee breakdown, grace-period reminder, and optional accessibility notice |
@@ -75,7 +75,7 @@ should preserve this shell where practical rather than introducing unrelated pag
 |---|---|
 | Sidebar | Guest: Create account / Sign in; signed in: name and default plate, opens Account |
 | Account | Guest: perks + Create account / Sign in. Signed in: name, email for receipts, verified phone, saved plates with a default, default payment method, recent activity, sign out, delete account |
-| Settings | Account shortcut, theme, Install Uy Parking! (when the browser can install it; on iPhone it says how), Presentation mode (shows or hides the demo controls; on by default on desktop, off on phones, kept by a data reset), notification toggles (saved locally; SMS alerts need a verified phone) |
+| Settings | Account shortcut, theme, Install Uy! Parking (when the browser can install it; on iPhone it says how), Presentation mode (shows or hides the demo controls; on by default on desktop, off on phones, kept by a data reset), notification toggles (saved locally; SMS alerts need a verified phone) |
 | OTP / identity | At reserve/pay for guests (plate number or phone OTP); also create account (plate or phone), sign in (phone only), add/change phone |
 | Owner statistics | Mock occupancy, peak-time, entries and no-show cards; hourly occupancy for today (tap or slide across the bars: earlier hours, now, and the usual for later hours); By lot list with the parked/reserved split, each lot opening its own page |
 | Owner lot performance | One lot: live parked/reserved split, today's entries, revenue, average stay and no-shows against the same day last week, its hourly chart, a 7-day chart (entries, revenue or peak), turnover, reservations kept, revenue per space, and when it is usually full |

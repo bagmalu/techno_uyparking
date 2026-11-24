@@ -1,4 +1,4 @@
-// Uy Parking! service worker: the app opens and runs offline, and map tiles already seen stay available.
+// Uy! Parking service worker: the app opens and runs offline, and map tiles already seen stay available.
 // - App files: the network first, so edits and deploys show up straight away; the cache when offline,
 //   or when the network takes longer than SLOW_MS (a weak signal underground).
 // - Map tiles: kept as OpenStreetMap's headers allow (fresh for max-age, then shown while refetched,

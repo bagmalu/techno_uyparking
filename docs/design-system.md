@@ -1,4 +1,4 @@
-# Uy Parking! — Design System
+# Uy! Parking — Design System
 
 Tokens for the Figma file and any HTML prototype. Build these as Figma **styles +
 components before drawing screens** — it prevents the week-8 crunch.

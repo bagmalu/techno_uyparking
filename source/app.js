@@ -1,4 +1,4 @@
-/* Uy Parking! clickable prototype — everything here is mocked.
+/* Uy! Parking clickable prototype — everything here is mocked.
    Screen router, reservation countdown (1 h 15 min), mock lot / slot / QR data. */
 'use strict';
 
@@ -1027,7 +1027,7 @@ function renderSheet() {
       <span>${icon('i-height')}<span>${lot.clearance ? `${lot.clearance.toFixed(1)} m clearance` : 'No height limit'}</span></span></p>
     ${miss.length ? `<p class="filter-miss">${icon('i-sliders', 'sm')}<span>Doesn't match your filters: ${esc(miss.join(', '))}</span></p>` : ''}
     ${near ? `<p class="near-tag">${icon('i-store', 'sm')}<span><b>${fmtDist(metres(lot.center, near.pt))} from ${esc(near.name)}${near.branch ? ` ${esc(near.branch)}` : ''}</b>
-      This lot is nearby. ${esc(near.name)} isn't listed as a parking lot in Uy Parking!</span></p>` : ''}
+      This lot is nearby. ${esc(near.name)} isn't listed as a parking lot in Uy! Parking.</span></p>` : ''}
 
     ${lotPhoto(lot)}
 
@@ -1100,7 +1100,7 @@ function renderSearch(q = '') {
       html = groups.length ? groups.map(({ p, i, near }) => {
         const chain = p.at.length > 1;
         return `<h4>Parking near ${esc(p.name)} <small>${esc(p.kind)}</small></h4>
-          <div class="near-note">${icon('i-info', 'sm')}<span><b>${esc(p.name)} isn't listed as a parking lot in Uy Parking!</b>
+          <div class="near-note">${icon('i-info', 'sm')}<span><b>${esc(p.name)} isn't listed as a parking lot in Uy! Parking.</b>
             ${chain ? `These lots are near a ${esc(p.name)} branch.` : 'These lots are nearby.'}</span></div>`
           + near.slice(0, groups.length > 1 ? 3 : 5).map(({ lot, j, m }) => {
             const branch = p.at[j][2] ? ` ${p.at[j][2]}` : '';
@@ -1229,7 +1229,7 @@ function renderPay() {
     </div>
     <div class="ticket">
       ${qr ? `<div class="ref">Scan with any QR Ph bank or e-wallet app</div>
-        <h3>Uy Parking! · ${esc(lot.name)}</h3>${qrSvg('pay' + amount + lot.id)}
+        <h3>Uy! Parking · ${esc(lot.name)}</h3>${qrSvg('pay' + amount + lot.id)}
         <div class="qr-cap">Universal QR Ph</div>`
       : `<div class="pulse" style="margin:8px auto 12px">${icon('i-nfc', 'xl')}</div>
         <h3>Hold your phone or card near the reader</h3><div class="ref">Contactless / NFC</div>`}
@@ -1644,7 +1644,7 @@ function renderProfile() {
     $('#profileBody').innerHTML = `
       <div class="center"><div class="big-icon soft">${icon('i-user')}</div>
         <h2 style="margin:0">Guest</h2>
-        <p class="lead" style="margin-top:4px">You're using Uy Parking! without an account. Everything still works.</p></div>
+        <p class="lead" style="margin-top:4px">You're using Uy! Parking without an account. Everything still works.</p></div>
       <div class="card tinted perks">
         <p>${icon('i-car', 'sm')} Save your plates so reserving takes one tap</p>
         <p>${icon('i-wallet', 'sm')} Pick QR Ph or NFC once for every payment</p>
@@ -1782,7 +1782,7 @@ function renderInstall() {
   $('#installSub').textContent = installPrompt ? 'Opens full screen and works offline' : 'Tap Share, then Add to Home Screen';
 }
 addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; renderInstall(); });
-addEventListener('appinstalled', () => { installPrompt = null; renderInstall(); toast('Uy Parking! is installed.'); });
+addEventListener('appinstalled', () => { installPrompt = null; renderInstall(); toast('Uy! Parking is installed.'); });
 function openDrawer() { renderDrawer(); $('#app').classList.add('drawer-open'); }
 function closeDrawer() { $('#app').classList.remove('drawer-open'); }
 

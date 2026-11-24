@@ -1,4 +1,4 @@
-# Uy Parking! — HTML prototype
+# Uy! Parking — HTML prototype
 
 Open `index.html` directly, or run `python -m http.server 8777` in this folder and visit
 <http://localhost:8777>. No build step is needed.

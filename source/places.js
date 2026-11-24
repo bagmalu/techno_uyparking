@@ -1,4 +1,4 @@
-/* Uy Parking! — popular businesses and landmarks for the "parking near …" search fallback.
+/* Uy! Parking — popular businesses and landmarks for the "parking near …" search fallback.
    Positions (and branch names, where tagged) from OpenStreetMap (© OpenStreetMap contributors, ODbL),
    fetched 2026-10-29 via Overpass and kept only within 700 m of a lot in app.js. None of these places
    are listed as parking lots in the app; search lists the lots near them. `at` = [lat, lng, branch?]. */

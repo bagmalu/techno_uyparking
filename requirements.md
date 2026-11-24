@@ -1,4 +1,4 @@
-# Uy Parking! — Requirements
+# Uy! Parking — Requirements
 
 **Goal:** In one month, design a lo-fi mobile app for **online parking availability and
 location**. The deliverable is a Figma MVP and/or a clickable HTML prototype, not a working
@@ -22,7 +22,7 @@ The core question the app answers: **"Is there a parking space?"**
 
 ### Accessible spaces
 Users can see that a lot has accessible spaces, but the app does **not** verify whether a
-driver is eligible to use them. Uy Parking! is a locator, not an enforcement authority. A
+driver is eligible to use them. Uy! Parking is a locator, not an enforcement authority. A
 short, non-blocking reminder is shown when reserving.
 
 ---
@@ -102,7 +102,7 @@ Reference frames are in `docs/mockup/`:
 
 | Item | Value |
 |---|---|
-| App name | **Uy Parking!** |
+| App name | **Uy! Parking** |
 | Primary / accent colour | `#009f8b` |
 | Dark mode background | `#021c1c` |
 | Light mode background | `#f7f7f7` |

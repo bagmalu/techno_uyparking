@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Uy Parking!",
-  "short_name": "Uy Parking!",
+  "name": "Uy! Parking",
+  "short_name": "Uy! Parking",
   "description": "Is there a parking space? Live lot availability, reservations, scan-in and pay on exit. Prototype with mock data.",
   "lang": "en",
   "start_url": "./",

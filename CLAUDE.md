@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **lo-fi project**, not a working system. The deliverable
 across 1 month is a Figma MVP and/or a basic clickable HTML prototype of the
-"Uy Parking!" mobile app.
+"Uy! Parking" mobile app.
 
 Do **not** build a real backend, authentication, database, or payment integration.
 Every feature only has to be drawn or mocked. The map may use an OpenStreetMap base map
@@ -30,7 +30,7 @@ the screen router, the 1 h 15 min reservation countdown, and the mock slot/QR da
 
 ## Product
 
-"Uy Parking!" — a mobile Online Parking Availability & Locator app. Core question:
+"Uy! Parking" — a mobile Online Parking Availability & Locator app. Core question:
 *is there a parking space?* Around that: per-slot attributes (EV charging,
 covered/uncovered, disabled-accessible), reservation, proximity to entrance/elevator,
 historical fill-time trends, payment on exit, and "find where you parked."
@@ -70,7 +70,7 @@ See `docs/product-spec.md` for the full screen inventory and the nav/sidebar lay
 
 ## Branding (fixed — do not change without the user's say-so)
 
-- App name: **Uy Parking!**
+- App name: **Uy! Parking**
 - Primary / accent color: `#009f8b`
 - Dark mode background: `#021c1c`
 - Light mode background: `#f7f7f7`
